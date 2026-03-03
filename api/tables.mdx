@@ -1,0 +1,327 @@
+---
+title: 'Tables'
+description: 'Manage tables in NocoDB bases via API'
+---
+
+## List Tables
+
+Retrieve all tables in a base.
+
+```bash GET /api/v1/db/meta/projects/{baseId}/tables
+curl -X GET https://app.nocodb.com/api/v1/db/meta/projects/p_124hhlkbeasewh/tables \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="baseId" type="string" required>
+  Unique base identifier (e.g., `p_124hhlkbeasewh`)
+</ParamField>
+
+<ParamField path="sourceId" type="string">
+  Optional source identifier to filter tables by data source
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="page" type="number">
+  Page number for pagination
+</ParamField>
+
+<ParamField query="pageSize" type="number">
+  Number of tables per page
+</ParamField>
+
+<ParamField query="sort" type="string">
+  Sort order for tables
+</ParamField>
+
+<ParamField query="includeM2M" type="boolean" default="false">
+  Include many-to-many relation tables
+</ParamField>
+
+### Response
+
+<ResponseField name="list" type="array">
+  Array of table objects
+  <ResponseField name="id" type="string">
+    Unique table identifier (e.g., `md_w9gpnaousnfss1`)
+  </ResponseField>
+  <ResponseField name="table_name" type="string">
+    Physical table name in database
+  </ResponseField>
+  <ResponseField name="title" type="string">
+    Display title of the table
+  </ResponseField>
+  <ResponseField name="type" type="string">
+    Table type (e.g., `table`, `view`)
+  </ResponseField>
+  <ResponseField name="base_id" type="string">
+    Parent base identifier
+  </ResponseField>
+  <ResponseField name="source_id" type="string">
+    Data source identifier
+  </ResponseField>
+  <ResponseField name="columns" type="array">
+    Array of column definitions
+  </ResponseField>
+  <ResponseField name="views" type="array">
+    Array of view configurations
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="pageInfo" type="object">
+  Pagination information
+</ResponseField>
+
+## Get Table
+
+Retrieve details of a specific table including columns and views.
+
+```bash GET /api/v1/db/meta/tables/{tableId}
+curl -X GET https://app.nocodb.com/api/v1/db/meta/tables/md_w9gpnaousnfss1 \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="tableId" type="string" required>
+  Unique table identifier (e.g., `md_w9gpnaousnfss1`)
+</ParamField>
+
+### Response
+
+Returns complete table metadata including:
+- All columns with their data types and properties
+- All views (Grid, Gallery, Kanban, etc.)
+- Table relationships
+- Table settings and metadata
+
+## Create Table
+
+Create a new table in a base.
+
+```bash POST /api/v1/db/meta/projects/{baseId}/tables
+curl -X POST https://app.nocodb.com/api/v1/db/meta/projects/p_124hhlkbeasewh/tables \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Users",
+    "table_name": "users",
+    "columns": [
+      {
+        "column_name": "id",
+        "title": "Id",
+        "uidt": "ID",
+        "pk": true,
+        "ai": true
+      },
+      {
+        "column_name": "name",
+        "title": "Name",
+        "uidt": "SingleLineText"
+      },
+      {
+        "column_name": "email",
+        "title": "Email",
+        "uidt": "Email"
+      }
+    ]
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="baseId" type="string" required>
+  Unique base identifier
+</ParamField>
+
+<ParamField path="sourceId" type="string">
+  Optional source identifier (defaults to primary source)
+</ParamField>
+
+### Request Body
+
+<ParamField body="title" type="string" required>
+  Display title of the table
+</ParamField>
+
+<ParamField body="table_name" type="string" required>
+  Physical table name in database
+</ParamField>
+
+<ParamField body="columns" type="array" required>
+  Array of column definitions
+  <ParamField body="column_name" type="string" required>
+    Physical column name
+  </ParamField>
+  <ParamField body="title" type="string" required>
+    Display column title
+  </ParamField>
+  <ParamField body="uidt" type="string" required>
+    UI data type (e.g., `SingleLineText`, `Number`, `Email`, `URL`, `DateTime`)
+  </ParamField>
+  <ParamField body="pk" type="boolean" default="false">
+    Whether this is a primary key
+  </ParamField>
+  <ParamField body="ai" type="boolean" default="false">
+    Whether this is auto-increment
+  </ParamField>
+  <ParamField body="rqd" type="boolean" default="false">
+    Whether this field is required
+  </ParamField>
+</ParamField>
+
+### Response
+
+Returns the created table object with generated columns and default view.
+
+## Update Table
+
+Update table metadata.
+
+```bash PATCH /api/v1/db/meta/tables/{tableId}
+curl -X PATCH https://app.nocodb.com/api/v1/db/meta/tables/md_w9gpnaousnfss1 \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "User Accounts",
+    "description": "Table for storing user information"
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="tableId" type="string" required>
+  Unique table identifier
+</ParamField>
+
+### Request Body
+
+<ParamField body="title" type="string">
+  Updated table title
+</ParamField>
+
+<ParamField body="table_name" type="string">
+  Updated physical table name
+</ParamField>
+
+<ParamField body="description" type="string">
+  Table description
+</ParamField>
+
+<ParamField body="meta" type="object">
+  Additional metadata
+</ParamField>
+
+### Response
+
+```json
+{
+  "msg": "The table has been updated successfully"
+}
+```
+
+## Delete Table
+
+Delete a table from the base.
+
+```bash DELETE /api/v1/db/meta/tables/{tableId}
+curl -X DELETE https://app.nocodb.com/api/v1/db/meta/tables/md_w9gpnaousnfss1 \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="tableId" type="string" required>
+  Unique table identifier
+</ParamField>
+
+### Response
+
+Returns `true` on successful deletion.
+
+## Reorder Table
+
+Change the display order of a table.
+
+```bash POST /api/v1/db/meta/tables/{tableId}/reorder
+curl -X POST https://app.nocodb.com/api/v1/db/meta/tables/md_w9gpnaousnfss1/reorder \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order": 3
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="tableId" type="string" required>
+  Unique table identifier
+</ParamField>
+
+### Request Body
+
+<ParamField body="order" type="number" required>
+  New position order for the table
+</ParamField>
+
+### Response
+
+Returns success confirmation.
+
+## Duplicate Table
+
+Create a copy of an existing table.
+
+```bash POST /api/v1/db/meta/duplicate/{baseId}/table/{tableId}
+curl -X POST https://app.nocodb.com/api/v1/db/meta/duplicate/p_124hhlkbeasewh/table/md_w9gpnaousnfss1 \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "options": {
+      "excludeData": false,
+      "excludeViews": false,
+      "excludeHooks": false,
+      "title": "Users Copy"
+    }
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="baseId" type="string" required>
+  Base identifier
+</ParamField>
+
+<ParamField path="tableId" type="string" required>
+  Table identifier to duplicate
+</ParamField>
+
+### Request Body
+
+<ParamField body="options" type="object">
+  Duplication options
+  <ParamField body="excludeData" type="boolean" default="false">
+    Exclude table data from duplication
+  </ParamField>
+  <ParamField body="excludeViews" type="boolean" default="false">
+    Exclude views from duplication
+  </ParamField>
+  <ParamField body="excludeHooks" type="boolean" default="false">
+    Exclude webhooks from duplication
+  </ParamField>
+  <ParamField body="title" type="string">
+    Title for the duplicated table
+  </ParamField>
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  ID of the duplicated table
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the duplicated table
+</ResponseField>

@@ -1,0 +1,449 @@
+---
+title: 'API Tokens'
+description: 'Create and manage API tokens for programmatic access to NocoDB bases'
+---
+
+API tokens provide a secure way to authenticate API requests without using user credentials. They are ideal for server-to-server communication, CI/CD pipelines, and automation workflows.
+
+## Overview
+
+API tokens are:
+- **Base-scoped**: Each token is associated with a specific base
+- **Non-expiring**: Unlike JWT tokens, API tokens don't expire automatically
+- **User-linked**: Tokens inherit the permissions of the user who created them
+- **Revocable**: Can be deleted at any time
+
+## Creating API Tokens
+
+### Via API
+
+Create a new API token programmatically using the API.
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://app.nocodb.com/api/v1/db/meta/projects/{baseId}/api-tokens' \
+  -H 'xc-auth: YOUR_JWT_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "description": "Token for production API integration"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://app.nocodb.com/api/v1/db/meta/projects/p_124hhlkbeasewh/api-tokens',
+  {
+    method: 'POST',
+    headers: {
+      'xc-auth': 'YOUR_JWT_TOKEN',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      description: 'Token for production API integration'
+    })
+  }
+);
+
+const token = await response.json();
+console.log(token);
+```
+
+```python Python
+import requests
+
+url = 'https://app.nocodb.com/api/v1/db/meta/projects/p_124hhlkbeasewh/api-tokens'
+headers = {
+    'xc-auth': 'YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json'
+}
+data = {
+    'description': 'Token for production API integration'
+}
+
+response = requests.post(url, headers=headers, json=data)
+token = response.json()
+print(token)
+```
+</CodeGroup>
+
+<ParamField path="baseId" type="string" required>
+  Unique identifier of the base (e.g., `p_124hhlkbeasewh`)
+</ParamField>
+
+<ParamField body="description" type="string" required>
+  Description of the API token (max 255 characters). Used to identify the token's purpose.
+</ParamField>
+
+<ResponseField name="id" type="string">
+  Unique identifier for the token
+</ResponseField>
+
+<ResponseField name="fk_user_id" type="string">
+  ID of the user who created the token
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Token description
+</ResponseField>
+
+<ResponseField name="token" type="string">
+  The actual API token string (40 characters). Save this securely - it cannot be retrieved again.
+</ResponseField>
+
+<ResponseExample>
+```json Success Response
+{
+  "id": "1",
+  "fk_user_id": "us_b3xo2i44nx5y9l",
+  "description": "Token for production API integration",
+  "token": "DYh540o8hbWpUGdarekECKLdN5OhlgCUWutVJYX2"
+}
+```
+</ResponseExample>
+
+<Warning>
+  Save the token value immediately after creation. For security reasons, the full token value is only displayed once.
+</Warning>
+
+## Using API Tokens
+
+Once created, use your API token in the `xc-token` header for all API requests:
+
+<CodeGroup>
+```bash List Records
+curl -X GET 'https://app.nocodb.com/api/v1/db/data/noco/p_123/TableName' \
+  -H 'xc-token: DYh540o8hbWpUGdarekECKLdN5OhlgCUWutVJYX2'
+```
+
+```bash Create Record
+curl -X POST 'https://app.nocodb.com/api/v1/db/data/noco/p_123/TableName' \
+  -H 'xc-token: DYh540o8hbWpUGdarekECKLdN5OhlgCUWutVJYX2' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "Name": "New Record",
+    "Status": "Active"
+  }'
+```
+
+```bash Update Record
+curl -X PATCH 'https://app.nocodb.com/api/v1/db/data/noco/p_123/TableName/1' \
+  -H 'xc-token: DYh540o8hbWpUGdarekECKLdN5OhlgCUWutVJYX2' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "Status": "Completed"
+  }'
+```
+
+```bash Delete Record
+curl -X DELETE 'https://app.nocodb.com/api/v1/db/data/noco/p_123/TableName/1' \
+  -H 'xc-token: DYh540o8hbWpUGdarekECKLdN5OhlgCUWutVJYX2'
+```
+</CodeGroup>
+
+## Listing API Tokens
+
+Retrieve all API tokens for a specific base.
+
+<CodeGroup>
+```bash cURL
+curl -X GET 'https://app.nocodb.com/api/v1/db/meta/projects/{baseId}/api-tokens' \
+  -H 'xc-auth: YOUR_JWT_TOKEN'
+```
+</CodeGroup>
+
+<ParamField path="baseId" type="string" required>
+  Unique identifier of the base
+</ParamField>
+
+<ResponseField name="list" type="array">
+  Array of API token objects
+  <Expandable title="Token Object">
+    <ResponseField name="id" type="string">
+      Token ID
+    </ResponseField>
+    <ResponseField name="fk_user_id" type="string">
+      User ID who created the token
+    </ResponseField>
+    <ResponseField name="description" type="string">
+      Token description
+    </ResponseField>
+    <ResponseField name="token" type="string">
+      API token value
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="pageInfo" type="object">
+  Pagination information
+  <Expandable title="Pagination Fields">
+    <ResponseField name="totalRows" type="number">
+      Total number of tokens
+    </ResponseField>
+    <ResponseField name="page" type="number">
+      Current page number
+    </ResponseField>
+    <ResponseField name="pageSize" type="number">
+      Number of items per page
+    </ResponseField>
+    <ResponseField name="isFirstPage" type="boolean">
+      Whether this is the first page
+    </ResponseField>
+    <ResponseField name="isLastPage" type="boolean">
+      Whether this is the last page
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseExample>
+```json Success Response
+{
+  "list": [
+    {
+      "id": "1",
+      "fk_user_id": "us_b3xo2i44nx5y9l",
+      "description": "Token for production API integration",
+      "token": "DYh540o8hbWpUGdarekECKLdN5OhlgCUWutVJYX2"
+    }
+  ],
+  "pageInfo": {
+    "isFirstPage": true,
+    "isLastPage": true,
+    "page": 1,
+    "pageSize": 10,
+    "totalRows": 1
+  }
+}
+```
+</ResponseExample>
+
+## Deleting API Tokens
+
+Revoke an API token when it's no longer needed.
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE 'https://app.nocodb.com/api/v1/db/meta/projects/{baseId}/api-tokens/{tokenId}' \
+  -H 'xc-auth: YOUR_JWT_TOKEN'
+```
+</CodeGroup>
+
+<ParamField path="baseId" type="string" required>
+  Unique identifier of the base
+</ParamField>
+
+<ParamField path="tokenId" type="string" required>
+  ID of the API token to delete
+</ParamField>
+
+<ResponseExample>
+```json Success Response
+1
+```
+</ResponseExample>
+
+<Info>
+  The response returns `1` to indicate successful deletion.
+</Info>
+
+## API Token Scoping
+
+### SSO Integration
+
+API tokens created by users logged in via SSO (Single Sign-On) are associated with the SSO client. This ensures:
+
+- Tokens are properly linked to the SSO authentication method
+- SSO users can see both SSO and non-SSO tokens they created
+- Non-SSO users only see non-SSO tokens
+
+### Permissions
+
+API tokens inherit the permissions of the user who created them:
+
+- **Base-level access**: Tokens can only access the base they were created in
+- **Role-based permissions**: Token operations are limited by the creator's role (viewer, editor, owner, etc.)
+- **Data access**: Tokens respect all view filters, field visibility, and row-level permissions
+
+## Organization API Tokens
+
+Organization-level API tokens provide access across all bases in an organization. These are only available to super admins.
+
+<Warning>
+  Organization API tokens have broader access. Use base-scoped tokens whenever possible for better security.
+</Warning>
+
+### List Organization Tokens
+
+<CodeGroup>
+```bash cURL
+curl -X GET 'https://app.nocodb.com/api/v1/tokens' \
+  -H 'xc-auth: YOUR_JWT_TOKEN'
+```
+</CodeGroup>
+
+### Create Organization Token
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://app.nocodb.com/api/v1/tokens' \
+  -H 'xc-auth: YOUR_JWT_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "description": "Organization-wide integration token"
+  }'
+```
+</CodeGroup>
+
+### Delete Organization Token
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE 'https://app.nocodb.com/api/v1/tokens/{tokenId}' \
+  -H 'xc-auth: YOUR_JWT_TOKEN'
+```
+</CodeGroup>
+
+<Note>
+  Access to organization token endpoints is blocked when using API token authentication. You must use JWT authentication.
+</Note>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Descriptive Names" icon="tag">
+    Use clear descriptions like "Production CI/CD Pipeline" or "Slack Integration" to easily identify token purposes
+  </Card>
+  
+  <Card title="Least Privilege" icon="shield">
+    Create tokens with the minimum required permissions by using accounts with appropriate roles
+  </Card>
+  
+  <Card title="Regular Rotation" icon="rotate">
+    Periodically rotate tokens, especially for critical integrations
+  </Card>
+  
+  <Card title="Secure Storage" icon="lock">
+    Store tokens in environment variables or secret management systems, never in source code
+  </Card>
+</CardGroup>
+
+## Common Use Cases
+
+### CI/CD Integration
+
+Use API tokens to automate database updates in your deployment pipeline:
+
+<CodeGroup>
+```yaml GitHub Actions
+name: Deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update NocoDB
+        run: |
+          curl -X POST 'https://app.nocodb.com/api/v1/db/data/noco/p_123/Deployments' \
+            -H 'xc-token: ${{ secrets.NOCODB_TOKEN }}' \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "version": "${{ github.sha }}",
+              "status": "deployed"
+            }'
+```
+</CodeGroup>
+
+### Webhook Integration
+
+Authenticate webhook requests to NocoDB:
+
+<CodeGroup>
+```javascript Node.js Webhook
+const express = require('express');
+const fetch = require('node-fetch');
+
+const app = express();
+app.use(express.json());
+
+app.post('/webhook', async (req, res) => {
+  const data = req.body;
+  
+  await fetch('https://app.nocodb.com/api/v1/db/data/noco/p_123/Events', {
+    method: 'POST',
+    headers: {
+      'xc-token': process.env.NOCODB_TOKEN,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+  
+  res.json({ success: true });
+});
+```
+</CodeGroup>
+
+### Scheduled Jobs
+
+Automate data synchronization with cron jobs:
+
+<CodeGroup>
+```python Python Scheduler
+import requests
+import schedule
+import time
+
+def sync_data():
+    headers = {
+        'xc-token': os.environ['NOCODB_TOKEN'],
+        'Content-Type': 'application/json'
+    }
+    
+    # Fetch data from external source
+    external_data = get_external_data()
+    
+    # Update NocoDB
+    response = requests.post(
+        'https://app.nocodb.com/api/v1/db/data/noco/p_123/SyncData',
+        headers=headers,
+        json=external_data
+    )
+    
+    print(f'Sync completed: {response.status_code}')
+
+# Run every hour
+schedule.every().hour.do(sync_data)
+
+while True:
+    schedule.run_pending()
+    time.sleep(60)
+```
+</CodeGroup>
+
+## Troubleshooting
+
+### Invalid Token Error
+
+If you receive an authentication error:
+
+1. Verify the token is being sent in the `xc-token` header
+2. Ensure the token hasn't been deleted
+3. Check that you're accessing the correct base
+4. Confirm the token creator still has access to the base
+
+### Permission Denied
+
+If operations fail with permission errors:
+
+1. Check the role of the user who created the token
+2. Verify base-level permissions for that user
+3. Ensure the operation is allowed for that role
+
+### Token Not Found in List
+
+If tokens don't appear in the list:
+
+1. SSO users see all tokens; non-SSO users only see non-SSO tokens
+2. Tokens are base-scoped - check the correct base
+3. Ensure you have permission to view tokens in the base

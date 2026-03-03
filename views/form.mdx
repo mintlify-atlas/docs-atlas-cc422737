@@ -1,0 +1,412 @@
+---
+title: "Form View"
+description: "Learn how to create and share forms for data collection with Form view"
+---
+
+## Overview
+
+Form view transforms your NocoDB table into a beautiful, shareable form for data collection. It's perfect for surveys, feedback collection, registration forms, and any scenario where you need external users to submit data without accessing your full database.
+
+<Info>
+Form views create a unique shareable URL that allows anyone to submit data to your table without needing a NocoDB account.
+</Info>
+
+## When to Use Form View
+
+Form view is ideal for:
+
+- **Surveys and questionnaires** - Collect responses from customers or team members
+- **Contact forms** - Capture leads and inquiries from your website
+- **Registration forms** - Sign-ups for events, programs, or services
+- **Feedback collection** - Gather user feedback or bug reports
+- **Job applications** - Collect resumes and applicant information
+- **Order forms** - Accept product orders or service requests
+- **Data submission** - Allow external contributors to add records
+
+## Configuration Options
+
+Form view offers extensive customization options:
+
+### Branding and Appearance
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `heading` | string | Main form title displayed at the top |
+| `subheading` | string | Subtitle or description below the heading |
+| `logo_url` | object | Logo image displayed in the form header |
+| `banner_image_url` | object | Banner image shown above the form |
+
+<Tabs>
+  <Tab title="Basic Form">
+    Simple form with title and description:
+
+    ```json
+    {
+      "heading": "Contact Us",
+      "subheading": "We'd love to hear from you. Fill out the form below."
+    }
+    ```
+  </Tab>
+  <Tab title="Branded Form">
+    Form with logo and banner for professional appearance:
+
+    ```json
+    {
+      "heading": "2024 Conference Registration",
+      "subheading": "Register now to secure your spot",
+      "logo_url": {
+        "url": "https://example.com/logo.png",
+        "title": "Company Logo"
+      },
+      "banner_image_url": {
+        "url": "https://example.com/banner.jpg",
+        "title": "Event Banner"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Success Behavior
+
+Control what happens after form submission:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `success_msg` | string | Custom message shown after successful submission |
+| `redirect_url` | string | URL to redirect to after submission |
+| `redirect_after_secs` | string | Delay in seconds before redirect (e.g., "3") |
+| `submit_another_form` | boolean | Show "Submit Another" button after submission |
+| `show_blank_form` | boolean | Reset form after submission for another entry |
+
+<Tabs>
+  <Tab title="Thank You Message">
+    Show a custom message and allow another submission:
+
+    ```json
+    {
+      "success_msg": "Thank you for your submission! We'll be in touch soon.",
+      "submit_another_form": true,
+      "show_blank_form": true
+    }
+    ```
+  </Tab>
+  <Tab title="Redirect After Submission">
+    Redirect to a custom page after a delay:
+
+    ```json
+    {
+      "success_msg": "Registration complete! Redirecting to payment...",
+      "redirect_url": "https://example.com/payment",
+      "redirect_after_secs": "3"
+    }
+    ```
+  </Tab>
+  <Tab title="Simple Confirmation">
+    Just show a message without additional options:
+
+    ```json
+    {
+      "success_msg": "Your feedback has been recorded. Thank you!",
+      "submit_another_form": false,
+      "show_blank_form": false
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Email Notifications
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `email` | string | Email address(es) to notify on form submission |
+
+```json
+{
+  "email": "[email protected],[email protected]"
+}
+```
+
+<Tip>
+Use comma-separated email addresses to notify multiple recipients about form submissions.
+</Tip>
+
+### Field Configuration
+
+Each form field can be customized individually:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `label` | string | Custom field label (overrides column title) |
+| `help` | string | Help text displayed below the field |
+| `description` | string | Detailed description or instructions |
+| `required` | boolean | Make field mandatory for submission |
+| `show` | boolean | Show or hide field in the form |
+| `order` | number | Field display order (top to bottom) |
+| `enable_scanner` | boolean | Enable QR/barcode scanner for the field |
+
+<Info>
+Field configurations are specific to each form view, allowing you to create multiple forms from the same table with different field requirements.
+</Info>
+
+## Working with Form View
+
+<Tabs>
+  <Tab title="Creating a Form">
+    ### Basic Setup
+
+    1. Open your table and click "Create View"
+    2. Select "Form View" from the view types
+    3. Give your form a descriptive name
+    4. Configure form appearance and behavior
+
+    ### Customize Fields
+
+    1. Click "Fields" to open field configuration
+    2. Toggle fields on/off to show/hide in the form
+    3. Drag to reorder field appearance
+    4. Click each field to customize:
+       - Custom label
+       - Help text
+       - Required status
+       - QR scanner (for text fields)
+
+    ### Add Branding
+
+    1. Click "Form Settings"
+    2. Add heading and subheading
+    3. Upload logo (recommended: 200x50px)
+    4. Upload banner image (recommended: 1200x300px)
+    5. Configure success message and behavior
+  </Tab>
+  <Tab title="Sharing Your Form">
+    ### Share Form URL
+
+    1. Click "Share View" in the form toolbar
+    2. Copy the generated shareable URL
+    3. Share via email, social media, or embed in website
+
+    ### Embed in Website
+
+    ```html
+    <iframe
+      src="https://app.nocodb.com/form/your-form-id"
+      width="100%"
+      height="800"
+      frameborder="0"
+      marginheight="0"
+      marginwidth="0"
+    >
+      Loading form...
+    </iframe>
+    ```
+
+    ### Password Protection
+
+    1. Open share settings
+    2. Enable "Restrict with password"
+    3. Set a strong password
+    4. Share password separately with intended users
+
+    <Tip>
+    Use password protection for sensitive forms like internal surveys or confidential data collection.
+    </Tip>
+  </Tab>
+  <Tab title="Managing Submissions">
+    ### View Responses
+
+    - Switch to Grid view to see all form submissions
+    - Each submission creates a new record in your table
+    - All view types (Grid, Gallery, etc.) show the same data
+
+    ### Email Notifications
+
+    Configure email notifications to get instant alerts:
+
+    1. Add notification email in form settings
+    2. Multiple emails supported (comma-separated)
+    3. Emails sent immediately upon submission
+    4. Contains submission details and timestamp
+
+    ### Export Responses
+
+    - Export to CSV/Excel from Grid view
+    - Use API to programmatically retrieve submissions
+    - Create automated workflows with webhooks
+
+    <Info>
+    Form submissions are immediately available in all views of the table, enabling real-time data access and processing.
+    </Info>
+  </Tab>
+</Tabs>
+
+## Advanced Features
+
+### QR/Barcode Scanner
+
+Enable scanner functionality for specific fields:
+
+```json
+{
+  "enable_scanner": true
+}
+```
+
+Use cases:
+- Product ID entry
+- Ticket validation
+- Asset tracking
+- Inventory management
+
+### Conditional Logic
+
+While not directly in the form model, you can implement conditional behavior:
+
+- Use field descriptions to provide conditional guidance
+- Hide/show fields based on user journey
+- Create multiple forms for different scenarios
+
+### Pre-filled Forms
+
+Create forms with pre-filled values via URL parameters:
+
+```
+https://app.nocodb.com/form/your-form-id?field1=value1&field2=value2
+```
+
+<Tip>
+Use pre-filled forms for personalized surveys or to streamline data entry for known users.
+</Tip>
+
+## Use Cases and Examples
+
+### Customer Feedback Form
+
+```json
+{
+  "heading": "We Value Your Feedback",
+  "subheading": "Help us improve by sharing your experience",
+  "success_msg": "Thank you! Your feedback helps us serve you better.",
+  "submit_another_form": true,
+  "email": "[email protected]"
+}
+```
+
+Fields:
+- Name (required)
+- Email (required)
+- Rating (1-5 stars)
+- Comments (long text)
+- Would you recommend us? (checkbox)
+
+### Event Registration
+
+```json
+{
+  "heading": "Tech Summit 2024 Registration",
+  "subheading": "Join us for three days of innovation and networking",
+  "logo_url": {"url": "event-logo.png"},
+  "success_msg": "You're registered! Check your email for confirmation.",
+  "redirect_url": "https://summit.example.com/confirmed",
+  "redirect_after_secs": "5",
+  "email": "[email protected]"
+}
+```
+
+Fields:
+- Full Name (required)
+- Email (required)
+- Company
+- Job Title
+- Dietary Restrictions
+- T-shirt Size
+- How did you hear about us?
+
+### Product Order Form
+
+```json
+{
+  "heading": "Custom Order Request",
+  "subheading": "Fill out the details below and we'll prepare your quote",
+  "success_msg": "Order received! We'll contact you within 24 hours.",
+  "show_blank_form": true,
+  "email": "[email protected],[email protected]"
+}
+```
+
+Fields:
+- Customer Name (required)
+- Email (required)
+- Phone (required)
+- Product Type (single select)
+- Quantity (number)
+- Special Instructions (long text)
+- Preferred Delivery Date (date)
+
+## Best Practices
+
+<Tip>
+**Keep Forms Short** - Only ask for essential information. Long forms have higher abandonment rates.
+</Tip>
+
+<Tip>
+**Clear Labels and Help Text** - Use descriptive labels and provide help text for fields that might be confusing.
+</Tip>
+
+<Tip>
+**Test Before Sharing** - Submit test entries to ensure all fields work correctly and validation is appropriate.
+</Tip>
+
+<Tip>
+**Mobile-Friendly Design** - Forms are automatically responsive, but test on mobile devices to ensure a smooth experience.
+</Tip>
+
+<Tip>
+**Use Required Fields Wisely** - Mark only truly essential fields as required to avoid frustrating users.
+</Tip>
+
+<Info>
+**Spam Prevention** - Consider using CAPTCHA or other verification methods for public forms to prevent spam submissions.
+</Info>
+
+## Accessibility Features
+
+Form view is built with accessibility in mind:
+
+- Keyboard navigation support
+- Screen reader compatible
+- ARIA labels on all form elements
+- High contrast mode support
+- Clear error messages and validation
+
+## API Reference
+
+Create a form view programmatically:
+
+```typescript
+const formView = {
+  fk_view_id: 'view_id',
+  heading: 'Contact Form',
+  subheading: 'Get in touch with us',
+  success_msg: 'Thank you for your message!',
+  email: '[email protected]',
+  submit_another_form: true,
+  show_blank_form: true,
+  meta: {}
+}
+```
+
+Update form settings:
+
+```typescript
+const updates = {
+  heading: 'Updated Form Title',
+  success_msg: 'New success message',
+  redirect_url: 'https://example.com/thank-you',
+  redirect_after_secs: '3'
+}
+```
+
+<Info>
+Form view supports file attachments through the attachment field type, allowing users to upload files, images, or documents with their submission.
+</Info>

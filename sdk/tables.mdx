@@ -1,0 +1,330 @@
+---
+title: 'Table Operations'
+description: 'Create, read, update, and manage tables using the NocoDB SDK'
+---
+
+## Overview
+
+Tables are the core data structure in NocoDB. The SDK provides comprehensive methods for managing tables through the `dbTable` namespace.
+
+## List Tables
+
+Retrieve all tables in a base:
+
+```typescript
+const baseId = 'p_xxxxxxxxxx';
+
+try {
+  const response = await api.dbTable.list(baseId, {
+    page: 1,
+    pageSize: 25,
+    sort: 'title',
+    includeM2M: false  // Exclude many-to-many junction tables
+  });
+  
+  console.log(`Total tables: ${response.list?.length}`);
+  
+  response.list?.forEach(table => {
+    console.log(`${table.title} (${table.table_name})`);
+    console.log(`  ID: ${table.id}`);
+    console.log(`  Type: ${table.type}`);
+    console.log(`  Columns: ${table.columns?.length}`);
+  });
+} catch (error) {
+  console.error('Error listing tables:', error);
+}
+```
+
+### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `page` | number | Page number for pagination |
+| `pageSize` | number | Number of results per page |
+| `sort` | string | Sort field (e.g., 'title', '-created_at') |
+| `includeM2M` | boolean | Include many-to-many junction tables |
+
+## Read Table Details
+
+Get detailed information about a specific table:
+
+```typescript
+const tableId = 'md_xxxxxxxxxx';
+
+try {
+  const table = await api.dbTable.read(tableId);
+  
+  console.log('Table:', table.title);
+  console.log('Description:', table.description);
+  console.log('Base ID:', table.base_id);
+  console.log('Created:', table.created_at);
+  console.log('Updated:', table.updated_at);
+  
+  // Access columns
+  table.columns?.forEach(column => {
+    console.log(`  - ${column.title} (${column.uidt})`);
+  });
+} catch (error) {
+  console.error('Error reading table:', error);
+}
+```
+
+### Table Type
+
+```typescript
+interface TableType {
+  id?: string;              // Table ID (e.g., 'md_xxxxxxxxxx')
+  title?: string;           // Display name
+  table_name?: string;      // Database table name
+  description?: string;     // Table description
+  base_id?: string;         // Parent base ID
+  type?: string;            // 'table' or 'view'
+  meta?: object;            // Metadata
+  columns?: ColumnType[];   // Table columns
+  created_at?: string;      // Creation timestamp
+  updated_at?: string;      // Last update timestamp
+}
+```
+
+## Create Table
+
+Create a new table with columns:
+
+```typescript
+const baseId = 'p_xxxxxxxxxx';
+
+try {
+  const newTable = await api.dbTable.create(baseId, {
+    table_name: 'employees',
+    title: 'Employees',
+    description: 'Employee directory and information',
+    columns: [
+      {
+        column_name: 'name',
+        title: 'Name',
+        uidt: 'SingleLineText',
+        pv: true  // Primary value column
+      },
+      {
+        column_name: 'email',
+        title: 'Email',
+        uidt: 'Email'
+      },
+      {
+        column_name: 'department',
+        title: 'Department',
+        uidt: 'SingleSelect',
+        dtxp: "'Engineering','Sales','Marketing','HR'"  // Options
+      },
+      {
+        column_name: 'hire_date',
+        title: 'Hire Date',
+        uidt: 'Date'
+      },
+      {
+        column_name: 'salary',
+        title: 'Salary',
+        uidt: 'Currency',
+        meta: {
+          currency_locale: 'en-US',
+          currency_code: 'USD'
+        }
+      }
+    ]
+  });
+  
+  console.log('Created table:', newTable.id);
+} catch (error) {
+  console.error('Error creating table:', error);
+}
+```
+
+### Common Column Types (uidt)
+
+| Type | Description |
+|------|-------------|
+| `SingleLineText` | Short text field |
+| `LongText` | Multi-line text |
+| `Email` | Email address |
+| `URL` | Web URL |
+| `PhoneNumber` | Phone number |
+| `Number` | Numeric value |
+| `Decimal` | Decimal number |
+| `Currency` | Monetary value |
+| `Percent` | Percentage |
+| `SingleSelect` | Dropdown (single choice) |
+| `MultiSelect` | Dropdown (multiple choice) |
+| `Date` | Date only |
+| `DateTime` | Date and time |
+| `Checkbox` | Boolean checkbox |
+| `Rating` | Star rating |
+| `Attachment` | File upload |
+| `LinkToAnotherRecord` | Relation to another table |
+| `Lookup` | Reference field from relation |
+| `Rollup` | Aggregate from relation |
+| `Formula` | Computed field |
+
+## Update Table
+
+Modify table properties:
+
+```typescript
+const tableId = 'md_xxxxxxxxxx';
+
+try {
+  await api.dbTable.update(tableId, {
+    title: 'Team Members',
+    description: 'Updated description for team members table',
+    meta: {
+      icon: 'mdi-account-group',
+      color: '#3b82f6'
+    }
+  });
+  
+  console.log('Table updated successfully');
+} catch (error) {
+  console.error('Error updating table:', error);
+}
+```
+
+## Delete Table
+
+Remove a table from the base:
+
+```typescript
+const tableId = 'md_xxxxxxxxxx';
+
+try {
+  await api.dbTable.delete(tableId);
+  console.log('Table deleted successfully');
+} catch (error) {
+  console.error('Error deleting table:', error);
+}
+```
+
+<Warning>
+  Deleting a table permanently removes all data. This action cannot be undone.
+</Warning>
+
+## Reorder Tables
+
+Change the display order of tables in the UI:
+
+```typescript
+const tableId = 'md_xxxxxxxxxx';
+
+try {
+  await api.dbTable.reorder(tableId, {
+    order: 3  // New position (0-indexed)
+  });
+  
+  console.log('Table reordered');
+} catch (error) {
+  console.error('Error reordering table:', error);
+}
+```
+
+## Duplicate Table
+
+Create a copy of an existing table:
+
+```typescript
+const tableId = 'md_xxxxxxxxxx';
+
+try {
+  const duplicated = await api.dbTable.duplicate(tableId, {
+    includeData: true,   // Copy records
+    includeViews: true   // Copy views
+  });
+  
+  console.log('Duplicated table:', duplicated.id);
+} catch (error) {
+  console.error('Error duplicating table:', error);
+}
+```
+
+## Working with Table Metadata
+
+```typescript
+async function getTableStats(tableId: string) {
+  const table = await api.dbTable.read(tableId);
+  
+  return {
+    name: table.title,
+    totalColumns: table.columns?.length || 0,
+    columnTypes: table.columns?.reduce((acc, col) => {
+      acc[col.uidt!] = (acc[col.uidt!] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>),
+    hasDescription: !!table.description,
+    createdAt: new Date(table.created_at!),
+    lastModified: new Date(table.updated_at!)
+  };
+}
+
+// Usage
+const stats = await getTableStats('md_xxxxxxxxxx');
+console.log('Table Statistics:', stats);
+```
+
+## Best Practices
+
+### 1. Use Descriptive Names
+
+```typescript
+// Good
+const table = await api.dbTable.create(baseId, {
+  table_name: 'customer_orders',
+  title: 'Customer Orders'
+});
+
+// Avoid
+const table = await api.dbTable.create(baseId, {
+  table_name: 'table1',
+  title: 'Table 1'
+});
+```
+
+### 2. Set Primary Value Column
+
+```typescript
+// Always designate one column as the primary value (pv: true)
+columns: [
+  {
+    column_name: 'name',
+    title: 'Name',
+    uidt: 'SingleLineText',
+    pv: true  // This will be used as the record identifier
+  }
+]
+```
+
+### 3. Handle Errors Gracefully
+
+```typescript
+async function safeTableOperation(fn: () => Promise<any>) {
+  try {
+    return await fn();
+  } catch (error) {
+    if (error.response?.status === 404) {
+      console.error('Table not found');
+    } else if (error.response?.status === 403) {
+      console.error('Insufficient permissions');
+    } else {
+      console.error('Operation failed:', error.message);
+    }
+    throw error;
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Records" icon="database" href="/sdk/records">
+    Learn how to work with table records
+  </Card>
+  <Card title="Filters" icon="filter" href="/sdk/filters">
+    Build advanced queries and filters
+  </Card>
+</CardGroup>

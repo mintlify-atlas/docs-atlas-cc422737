@@ -1,0 +1,493 @@
+---
+title: 'Integrations'
+description: 'Learn how to manage integrations in NocoDB using the API'
+icon: 'puzzle-piece'
+---
+
+Integrations in NocoDB allow you to connect external services and databases to your workspace. The Integrations API provides endpoints to create, configure, and manage these connections.
+
+## List Integrations
+
+Retrieve all integrations in a workspace.
+
+```bash GET /api/v2/meta/integrations
+curl -X GET "https://app.nocodb.com/api/v2/meta/integrations" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField query="type" type="string">
+  Filter by integration type:
+  - `database` - Database integrations
+  - `ai` - AI service integrations
+  - `auth` - Authentication providers
+  - `sync` - Data synchronization services
+  - `communication` - Communication tools
+  - `spread-sheet` - Spreadsheet services
+  - `project-management` - Project management tools
+  - `crm` - CRM systems
+  - `marketing` - Marketing platforms
+  - `ats` - Applicant tracking systems
+  - `development` - Development tools
+  - `finance` - Financial services
+  - `ticketing` - Ticketing systems
+  - `storage` - Storage services
+  - `others` - Other integrations
+</ParamField>
+
+<ParamField query="includeDatabaseInfo" type="string">
+  Include database configuration info ("true" or "false")
+</ParamField>
+
+<ParamField query="limit" type="string">
+  Number of results to return
+</ParamField>
+
+<ParamField query="offset" type="string">
+  Number of results to skip
+</ParamField>
+
+<ParamField query="query" type="string">
+  Search query for filtering integrations
+</ParamField>
+
+<ResponseField name="list" type="array">
+  Array of integration objects
+  
+  <ResponseField name="id" type="string">
+    Unique Integration ID
+  </ResponseField>
+  
+  <ResponseField name="title" type="string">
+    Integration name/title
+  </ResponseField>
+  
+  <ResponseField name="type" type="string">
+    Integration type (database, ai, auth, etc.)
+  </ResponseField>
+  
+  <ResponseField name="sub_type" type="string">
+    Integration sub-type (e.g., "mysql2", "pg", "openai")
+  </ResponseField>
+  
+  <ResponseField name="enabled" type="boolean">
+    Whether the integration is enabled
+  </ResponseField>
+  
+  <ResponseField name="is_private" type="boolean">
+    Whether the integration is private to the creator
+  </ResponseField>
+  
+  <ResponseField name="is_default" type="boolean">
+    Whether this is the default integration
+  </ResponseField>
+  
+  <ResponseField name="created_by" type="string">
+    User ID of the creator
+  </ResponseField>
+  
+  <ResponseField name="fk_workspace_id" type="string">
+    Workspace ID this integration belongs to
+  </ResponseField>
+</ResponseField>
+
+## Get Integration
+
+Retrieve details of a specific integration.
+
+```bash GET /api/v2/meta/integrations/{integrationId}
+curl -X GET "https://app.nocodb.com/api/v2/meta/integrations/{integrationId}" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField path="integrationId" type="string" required>
+  Unique Integration ID
+</ParamField>
+
+<ParamField query="includeConfig" type="string">
+  Include integration configuration ("true" or "false"). Only available if you are the creator or have appropriate permissions.
+</ParamField>
+
+<ParamField query="includeSources" type="string">
+  Include associated data sources ("true" or "false")
+</ParamField>
+
+## Create Integration
+
+Create a new integration in the workspace.
+
+```bash POST /api/v2/meta/integrations
+curl -X POST "https://app.nocodb.com/api/v2/meta/integrations" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "My Database Integration",
+    "type": "database",
+    "sub_type": "pg",
+    "config": {
+      "client": "pg",
+      "connection": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "postgres",
+        "password": "password",
+        "database": "mydb"
+      }
+    }
+  }'
+```
+
+<ParamField body="title" type="string" required>
+  Integration name (max 128 characters)
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  Integration type (database, ai, auth, sync, etc.)
+</ParamField>
+
+<ParamField body="sub_type" type="string">
+  Integration sub-type specific to the type
+</ParamField>
+
+<ParamField body="config" type="object" required>
+  Integration configuration (varies by type)
+</ParamField>
+
+<ParamField body="meta" type="object">
+  Additional metadata for the integration
+</ParamField>
+
+<ParamField body="copy_from_id" type="string">
+  ID of another integration to copy settings from
+</ParamField>
+
+### Database Integration Example
+
+```json
+{
+  "title": "PostgreSQL Production",
+  "type": "database",
+  "sub_type": "pg",
+  "config": {
+    "client": "pg",
+    "connection": {
+      "host": "db.example.com",
+      "port": 5432,
+      "user": "app_user",
+      "password": "secure_password",
+      "database": "production_db",
+      "ssl": {
+        "rejectUnauthorized": false
+      }
+    },
+    "pool": {
+      "min": 2,
+      "max": 10
+    }
+  }
+}
+```
+
+### AI Integration Example
+
+```json
+{
+  "title": "OpenAI Integration",
+  "type": "ai",
+  "sub_type": "openai",
+  "config": {
+    "apiKey": "sk-...",
+    "model": "gpt-4",
+    "temperature": 0.7
+  }
+}
+```
+
+## Update Integration
+
+Update an existing integration.
+
+```bash PATCH /api/v2/meta/integrations/{integrationId}
+curl -X PATCH "https://app.nocodb.com/api/v2/meta/integrations/{integrationId}" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Updated Integration Name",
+    "config": {
+      "connection": {
+        "host": "new-host.example.com"
+      }
+    }
+  }'
+```
+
+<ParamField path="integrationId" type="string" required>
+  Unique Integration ID
+</ParamField>
+
+<ParamField body="title" type="string">
+  Updated integration name
+</ParamField>
+
+<ParamField body="config" type="object">
+  Updated configuration (merged with existing config)
+</ParamField>
+
+<ParamField body="meta" type="object">
+  Updated metadata
+</ParamField>
+
+## Delete Integration
+
+Delete an integration from the workspace.
+
+```bash DELETE /api/v2/meta/integrations/{integrationId}
+curl -X DELETE "https://app.nocodb.com/api/v2/meta/integrations/{integrationId}" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField path="integrationId" type="string" required>
+  Unique Integration ID
+</ParamField>
+
+<ParamField query="force" type="string">
+  Force delete even if integration has associated sources ("true" or "false")
+</ParamField>
+
+## Available Integrations
+
+Get a list of all available integration types that can be configured.
+
+```bash GET /api/v2/integrations
+curl -X GET "https://app.nocodb.com/api/v2/integrations" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Response Example
+
+```json
+[
+  {
+    "type": "database",
+    "sub_type": "mysql2",
+    "manifest": {
+      "title": "MySQL",
+      "description": "MySQL Database",
+      "icon": "mysql-icon"
+    }
+  },
+  {
+    "type": "database",
+    "sub_type": "pg",
+    "manifest": {
+      "title": "PostgreSQL",
+      "description": "PostgreSQL Database",
+      "icon": "postgresql-icon"
+    }
+  },
+  {
+    "type": "ai",
+    "sub_type": "openai",
+    "manifest": {
+      "title": "OpenAI",
+      "description": "OpenAI API Integration",
+      "icon": "openai-icon"
+    }
+  }
+]
+```
+
+## Get Integration Metadata
+
+Get the configuration schema and metadata for a specific integration type.
+
+```bash GET /api/v2/integrations/{type}/{subType}
+curl -X GET "https://app.nocodb.com/api/v2/integrations/database/pg" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField path="type" type="string" required>
+  Integration type
+</ParamField>
+
+<ParamField path="subType" type="string" required>
+  Integration sub-type
+</ParamField>
+
+### Response Example
+
+```json
+{
+  "integrationType": "database",
+  "integrationSubType": "pg",
+  "manifest": {
+    "title": "PostgreSQL",
+    "description": "PostgreSQL Database",
+    "icon": "postgresql-icon"
+  },
+  "form": [
+    {
+      "key": "host",
+      "label": "Host",
+      "type": "text",
+      "required": true
+    },
+    {
+      "key": "port",
+      "label": "Port",
+      "type": "number",
+      "default": 5432
+    },
+    {
+      "key": "database",
+      "label": "Database",
+      "type": "text",
+      "required": true
+    }
+  ]
+}
+```
+
+## Integration Store
+
+Interact with integration-specific storage and data.
+
+```bash POST /api/v2/integrations/{integrationId}/store
+curl -X POST "https://app.nocodb.com/api/v2/integrations/{integrationId}/store" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "op": "list",
+    "limit": 10,
+    "offset": 0
+  }'
+```
+
+<ParamField path="integrationId" type="string" required>
+  Unique Integration ID
+</ParamField>
+
+<ParamField body="op" type="string" required>
+  Operation to perform: `list`, `get`, or `sum`
+</ParamField>
+
+<ParamField body="limit" type="number">
+  Number of records to return (for `list` operation)
+</ParamField>
+
+<ParamField body="offset" type="number">
+  Number of records to skip (for `list` operation)
+</ParamField>
+
+<ParamField body="fields" type="array">
+  Fields to sum (for `sum` operation)
+</ParamField>
+
+## Call Integration Endpoint
+
+Execute integration-specific API endpoints.
+
+```bash POST /api/v2/integrations/{integrationId}/{endpoint}
+curl -X POST "https://app.nocodb.com/api/v2/integrations/{integrationId}/execute" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "action": "query",
+    "params": {
+      "sql": "SELECT * FROM users LIMIT 10"
+    }
+  }'
+```
+
+<ParamField path="integrationId" type="string" required>
+  Unique Integration ID
+</ParamField>
+
+<ParamField path="endpoint" type="string" required>
+  Integration-specific endpoint to call
+</ParamField>
+
+<ParamField body="*" type="any">
+  Endpoint-specific parameters
+</ParamField>
+
+## Supported Database Types
+
+NocoDB supports the following database integrations:
+
+- **MySQL** (`mysql2`) - MySQL 5.7+
+- **PostgreSQL** (`pg`) - PostgreSQL 9.6+
+- **SQLite** (`sqlite3`) - SQLite 3
+- **SQL Server** (`mssql`) - SQL Server 2012+
+- **Oracle** (`oracledb`) - Oracle Database
+- **Snowflake** (`snowflake`) - Snowflake Data Cloud
+- **Databricks** (`databricks`) - Databricks SQL
+
+## Integration Security
+
+### Private Integrations
+
+Integrations can be marked as private, making them only accessible to their creator:
+
+```json
+{
+  "title": "My Private DB",
+  "type": "database",
+  "sub_type": "pg",
+  "is_private": true,
+  "config": {...}
+}
+```
+
+### Configuration Access
+
+Integration configurations (containing sensitive data like passwords) are:
+
+- Only returned when `includeConfig=true` is specified
+- Only accessible to the integration creator or workspace admins
+- Encrypted at rest in the database
+- Masked in API responses when displayed to non-owners
+
+## Best Practices
+
+### Connection Pooling
+
+For database integrations, configure appropriate connection pool settings:
+
+```json
+{
+  "config": {
+    "pool": {
+      "min": 2,
+      "max": 10,
+      "acquireTimeoutMillis": 30000,
+      "idleTimeoutMillis": 30000
+    }
+  }
+}
+```
+
+### SSL Configuration
+
+Always use SSL for production database connections:
+
+```json
+{
+  "config": {
+    "connection": {
+      "ssl": {
+        "rejectUnauthorized": true,
+        "ca": "-----BEGIN CERTIFICATE-----\n..."
+      }
+    }
+  }
+}
+```
+
+### Integration Naming
+
+Use descriptive names that indicate:
+- Environment (Production, Staging, Development)
+- Purpose (Analytics DB, Customer Data, etc.)
+- Database type
+
+Example: `PostgreSQL - Production - Customer Data`

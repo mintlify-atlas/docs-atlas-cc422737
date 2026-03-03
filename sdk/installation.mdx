@@ -1,0 +1,81 @@
+---
+title: 'Installation'
+description: 'Install the NocoDB SDK in your JavaScript or TypeScript project'
+---
+
+## Package Manager
+
+The NocoDB SDK is available on npm and can be installed using your preferred package manager.
+
+<CodeGroup>
+
+```bash npm
+npm install nocodb-sdk
+```
+
+```bash yarn
+yarn add nocodb-sdk
+```
+
+```bash pnpm
+pnpm add nocodb-sdk
+```
+
+</CodeGroup>
+
+## Package Details
+
+- **Package Name**: `nocodb-sdk`
+- **Version**: 0.301.3
+- **License**: Sustainable Use License
+- **Repository**: [github.com/nocodb/nocodb](https://github.com/nocodb/nocodb)
+
+## Dependencies
+
+The SDK has the following key dependencies that will be installed automatically:
+
+- `axios` - HTTP client for API requests
+- `dayjs` - Date manipulation
+- `validator` - String validation utilities
+
+And several specialized libraries for formula parsing, data processing, and workflow management.
+
+## TypeScript Support
+
+The SDK is written in TypeScript and includes complete type definitions out of the box. No additional `@types` packages are needed.
+
+```typescript
+import { Api } from 'nocodb-sdk';
+
+// Full IntelliSense and type checking available
+const api = new Api({
+  baseURL: 'https://app.nocodb.com',
+});
+```
+
+## Module Formats
+
+The SDK supports both CommonJS and ES Modules:
+
+- **CommonJS**: `build/main/index.js`
+- **ES Module**: `build/module/index.js`
+- **TypeScript Definitions**: `build/main/index.d.ts`
+
+Your bundler or Node.js runtime will automatically select the appropriate format.
+
+## Verification
+
+After installation, verify the SDK is working:
+
+```javascript
+const { Api } = require('nocodb-sdk');
+
+console.log('NocoDB SDK loaded successfully');
+console.log(typeof Api); // Should output: 'function'
+```
+
+## Next Steps
+
+<Card title="Quickstart Guide" icon="rocket" href="/sdk/quickstart">
+  Initialize the SDK and make your first API call
+</Card>

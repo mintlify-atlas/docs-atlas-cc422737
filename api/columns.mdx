@@ -1,0 +1,437 @@
+---
+title: 'Columns API'
+description: 'Manage table columns using NocoDB API'
+---
+
+## Overview
+
+Columns are the fundamental building blocks of tables in NocoDB. The Columns API allows you to create, read, update, and delete columns with various data types and configurations.
+
+## Column Types
+
+NocoDB supports a wide range of column types:
+
+- **Text**: `SingleLineText`, `LongText`, `Email`, `URL`, `PhoneNumber`
+- **Numeric**: `Number`, `Decimal`, `Currency`, `Percent`, `Duration`, `Rating`
+- **Date & Time**: `Date`, `DateTime`, `Time`, `Year`
+- **Select**: `SingleSelect`, `MultiSelect`
+- **Relationship**: `LinkToAnotherRecord`, `Lookup`, `Rollup`
+- **Special**: `Attachment`, `Checkbox`, `QrCode`, `Barcode`, `JSON`
+- **Auto**: `ID`, `AutoNumber`, `CreatedTime`, `LastModifiedTime`
+- **User**: `User`, `Collaborator`, `CreatedBy`, `LastModifiedBy`
+- **Formula**: `Formula`
+- **Other**: `Button`, `GeoData`, `Geometry`, `AI`, `UUID`
+
+## Create Column
+
+Create a new column in a table.
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/tables/{tableId}/columns" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Full Name",
+    "column_name": "full_name",
+    "uidt": "SingleLineText"
+  }'
+```
+
+### Request Parameters
+
+<ParamField path="tableId" type="string" required>
+  Unique identifier for the table
+</ParamField>
+
+### Request Body
+
+<ParamField body="title" type="string" required>
+  Display title of the column (1-255 characters)
+</ParamField>
+
+<ParamField body="column_name" type="string">
+  Database column name (auto-generated if not provided)
+</ParamField>
+
+<ParamField body="uidt" type="string" required>
+  UI Data Type - determines the column type. See [Column Types](#column-types) for available options
+</ParamField>
+
+<ParamField body="description" type="string">
+  Column description (max 8192 characters)
+</ParamField>
+
+<ParamField body="dt" type="string">
+  Database data type (e.g., "varchar", "int")
+</ParamField>
+
+<ParamField body="dtxp" type="number | string">
+  Data type precision (e.g., length for varchar)
+</ParamField>
+
+<ParamField body="dtxs" type="number | string">
+  Data type scale (for decimal types)
+</ParamField>
+
+<ParamField body="rqd" type="boolean">
+  Is required field (0 = false, 1 = true)
+</ParamField>
+
+<ParamField body="pk" type="boolean">
+  Is primary key (0 = false, 1 = true)
+</ParamField>
+
+<ParamField body="unique" type="boolean">
+  Is unique constraint (0 = false, 1 = true)
+</ParamField>
+
+<ParamField body="cdf" type="string | number | boolean | null">
+  Column default value
+</ParamField>
+
+<ParamField body="ai" type="boolean">
+  Is auto-increment (0 = false, 1 = true)
+</ParamField>
+
+<ParamField body="au" type="boolean">
+  Auto update timestamp (0 = false, 1 = true)
+</ParamField>
+
+<ParamField body="meta" type="object">
+  Additional metadata for the column
+</ParamField>
+
+### Example: Create Select Column
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/tables/md_abc123/columns" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Status",
+    "uidt": "SingleSelect",
+    "colOptions": {
+      "options": [
+        {"title": "Todo", "color": "#ff0000"},
+        {"title": "In Progress", "color": "#00ff00"},
+        {"title": "Done", "color": "#0000ff"}
+      ]
+    }
+  }'
+```
+
+## Get Column
+
+Retrieve a specific column by its ID.
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/columns/{columnId}" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="columnId" type="string" required>
+  Unique identifier for the column
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique column identifier
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  Display title of the column
+</ResponseField>
+
+<ResponseField name="column_name" type="string">
+  Database column name
+</ResponseField>
+
+<ResponseField name="uidt" type="string">
+  UI data type (e.g., "SingleLineText", "Number")
+</ResponseField>
+
+<ResponseField name="dt" type="string">
+  Database data type
+</ResponseField>
+
+<ResponseField name="fk_model_id" type="string">
+  Foreign key to the table this column belongs to
+</ResponseField>
+
+<ResponseField name="order" type="number">
+  Display order of the column
+</ResponseField>
+
+<ResponseField name="pk" type="boolean">
+  Whether this is a primary key
+</ResponseField>
+
+<ResponseField name="pv" type="boolean">
+  Whether this is the primary value column
+</ResponseField>
+
+<ResponseField name="rqd" type="boolean">
+  Whether this column is required
+</ResponseField>
+
+<ResponseField name="system" type="boolean">
+  Whether this is a system column
+</ResponseField>
+
+<ResponseField name="unique" type="boolean">
+  Whether this column has a unique constraint
+</ResponseField>
+
+## Update Column
+
+Update an existing column's properties.
+
+```bash
+curl -X PATCH "https://app.nocodb.com/api/v1/db/meta/columns/{columnId}" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Updated Title",
+    "description": "New description"
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="columnId" type="string" required>
+  Unique identifier for the column to update
+</ParamField>
+
+### Request Body
+
+Accepts the same parameters as [Create Column](#create-column). Only include fields you want to update.
+
+<ParamField body="title" type="string">
+  New display title
+</ParamField>
+
+<ParamField body="description" type="string">
+  New description
+</ParamField>
+
+<ParamField body="rqd" type="boolean">
+  Update required status
+</ParamField>
+
+### Example: Update Column to Required
+
+```bash
+curl -X PATCH "https://app.nocodb.com/api/v1/db/meta/columns/cl_xyz789" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "rqd": 1,
+    "description": "This field is now required"
+  }'
+```
+
+## Delete Column
+
+Delete a column from a table.
+
+```bash
+curl -X DELETE "https://app.nocodb.com/api/v1/db/meta/columns/{columnId}" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="columnId" type="string" required>
+  Unique identifier for the column to delete
+</ParamField>
+
+<Warning>
+  Deleting a column will permanently remove all data in that column. This action cannot be undone.
+</Warning>
+
+## Set Primary Value
+
+Set a column as the primary display value for the table.
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/columns/{columnId}/primary" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="columnId" type="string" required>
+  Unique identifier for the column
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Returns true if the operation was successful
+</ResponseField>
+
+<Info>
+  The primary value column is used as the display value when this table is linked to other tables.
+</Info>
+
+## Bulk Column Operations
+
+Perform multiple column operations in a single request.
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/tables/{tableId}/columns/bulk" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hash": "abc123",
+    "ops": [
+      {
+        "op": "add",
+        "column": {
+          "title": "New Column",
+          "uidt": "SingleLineText"
+        }
+      },
+      {
+        "op": "update",
+        "column": {
+          "id": "cl_xyz789",
+          "title": "Updated Title"
+        }
+      },
+      {
+        "op": "delete",
+        "column": {
+          "id": "cl_abc123"
+        }
+      }
+    ]
+  }'
+```
+
+### Request Parameters
+
+<ParamField path="tableId" type="string" required>
+  Unique identifier for the table
+</ParamField>
+
+### Request Body
+
+<ParamField body="hash" type="string" required>
+  Hash of the current column state for optimistic locking
+</ParamField>
+
+<ParamField body="ops" type="array" required>
+  Array of operations to perform
+</ParamField>
+
+<ParamField body="ops[].op" type="string" required>
+  Operation type: `add`, `update`, or `delete`
+</ParamField>
+
+<ParamField body="ops[].column" type="object" required>
+  Column object with properties based on the operation type
+</ParamField>
+
+## Get Columns Hash
+
+Get a hash of the current column configuration for a table.
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/tables/{tableId}/columns/hash" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="tableId" type="string" required>
+  Unique identifier for the table
+</ParamField>
+
+### Response
+
+<ResponseField name="hash" type="string">
+  Hash representing the current state of columns in the table
+</ResponseField>
+
+<Info>
+  Use this hash for optimistic locking in bulk operations to ensure columns haven't changed since you last read them.
+</Info>
+
+## Column Options
+
+Different column types support specific options through the `colOptions` field:
+
+### Select Options
+
+For `SingleSelect` and `MultiSelect` columns:
+
+```json
+{
+  "colOptions": {
+    "options": [
+      {"title": "Option 1", "color": "#ff0000"},
+      {"title": "Option 2", "color": "#00ff00"}
+    ]
+  }
+}
+```
+
+### Link to Another Record
+
+For `LinkToAnotherRecord` columns:
+
+```json
+{
+  "uidt": "LinkToAnotherRecord",
+  "colOptions": {
+    "fk_related_model_id": "md_xyz789",
+    "type": "mm"
+  }
+}
+```
+
+### Lookup
+
+For `Lookup` columns:
+
+```json
+{
+  "uidt": "Lookup",
+  "colOptions": {
+    "fk_relation_column_id": "cl_abc123",
+    "fk_lookup_column_id": "cl_def456"
+  }
+}
+```
+
+### Rollup
+
+For `Rollup` columns:
+
+```json
+{
+  "uidt": "Rollup",
+  "colOptions": {
+    "fk_relation_column_id": "cl_abc123",
+    "fk_rollup_column_id": "cl_def456",
+    "rollup_function": "count"
+  }
+}
+```
+
+### Formula
+
+For `Formula` columns:
+
+```json
+{
+  "uidt": "Formula",
+  "colOptions": {
+    "formula": "CONCAT({FirstName}, ' ', {LastName})"
+  }
+}
+```

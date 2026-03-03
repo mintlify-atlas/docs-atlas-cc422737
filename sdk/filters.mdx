@@ -1,0 +1,501 @@
+---
+title: 'Filters and Queries'
+description: 'Build advanced filters and queries for your NocoDB records'
+---
+
+## Overview
+
+NocoDB provides powerful filtering capabilities to query records based on complex conditions. The SDK supports various filter operators and comparison methods.
+
+## Basic Filtering
+
+Use the `where` parameter to filter records:
+
+```typescript
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Age,gt,25)',  // Age greater than 25
+    limit: 50
+  }
+);
+
+console.log('Filtered records:', response.list);
+```
+
+## Filter Syntax
+
+The basic filter format is:
+
+```
+(FieldName,Operator,Value)
+```
+
+### Comparison Operators
+
+| Operator | Description | Example |
+|----------|-------------|----------|
+| `eq` | Equal to | `(Status,eq,Active)` |
+| `neq` | Not equal to | `(Status,neq,Archived)` |
+| `gt` | Greater than | `(Age,gt,18)` |
+| `gte` | Greater than or equal | `(Price,gte,100)` |
+| `lt` | Less than | `(Stock,lt,10)` |
+| `lte` | Less than or equal | `(Discount,lte,50)` |
+| `like` | Contains (case-insensitive) | `(Name,like,john)` |
+| `nlike` | Does not contain | `(Email,nlike,spam)` |
+| `is` | Is (for null/empty) | `(Phone,is,null)` |
+| `isnot` | Is not (for null/empty) | `(Address,isnot,null)` |
+| `in` | In list | `(Department,in,Sales,Marketing)` |
+| `notin` | Not in list | `(Status,notin,Draft,Archived)` |
+| `blank` | Is blank/empty | `(Notes,blank)` |
+| `notblank` | Is not blank/empty | `(Title,notblank)` |
+
+## Logical Operators
+
+Combine multiple conditions with logical operators:
+
+### AND Conditions
+
+```typescript
+// Records where Age > 25 AND Department = 'Sales'
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Age,gt,25)~and(Department,eq,Sales)'
+  }
+);
+```
+
+### OR Conditions
+
+```typescript
+// Records where Department = 'Sales' OR Department = 'Marketing'
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Department,eq,Sales)~or(Department,eq,Marketing)'
+  }
+);
+```
+
+### Complex Conditions
+
+```typescript
+// (Age > 25 AND Department = 'Sales') OR (Age > 30 AND Department = 'Marketing')
+const where = '((Age,gt,25)~and(Department,eq,Sales))~or((Age,gt,30)~and(Department,eq,Marketing))';
+
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  { where }
+);
+```
+
+## Date Filtering
+
+Filter records by date fields:
+
+<CodeGroup>
+
+```typescript Specific Date
+// Records created on a specific date
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Tasks',
+  {
+    where: '(CreatedAt,eq,2024-01-15)'
+  }
+);
+```
+
+```typescript Date Range
+// Records between two dates
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Tasks',
+  {
+    where: '(CreatedAt,gte,2024-01-01)~and(CreatedAt,lte,2024-01-31)'
+  }
+);
+```
+
+```typescript Relative Dates
+// Records from last 7 days
+const sevenDaysAgo = new Date();
+sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+const dateStr = sevenDaysAgo.toISOString().split('T')[0];
+
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Tasks',
+  {
+    where: `(CreatedAt,gte,${dateStr})`
+  }
+);
+```
+
+</CodeGroup>
+
+## Text Filtering
+
+Search and filter text fields:
+
+<CodeGroup>
+
+```typescript Contains
+// Records where Name contains 'john' (case-insensitive)
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Name,like,john)'
+  }
+);
+```
+
+```typescript Exact Match
+// Exact email match
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Email,eq,john@example.com)'
+  }
+);
+```
+
+```typescript Multiple Terms
+// Name contains 'john' OR contains 'jane'
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Name,like,john)~or(Name,like,jane)'
+  }
+);
+```
+
+</CodeGroup>
+
+## Null and Empty Checks
+
+Filter records with null or empty values:
+
+```typescript
+// Records with null phone numbers
+const noPhone = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Phone,is,null)'
+  }
+);
+
+// Records with non-null addresses
+const hasAddress = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Address,isnot,null)'
+  }
+);
+
+// Records with blank notes
+const blankNotes = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Tasks',
+  {
+    where: '(Notes,blank)'
+  }
+);
+```
+
+## List Membership
+
+Check if a field value is in a list:
+
+```typescript
+// Records where Department is either Sales, Marketing, or Engineering
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Department,in,Sales,Marketing,Engineering)'
+  }
+);
+
+// Records where Status is NOT Draft or Archived
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Tasks',
+  {
+    where: '(Status,notin,Draft,Archived)'
+  }
+);
+```
+
+## Filter Helper Functions
+
+The SDK provides helper utilities for working with filters:
+
+```typescript
+import { buildFilterTree, extractFilterFromXwhere } from 'nocodb-sdk';
+
+// Build a nested filter tree from flat filter objects
+const filterTree = buildFilterTree([
+  {
+    id: 'filter1',
+    fk_parent_id: null,
+    comparison_op: 'and',
+    logical_op: 'and'
+  },
+  {
+    id: 'filter2',
+    fk_parent_id: 'filter1',
+    fk_column_id: 'col_age',
+    comparison_op: 'gt',
+    value: '25'
+  },
+  {
+    id: 'filter3',
+    fk_parent_id: 'filter1',
+    fk_column_id: 'col_dept',
+    comparison_op: 'eq',
+    value: 'Sales'
+  }
+]);
+
+console.log('Filter tree:', filterTree);
+```
+
+## Advanced Query Builder
+
+Create a reusable query builder:
+
+```typescript
+class QueryBuilder {
+  private filters: string[] = [];
+  
+  eq(field: string, value: any) {
+    this.filters.push(`(${field},eq,${value})`);
+    return this;
+  }
+  
+  gt(field: string, value: number) {
+    this.filters.push(`(${field},gt,${value})`);
+    return this;
+  }
+  
+  lt(field: string, value: number) {
+    this.filters.push(`(${field},lt,${value})`);
+    return this;
+  }
+  
+  like(field: string, value: string) {
+    this.filters.push(`(${field},like,${value})`);
+    return this;
+  }
+  
+  isNull(field: string) {
+    this.filters.push(`(${field},is,null)`);
+    return this;
+  }
+  
+  in(field: string, ...values: any[]) {
+    this.filters.push(`(${field},in,${values.join(',')})`);
+    return this;
+  }
+  
+  and() {
+    return this;
+  }
+  
+  or() {
+    // Mark the next filter as OR
+    this.filters.push('~or');
+    return this;
+  }
+  
+  build() {
+    return this.filters.join('~and').replace('~and~or', '~or');
+  }
+}
+
+// Usage
+const query = new QueryBuilder()
+  .gt('Age', 25)
+  .and()
+  .in('Department', 'Sales', 'Marketing')
+  .or()
+  .eq('Role', 'Manager')
+  .build();
+
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  { where: query }
+);
+```
+
+## Combining Filters with Sorting
+
+```typescript
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Department,eq,Sales)~and(Active,eq,true)',
+    sort: ['-created_at', 'Name'],  // Sort by created_at desc, then Name asc
+    limit: 20,
+    offset: 0
+  }
+);
+```
+
+## Filtering with Pagination
+
+```typescript
+async function getFilteredRecords(
+  where: string,
+  page: number = 1,
+  pageSize: number = 25
+) {
+  const offset = (page - 1) * pageSize;
+  
+  const response = await api.dbTableRow.list(
+    'noco',
+    'my-base',
+    'Users',
+    {
+      where,
+      limit: pageSize,
+      offset,
+      sort: '-created_at'
+    }
+  );
+  
+  return {
+    records: response.list,
+    totalRecords: response.pageInfo.totalRows,
+    totalPages: Math.ceil((response.pageInfo.totalRows || 0) / pageSize),
+    currentPage: page
+  };
+}
+
+// Usage
+const result = await getFilteredRecords(
+  '(Age,gt,25)~and(Department,eq,Sales)',
+  1,
+  50
+);
+```
+
+## Filter Performance Tips
+
+### 1. Use Field Selection
+
+Only request fields you need:
+
+```typescript
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Department,eq,Sales)',
+    fields: ['id', 'Name', 'Email']  // Only these fields
+  }
+);
+```
+
+### 2. Optimize Date Filters
+
+Use indexed date columns for better performance:
+
+```typescript
+// Good - Uses indexed created_at
+where: '(created_at,gte,2024-01-01)'
+
+// Less efficient - Complex date computation
+where: '(CustomDate,gte,2024-01-01)~and(CustomDate,lte,2024-12-31)'
+```
+
+### 3. Limit Result Sets
+
+Always use pagination for large datasets:
+
+```typescript
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Active,eq,true)',
+    limit: 100,  // Don't fetch everything at once
+    offset: 0
+  }
+);
+```
+
+## Common Filter Patterns
+
+### Active Users
+
+```typescript
+where: '(Active,eq,true)~and(DeletedAt,is,null)'
+```
+
+### Recent Records
+
+```typescript
+const thirtyDaysAgo = new Date();
+thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+const dateStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+where: `(created_at,gte,${dateStr})`
+```
+
+### Search Across Multiple Fields
+
+```typescript
+const searchTerm = 'john';
+where: `(Name,like,${searchTerm})~or(Email,like,${searchTerm})~or(Phone,like,${searchTerm})`
+```
+
+### Incomplete Records
+
+```typescript
+where: '(Email,is,null)~or(Phone,is,null)~or(Address,blank)'
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Records" icon="database" href="/sdk/records">
+    Learn more about record operations
+  </Card>
+  <Card title="Tables" icon="table" href="/sdk/tables">
+    Explore table management
+  </Card>
+</CardGroup>

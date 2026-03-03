@@ -1,0 +1,426 @@
+---
+title: 'Bulk Operations'
+description: 'Perform bulk operations on multiple records in NocoDB tables'
+---
+
+## Bulk Insert Records
+
+Insert multiple records at once.
+
+```bash POST /api/v1/db/data/bulk/{orgs}/{baseName}/{tableName}
+curl -X POST https://app.nocodb.com/api/v1/db/data/bulk/noco/my-base/users \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "Name": "John Doe",
+      "Email": "john@example.com",
+      "Age": 30
+    },
+    {
+      "Name": "Jane Smith",
+      "Email": "jane@example.com",
+      "Age": 25
+    },
+    {
+      "Name": "Bob Johnson",
+      "Email": "bob@example.com",
+      "Age": 35
+    }
+  ]'
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="undo" type="boolean" default="false">
+  Track this operation for undo functionality
+</ParamField>
+
+### Request Body
+
+Provide an array of record objects. Each object should contain field values as key-value pairs.
+
+```json
+[
+  {
+    "FieldName1": "value1",
+    "FieldName2": "value2"
+  },
+  {
+    "FieldName1": "value3",
+    "FieldName2": "value4"
+  }
+]
+```
+
+### Response
+
+Returns an array of created records with auto-generated fields populated.
+
+```json
+[
+  {
+    "Id": 1,
+    "Name": "John Doe",
+    "Email": "john@example.com",
+    "Age": 30,
+    "CreatedAt": "2023-03-11T09:10:53.567Z"
+  },
+  {
+    "Id": 2,
+    "Name": "Jane Smith",
+    "Email": "jane@example.com",
+    "Age": 25,
+    "CreatedAt": "2023-03-11T09:10:53.568Z"
+  }
+]
+```
+
+## Bulk Update Records
+
+Update multiple specific records by their IDs.
+
+```bash PATCH /api/v1/db/data/bulk/{orgs}/{baseName}/{tableName}
+curl -X PATCH https://app.nocodb.com/api/v1/db/data/bulk/noco/my-base/users \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "Id": 1,
+      "Status": "active"
+    },
+    {
+      "Id": 2,
+      "Status": "active"
+    },
+    {
+      "Id": 3,
+      "Status": "inactive"
+    }
+  ]'
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+### Request Body
+
+Provide an array of record objects. Each object must include the primary key field and the fields to update.
+
+```json
+[
+  {
+    "Id": 1,
+    "FieldToUpdate": "newValue1"
+  },
+  {
+    "Id": 2,
+    "FieldToUpdate": "newValue2"
+  }
+]
+```
+
+### Response
+
+Returns an array of updated record objects.
+
+## Bulk Update All Records
+
+Update all records matching a filter condition.
+
+```bash PATCH /api/v1/db/data/bulk/{orgs}/{baseName}/{tableName}/all
+curl -X PATCH "https://app.nocodb.com/api/v1/db/data/bulk/noco/my-base/users/all?where=(Status,eq,pending)" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Status": "active"
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="where" type="string">
+  Filter condition to select which records to update (e.g., `(Status,eq,pending)`)
+</ParamField>
+
+### Request Body
+
+Provide an object with the fields to update. This will be applied to all matching records.
+
+```json
+{
+  "FieldName1": "newValue",
+  "FieldName2": "anotherValue"
+}
+```
+
+### Response
+
+Returns the number of records updated.
+
+```json
+{
+  "count": 15
+}
+```
+
+## Bulk Delete Records
+
+Delete multiple specific records by their IDs.
+
+```bash DELETE /api/v1/db/data/bulk/{orgs}/{baseName}/{tableName}
+curl -X DELETE https://app.nocodb.com/api/v1/db/data/bulk/noco/my-base/users \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {"Id": 1},
+    {"Id": 2},
+    {"Id": 3}
+  ]'
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+### Request Body
+
+Provide an array of objects, each containing the primary key of the record to delete.
+
+```json
+[
+  {"Id": 1},
+  {"Id": 2},
+  {"Id": 3}
+]
+```
+
+### Response
+
+Returns an array with deletion status for each record.
+
+```json
+[
+  {"Id": 1, "deleted": true},
+  {"Id": 2, "deleted": true},
+  {"Id": 3, "deleted": true}
+]
+```
+
+## Bulk Delete All Records
+
+Delete all records matching a filter condition.
+
+```bash DELETE /api/v1/db/data/bulk/{orgs}/{baseName}/{tableName}/all
+curl -X DELETE "https://app.nocodb.com/api/v1/db/data/bulk/noco/my-base/users/all?where=(Status,eq,inactive)" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="where" type="string">
+  Filter condition to select which records to delete (e.g., `(Status,eq,inactive)`)
+</ParamField>
+
+<ParamField query="viewId" type="string">
+  Optional view ID to apply view-specific filters
+</ParamField>
+
+### Response
+
+Returns the number of records deleted.
+
+```json
+{
+  "count": 8
+}
+```
+
+<Warning>
+**Use with caution!** This operation will permanently delete all records matching the filter. Always test your filter with a list query first.
+</Warning>
+
+## Bulk Upsert Records
+
+Insert or update multiple records. Records with matching primary keys will be updated, others will be inserted.
+
+```bash POST /api/v1/db/data/bulk/{orgs}/{baseName}/{tableName}/upsert
+curl -X POST https://app.nocodb.com/api/v1/db/data/bulk/noco/my-base/users/upsert \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "Id": 1,
+      "Name": "John Updated",
+      "Email": "john.updated@example.com"
+    },
+    {
+      "Name": "New User",
+      "Email": "newuser@example.com"
+    }
+  ]'
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="undo" type="boolean" default="false">
+  Track this operation for undo functionality
+</ParamField>
+
+### Request Body
+
+Provide an array of record objects. Records with existing primary key values will be updated, others will be inserted.
+
+```json
+[
+  {
+    "Id": 1,
+    "FieldName": "updatedValue"
+  },
+  {
+    "FieldName": "newRecordValue"
+  }
+]
+```
+
+### Response
+
+Returns an array of upserted records.
+
+## Best Practices for Bulk Operations
+
+### Batch Size Recommendations
+
+- **Optimal batch size**: 100-500 records per request
+- **Maximum recommended**: 1000 records per request
+- For larger datasets, split into multiple batches
+
+### Error Handling
+
+Bulk operations are typically atomic - if one record fails, the entire operation may be rolled back. Always:
+
+1. Validate data before sending
+2. Handle partial failures gracefully
+3. Implement retry logic for failed batches
+
+### Performance Tips
+
+```javascript
+// Example: Process large dataset in batches
+const batchSize = 500;
+const records = [...]; // Your large dataset
+
+for (let i = 0; i < records.length; i += batchSize) {
+  const batch = records.slice(i, i + batchSize);
+  
+  try {
+    const response = await fetch(
+      'https://app.nocodb.com/api/v1/db/data/bulk/noco/my-base/users',
+      {
+        method: 'POST',
+        headers: {
+          'xc-auth': 'YOUR_API_TOKEN',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(batch)
+      }
+    );
+    
+    const result = await response.json();
+    console.log(`Batch ${i/batchSize + 1} completed:`, result.length);
+  } catch (error) {
+    console.error(`Batch ${i/batchSize + 1} failed:`, error);
+  }
+}
+```
+
+### Filtering in Bulk Operations
+
+When using bulk update/delete all operations, always verify your filter first:
+
+```bash
+# 1. First, check what will be affected
+curl -X GET "https://app.nocodb.com/api/v1/db/data/noco/my-base/users/count?where=(Status,eq,inactive)" \
+  -H "xc-auth: YOUR_API_TOKEN"
+
+# 2. Then perform the bulk operation
+curl -X DELETE "https://app.nocodb.com/api/v1/db/data/bulk/noco/my-base/users/all?where=(Status,eq,inactive)" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```

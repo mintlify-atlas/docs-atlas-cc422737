@@ -1,0 +1,266 @@
+---
+title: 'Attachments'
+description: 'Learn how to upload and manage attachments in NocoDB using the API'
+icon: 'paperclip'
+---
+
+NocoDB allows you to upload files and manage attachments through the API. Attachments can be uploaded via direct file upload or by providing a URL.
+
+## Upload Files
+
+Upload one or more files to NocoDB storage.
+
+```bash POST /api/v1/db/storage/upload
+curl -X POST "https://app.nocodb.com/api/v1/db/storage/upload" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -F "file=@/path/to/image.jpg" \
+  -F "file=@/path/to/document.pdf"
+```
+
+### Using curl with multiple files
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/storage/upload" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -F "files[]=@image1.jpg" \
+  -F "files[]=@image2.png" \
+  -F "files[]=@document.pdf"
+```
+
+<ParamField query="path" type="string">
+  Optional path for organizing uploaded files
+</ParamField>
+
+<ParamField query="scope" type="string">
+  Attachment scope: Determines access permissions
+  - Not provided or empty: Private attachment
+  - `public`: Publicly accessible attachment
+</ParamField>
+
+<ParamField formData="files" type="file[]" required>
+  One or more files to upload
+</ParamField>
+
+<ResponseField name="array" type="array">
+  Array of uploaded attachment objects
+  
+  <ResponseField name="title" type="string">
+    The filename of the uploaded file
+  </ResponseField>
+  
+  <ResponseField name="mimetype" type="string">
+    MIME type of the file (e.g., "image/jpeg", "application/pdf")
+  </ResponseField>
+  
+  <ResponseField name="size" type="number">
+    File size in bytes
+  </ResponseField>
+  
+  <ResponseField name="path" type="string">
+    Relative path to the uploaded file
+  </ResponseField>
+  
+  <ResponseField name="signedPath" type="string">
+    Signed path for temporary direct access to the file (local storage)
+  </ResponseField>
+  
+  <ResponseField name="url" type="string">
+    Full URL to the uploaded file (external storage like S3)
+  </ResponseField>
+  
+  <ResponseField name="signedUrl" type="string">
+    Signed URL for temporary direct access to the file (external storage)
+  </ResponseField>
+</ResponseField>
+
+### Response Example
+
+```json
+[
+  {
+    "title": "image.jpg",
+    "mimetype": "image/jpeg",
+    "size": 146143,
+    "path": "download/noco/pm0umqsip16i1u5/m8yn03dncqal6ri/iDL5ednaHz2j2Sa3Cl.jpg",
+    "signedPath": "dltemp/lNoLbqB62Jdo5Rmp/1709308800000/noco/pm0umqsip16i1u5/m8yn03dncqal6ri/iDL5ednaHz2j2Sa3Cl.jpg"
+  },
+  {
+    "title": "document.pdf",
+    "mimetype": "application/pdf",
+    "size": 524288,
+    "path": "download/noco/pm0umqsip16i1u5/m8yn03dncqal6ri/xyz789document.pdf",
+    "signedPath": "dltemp/abc123/1709308800000/noco/pm0umqsip16i1u5/m8yn03dncqal6ri/xyz789document.pdf"
+  }
+]
+```
+
+## Upload by URL
+
+Upload files by providing their URLs instead of uploading files directly.
+
+```bash POST /api/v1/db/storage/upload-by-url
+curl -X POST "https://app.nocodb.com/api/v1/db/storage/upload-by-url" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "url": "https://example.com/image.jpg",
+      "fileName": "my-image.jpg"
+    },
+    {
+      "url": "https://example.com/document.pdf"
+    }
+  ]'
+```
+
+<ParamField query="path" type="string">
+  Optional path for organizing uploaded files
+</ParamField>
+
+<ParamField query="scope" type="string">
+  Attachment scope for access permissions
+</ParamField>
+
+<ParamField body="array" type="array" required>
+  Array of attachment objects to upload
+  
+  <ParamField body="url" type="string" required>
+    URL of the file to download and upload
+  </ParamField>
+  
+  <ParamField body="fileName" type="string">
+    Optional custom filename for the uploaded file
+  </ParamField>
+  
+  <ParamField body="mimetype" type="string">
+    MIME type of the file
+  </ParamField>
+</ParamField>
+
+### Response Example
+
+```json
+[
+  {
+    "title": "my-image.jpg",
+    "mimetype": "image/jpeg",
+    "size": 32903,
+    "url": "https://some-s3-server.com/nc/uploads/2023/10/16/some-key/3niqHLngUKiU2Hupe8.jpeg",
+    "signedUrl": "https://some-s3-server.com/nc/uploads/2023/10/16/signed-url-misc-info"
+  }
+]
+```
+
+## Download Attachment
+
+Download an attachment from a specific table record.
+
+```bash GET /api/v2/downloadAttachment/{modelId}/{columnId}/{rowId}
+curl -X GET "https://app.nocodb.com/api/v2/downloadAttachment/{modelId}/{columnId}/{rowId}?urlOrPath=download%2Fnoco%2Ffile.jpg" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField path="modelId" type="string" required>
+  Unique Model/Table ID
+</ParamField>
+
+<ParamField path="columnId" type="string" required>
+  Unique Column ID of the attachment field
+</ParamField>
+
+<ParamField path="rowId" type="string" required>
+  Unique Row ID
+</ParamField>
+
+<ParamField query="urlOrPath" type="string" required>
+  URL or path of the specific attachment file to download
+</ParamField>
+
+## File Access
+
+NocoDB provides different endpoints for accessing uploaded files:
+
+### Direct Download
+
+```bash
+GET /download/{filename}
+```
+
+Downloads files from the local storage. The `filename` parameter should include the full path.
+
+### Signed Path Access
+
+```bash
+GET /dltemp/{param}
+```
+
+Accesses files using signed temporary URLs. This provides time-limited access to files.
+
+## Working with Attachment Fields
+
+When inserting or updating records with attachment fields, use the response from the upload endpoints:
+
+```bash
+# 1. Upload file(s)
+curl -X POST "https://app.nocodb.com/api/v1/db/storage/upload" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -F "file=@image.jpg"
+
+# Response:
+# [{
+#   "title": "image.jpg",
+#   "mimetype": "image/jpeg",
+#   "size": 146143,
+#   "path": "download/noco/..../image.jpg"
+# }]
+
+# 2. Create/update record with attachment
+curl -X POST "https://app.nocodb.com/api/v1/db/data/noco/mybase/mytable" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Title": "My Record",
+    "Attachment": [
+      {
+        "title": "image.jpg",
+        "mimetype": "image/jpeg",
+        "size": 146143,
+        "path": "download/noco/..../image.jpg"
+      }
+    ]
+  }'
+```
+
+## Supported File Types
+
+NocoDB supports uploading any file type. Common types include:
+
+- **Images**: JPG, PNG, GIF, SVG, WebP
+- **Documents**: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX
+- **Archives**: ZIP, RAR, 7Z
+- **Videos**: MP4, AVI, MOV, WebM
+- **Audio**: MP3, WAV, OGG
+- **Code**: TXT, JSON, XML, CSV
+
+## File Size Limits
+
+File size limits depend on your NocoDB configuration:
+
+- Default limit: 20MB per file
+- Can be configured via `NC_ATTACHMENT_FIELD_SIZE` environment variable
+- Cloud instances may have different limits
+
+## Storage Options
+
+NocoDB supports multiple storage backends:
+
+- **Local Storage**: Default option, stores files on the server filesystem
+- **S3**: Amazon S3 or S3-compatible storage
+- **MinIO**: Self-hosted S3-compatible storage
+- **Google Cloud Storage**: GCS integration
+- **Azure Blob Storage**: Azure storage integration
+
+The response format varies slightly depending on the storage backend:
+
+- Local storage returns `path` and `signedPath`
+- External storage returns `url` and `signedUrl`

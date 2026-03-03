@@ -1,0 +1,287 @@
+---
+title: 'API Authentication'
+description: 'Learn how to authenticate API requests in NocoDB using JWT tokens, API tokens, and social authentication'
+---
+
+NocoDB provides multiple authentication methods to secure your API requests. Choose the method that best fits your use case.
+
+## Authentication Methods
+
+### JWT Token Authentication
+
+JWT (JSON Web Token) authentication is used for user-based authentication. After signing in, you receive a JWT token that's valid for 10 hours by default.
+
+#### Sign Up
+
+Create a new user account. The first user is automatically marked as super admin.
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://app.nocodb.com/api/v1/auth/user/signup' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "email": "user@example.com",
+    "password": "password123456789",
+    "firstname": "Alice",
+    "lastname": "Smith"
+  }'
+```
+</CodeGroup>
+
+<ParamField body="email" type="string" required>
+  User email address
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  User password (minimum length required)
+</ParamField>
+
+<ParamField body="firstname" type="string">
+  User's first name
+</ParamField>
+
+<ParamField body="lastname" type="string">
+  User's last name
+</ParamField>
+
+<ResponseField name="token" type="string">
+  JWT access token for authentication
+</ResponseField>
+
+<ResponseExample>
+```json Success Response
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IndAbm9jb2RiLmNvbSIsImZpcnN0bmFtZSI6bnVsbCwibGFzdG5hbWUiOm51bGwsImlkIjoidXNfYjN4bzJpNDRueDV5OWwiLCJyb2xlcyI6Im9yZy1sZXZlbC1jcmVhdG9yLHN1cGVyIiwidG9rZW5fdmVyc2lvbiI6ImJmMTc3ZGUzYjk3YjAzMjY4YjU0NGZmMjMzNGU5YjFhMGUzYzgxM2NiYzliOTJkYWMwYmM5NTRiNmUzN2ZjMTJjYmFkNDM2NmIwYzExZTdjIiwiaWF0IjoxNjc4MDc4NDMyLCJleHAiOjE2NzgxMTQ0MzJ9.gzwp_svZlbA5PV_eawYV-9UFjZVjniy-tCDce16xrkI"
+}
+```
+</ResponseExample>
+
+#### Sign In
+
+Authenticate an existing user with email and password.
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://app.nocodb.com/api/v1/auth/user/signin' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "email": "user@example.com",
+    "password": "Password"
+  }'
+```
+</CodeGroup>
+
+<ParamField body="email" type="string" required>
+  Registered user email
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  User password
+</ParamField>
+
+<ResponseField name="token" type="string">
+  JWT access token valid for 10 hours (configurable via `NC_JWT_EXPIRES_IN` environment variable)
+</ResponseField>
+
+<ResponseExample>
+```json Success Response
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IndAbm9jb2RiLmNvbSIsImZpcnN0bmFtZSI6bnVsbCwibGFzdG5hbWUiOm51bGwsImlkIjoidXNfYjN4bzJpNDRueDV5OWwiLCJyb2xlcyI6Im9yZy1sZXZlbC1jcmVhdG9yLHN1cGVyIiwidG9rZW5fdmVyc2lvbiI6ImJmMTc3ZGUzYjk3YjAzMjY4YjU0NGZmMjMzNGU5YjFhMGUzYzgxM2NiYzliOTJkYWMwYmM5NTRiNmUzN2ZjMTJjYmFkNDM2NmIwYzExZTdjIiwiaWF0IjoxNjc4MDc4NDMyLCJleHAiOjE2NzgxMTQ0MzJ9.gzwp_svZlbA5PV_eawYV-9UFjZVjniy-tCDce16xrkI"
+}
+```
+</ResponseExample>
+
+#### Using JWT Tokens
+
+Once you have a JWT token, include it in your API requests using the `xc-auth` header:
+
+<CodeGroup>
+```bash cURL
+curl -X GET 'https://app.nocodb.com/api/v1/auth/user/me' \
+  -H 'xc-auth: YOUR_JWT_TOKEN'
+```
+</CodeGroup>
+
+Alternatively, you can use the standard `Authorization` header with Bearer token:
+
+<CodeGroup>
+```bash Bearer Token
+curl -X GET 'https://app.nocodb.com/api/v1/auth/user/me' \
+  -H 'Authorization: Bearer YOUR_JWT_TOKEN'
+```
+</CodeGroup>
+
+#### Get User Info
+
+Retrieve information about the authenticated user.
+
+<CodeGroup>
+```bash cURL
+curl -X GET 'https://app.nocodb.com/api/v1/auth/user/me' \
+  -H 'xc-auth: YOUR_JWT_TOKEN'
+```
+</CodeGroup>
+
+<ResponseExample>
+```json Success Response
+{
+  "id": "us_8kugj628ebjngs",
+  "email": "user@example.com",
+  "email_verified": true,
+  "firstname": "Alice",
+  "lastname": "Smith",
+  "roles": "org-level-viewer"
+}
+```
+</ResponseExample>
+
+#### Refresh Token
+
+Create a new refresh token and JWT auth token. The refresh token is sent as a cookie.
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://app.nocodb.com/api/v1/auth/token/refresh' \
+  -H 'xc-auth: YOUR_JWT_TOKEN'
+```
+</CodeGroup>
+
+<ResponseExample>
+```json Success Response
+{
+  "token": "96751db2d53fb834382b682268874a2ea9ee610e4d904e688d1513f11d3c30d62d36d9e05dec0d63"
+}
+```
+</ResponseExample>
+
+#### Sign Out
+
+Clear the refresh token from the database and cookie.
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://app.nocodb.com/api/v1/auth/user/signout' \
+  -H 'xc-auth: YOUR_JWT_TOKEN'
+```
+</CodeGroup>
+
+<ResponseExample>
+```json Success Response
+{
+  "msg": "Signed out successfully"
+}
+```
+</ResponseExample>
+
+### API Token Authentication
+
+API tokens are ideal for server-to-server communication and automation. Unlike JWT tokens, API tokens don't expire and are scoped to specific bases.
+
+See the [API Tokens](/api/api-tokens) guide for detailed information on creating and using API tokens.
+
+### Password Management
+
+#### Forgot Password
+
+Request a password reset email.
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://app.nocodb.com/api/v1/auth/password/forgot' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "email": "user@example.com"
+  }'
+```
+</CodeGroup>
+
+<ResponseExample>
+```json Success Response
+{
+  "msg": "Please check your email to reset the password"
+}
+```
+</ResponseExample>
+
+#### Reset Password
+
+Reset password using the token received via email.
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://app.nocodb.com/api/v1/auth/password/reset/{token}' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "password": "newpassword"
+  }'
+```
+</CodeGroup>
+
+<ParamField path="token" type="string" required>
+  Password reset token received via email
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  New password
+</ParamField>
+
+<ResponseExample>
+```json Success Response
+{
+  "msg": "Password has been reset successfully"
+}
+```
+</ResponseExample>
+
+#### Change Password
+
+Change password for an authenticated user.
+
+<CodeGroup>
+```bash cURL
+curl -X POST 'https://app.nocodb.com/api/v1/auth/password/change' \
+  -H 'xc-auth: YOUR_JWT_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "currentPassword": "currentPassword",
+    "newPassword": "newPassword"
+  }'
+```
+</CodeGroup>
+
+<ParamField body="currentPassword" type="string" required>
+  Current password
+</ParamField>
+
+<ParamField body="newPassword" type="string" required>
+  New password
+</ParamField>
+
+<ResponseExample>
+```json Success Response
+{
+  "msg": "Password has been updated successfully"
+}
+```
+</ResponseExample>
+
+## Token Configuration
+
+You can customize token behavior using environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NC_JWT_EXPIRES_IN` | 10h | JWT token expiration time |
+
+## Security Best Practices
+
+<Warning>
+  Never share your JWT tokens or API tokens publicly. Treat them like passwords.
+</Warning>
+
+- Store tokens securely using environment variables or secret management services
+- Use API tokens for automated systems and integrations
+- Use JWT tokens for user-based authentication
+- Rotate API tokens periodically
+- Implement proper access controls at the base level
+- Use HTTPS for all API requests to prevent token interception

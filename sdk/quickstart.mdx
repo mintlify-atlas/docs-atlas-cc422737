@@ -1,0 +1,206 @@
+---
+title: 'Quickstart'
+description: 'Get started with the NocoDB SDK in minutes'
+---
+
+## Initialize the SDK
+
+Create a new instance of the NocoDB API client with your base URL and authentication token.
+
+<CodeGroup>
+
+```typescript TypeScript
+import { Api } from 'nocodb-sdk';
+
+const api = new Api({
+  baseURL: 'https://app.nocodb.com',
+  headers: {
+    'xc-auth': 'YOUR_API_TOKEN'
+  }
+});
+```
+
+```javascript JavaScript
+const { Api } = require('nocodb-sdk');
+
+const api = new Api({
+  baseURL: 'https://app.nocodb.com',
+  headers: {
+    'xc-auth': 'YOUR_API_TOKEN'
+  }
+});
+```
+
+```typescript Self-Hosted
+import { Api } from 'nocodb-sdk';
+
+const api = new Api({
+  baseURL: 'http://localhost:8080',
+  headers: {
+    'xc-auth': 'YOUR_API_TOKEN'
+  }
+});
+```
+
+</CodeGroup>
+
+## Authentication
+
+There are two ways to authenticate with NocoDB:
+
+### 1. Using API Token (Recommended)
+
+Generate an API token from your NocoDB dashboard and pass it in the headers:
+
+```typescript
+const api = new Api({
+  baseURL: 'https://app.nocodb.com',
+  headers: {
+    'xc-auth': 'YOUR_API_TOKEN'
+  }
+});
+```
+
+### 2. Using Email and Password
+
+Authenticate with your credentials to receive a JWT token:
+
+```typescript
+const api = new Api({
+  baseURL: 'https://app.nocodb.com'
+});
+
+// Sign in
+const response = await api.auth.signin({
+  email: 'user@example.com',
+  password: 'your-password'
+});
+
+// Use the token for subsequent requests
+api.instance.defaults.headers.common['xc-auth'] = response.token;
+```
+
+## Your First API Call
+
+Let's retrieve information about the authenticated user:
+
+```typescript
+try {
+  const userInfo = await api.auth.me();
+  console.log('User ID:', userInfo.id);
+  console.log('Email:', userInfo.email);
+  console.log('Roles:', userInfo.roles);
+} catch (error) {
+  console.error('API Error:', error);
+}
+```
+
+## List Tables in a Base
+
+Retrieve all tables from a specific base:
+
+```typescript
+const baseId = 'p_xxxxxxxxxx';
+
+try {
+  const tables = await api.dbTable.list(baseId);
+  
+  console.log(`Found ${tables.list?.length} tables`);
+  
+  tables.list?.forEach(table => {
+    console.log(`- ${table.title} (${table.table_name})`);
+  });
+} catch (error) {
+  console.error('Error listing tables:', error);
+}
+```
+
+## Fetch Records from a Table
+
+Read records from a table:
+
+```typescript
+const orgName = 'noco';
+const baseName = 'my-base';
+const tableName = 'Users';
+
+try {
+  const response = await api.dbTableRow.list(
+    orgName,
+    baseName,
+    tableName,
+    {
+      limit: 10,
+      offset: 0
+    }
+  );
+  
+  console.log(`Total records: ${response.pageInfo.totalRows}`);
+  console.log('Records:', response.list);
+} catch (error) {
+  console.error('Error fetching records:', error);
+}
+```
+
+## Create a New Record
+
+Insert a new record into a table:
+
+```typescript
+try {
+  const newRecord = await api.dbTableRow.create(
+    'noco',
+    'my-base',
+    'Users',
+    {
+      Name: 'John Doe',
+      Email: 'john@example.com',
+      Age: 30
+    }
+  );
+  
+  console.log('Created record:', newRecord);
+} catch (error) {
+  console.error('Error creating record:', error);
+}
+```
+
+## Error Handling
+
+Always wrap API calls in try-catch blocks to handle errors gracefully:
+
+```typescript
+try {
+  const response = await api.dbTableRow.list('org', 'base', 'table');
+  // Process response
+} catch (error) {
+  if (error.response) {
+    // Server responded with error
+    console.error('Status:', error.response.status);
+    console.error('Message:', error.response.data.msg);
+  } else if (error.request) {
+    // Request made but no response
+    console.error('No response received');
+  } else {
+    // Error setting up request
+    console.error('Error:', error.message);
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Database Operations" icon="database" href="/sdk/database">
+    Learn about base management
+  </Card>
+  <Card title="Working with Tables" icon="table" href="/sdk/tables">
+    Create and manage tables
+  </Card>
+  <Card title="Record Operations" icon="pen-to-square" href="/sdk/records">
+    CRUD operations on records
+  </Card>
+  <Card title="Filters and Queries" icon="filter" href="/sdk/filters">
+    Build complex queries
+  </Card>
+</CardGroup>

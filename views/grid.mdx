@@ -1,0 +1,237 @@
+---
+title: "Grid View"
+description: "Learn how to use Grid view to display and manage your data in a spreadsheet-like format"
+---
+
+## Overview
+
+Grid view is the default and most versatile view type in NocoDB. It displays your data in a familiar spreadsheet-like format with rows and columns, making it perfect for viewing and editing large datasets efficiently.
+
+<Info>
+Grid view is the most commonly used view type and serves as the foundation for data management in NocoDB.
+</Info>
+
+## When to Use Grid View
+
+Grid view is ideal for:
+
+- **Data entry and bulk editing** - Quickly enter and modify multiple records
+- **Comprehensive data analysis** - View all fields and records simultaneously
+- **Spreadsheet workflows** - Familiar interface for users coming from Excel or Google Sheets
+- **Sorting and filtering** - Apply complex filters and sort by multiple columns
+- **Grouping data** - Organize records by specific field values
+- **Calculating aggregates** - Sum, average, or count values across columns
+
+## Configuration Options
+
+Grid view supports the following configuration options:
+
+### Row Height
+
+Control the vertical spacing of rows to optimize for readability or data density.
+
+<Tabs>
+  <Tab title="Compact">
+    Use compact row height when you need to see more records on screen at once. Ideal for:
+    - Large datasets with simple data types
+    - Quick scanning and navigation
+    - Limited screen space
+
+    ```json
+    {
+      "row_height": 1
+    }
+    ```
+  </Tab>
+  <Tab title="Standard">
+    Standard row height provides balanced visibility and is the default setting.
+
+    ```json
+    {
+      "row_height": 2
+    }
+    ```
+  </Tab>
+  <Tab title="Expanded">
+    Expanded row height is useful for viewing multi-line content and attachments.
+
+    ```json
+    {
+      "row_height": 4
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Column Configuration
+
+Each column in the grid can be configured individually:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `show` | boolean | Controls column visibility in the view |
+| `order` | number | Defines the column display order (left to right) |
+| `width` | string | Column width in pixels (default: "200px") |
+| `group_by` | boolean | Enable grouping by this column |
+| `group_by_order` | number | Order when multiple group-by columns are used |
+| `group_by_sort` | string | Sort direction for groups ("asc" or "desc") |
+| `aggregation` | string | Aggregation function (sum, avg, count, etc.) |
+
+<Tip>
+Use the `width` property to optimize column sizes based on content. Wider columns for long text, narrower for status or checkbox fields.
+</Tip>
+
+## Working with Grid View
+
+<Tabs>
+  <Tab title="Viewing Data">
+    ### Navigate Your Data
+
+    - **Scroll** - Use mouse wheel or trackpad to scroll vertically and horizontally
+    - **Arrow keys** - Navigate between cells using keyboard arrows
+    - **Search** - Press `Ctrl+F` (or `Cmd+F`) to search within the grid
+    - **Jump to row** - Click row numbers to select entire rows
+
+    ### Column Operations
+
+    - **Resize** - Drag column borders to adjust width
+    - **Reorder** - Drag column headers to reposition columns
+    - **Hide/Show** - Toggle column visibility from the column menu
+    - **Sort** - Click column header to sort ascending/descending
+  </Tab>
+  <Tab title="Editing Data">
+    ### Quick Editing
+
+    - **Single cell** - Click any cell to edit its value
+    - **Tab navigation** - Press Tab to move to the next cell
+    - **Enter to save** - Press Enter to save and move to the cell below
+    - **Escape to cancel** - Press Esc to discard changes
+
+    ### Bulk Operations
+
+    - **Copy/Paste** - Copy cells from Excel or Google Sheets directly into the grid
+    - **Fill down** - Select multiple cells and drag to fill values
+    - **Multi-select** - Hold Shift to select ranges, Ctrl/Cmd for individual cells
+  </Tab>
+  <Tab title="Grouping & Aggregation">
+    ### Group By Columns
+
+    Group your data by one or more columns to organize records hierarchically:
+
+    1. Click the column menu (three dots)
+    2. Select "Group By"
+    3. Choose sorting order for groups
+    4. Add multiple group-by levels for nested grouping
+
+    ### Column Aggregation
+
+    Display summary calculations at the bottom of each column:
+
+    - **Count** - Total number of records
+    - **Sum** - Add all numeric values
+    - **Average** - Calculate mean value
+    - **Min/Max** - Find lowest or highest value
+    - **Median** - Calculate median value
+    - **Range** - Difference between min and max
+
+    <Info>
+    Aggregations are calculated on filtered data, making them useful for analyzing subsets of your records.
+    </Info>
+  </Tab>
+</Tabs>
+
+## Advanced Features
+
+### Column Freezing
+
+Freeze columns to keep them visible while scrolling horizontally:
+
+- Ideal for keeping ID or name columns always in view
+- Freeze up to 3 columns from the left
+- Useful when working with wide tables
+
+### Cell Formatting
+
+Grid view respects field types and displays data accordingly:
+
+- **Text** - Single or multi-line text with wrapping
+- **Numbers** - Right-aligned with decimal precision
+- **Dates** - Formatted based on locale settings
+- **Attachments** - Thumbnail previews in cells
+- **Links** - Clickable URLs with preview icons
+- **Relations** - Linked record chips with quick access
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Arrow keys` | Navigate between cells |
+| `Enter` | Edit selected cell |
+| `Esc` | Cancel editing |
+| `Tab` | Move to next cell |
+| `Shift + Tab` | Move to previous cell |
+| `Ctrl/Cmd + C` | Copy selected cells |
+| `Ctrl/Cmd + V` | Paste into selected cells |
+| `Ctrl/Cmd + Z` | Undo last change |
+
+## Best Practices
+
+<Tip>
+**Optimize Column Order** - Place the most important columns first, as users naturally scan from left to right.
+</Tip>
+
+<Tip>
+**Use Appropriate Row Height** - For tables with attachments or long text, use expanded row height. For simple data, compact height shows more records.
+</Tip>
+
+<Tip>
+**Hide Unnecessary Columns** - Keep your view focused by hiding columns that aren't needed for the current task.
+</Tip>
+
+<Tip>
+**Leverage Grouping** - Group by status, priority, or category fields to organize your data into manageable sections.
+</Tip>
+
+## Performance Considerations
+
+<Info>
+Grid view is optimized for handling large datasets through:
+- Virtual scrolling for thousands of rows
+- Lazy loading of cell content
+- Cached column configurations
+- Optimized rendering for field types
+</Info>
+
+For optimal performance:
+
+- Limit the number of visible columns (hide unused ones)
+- Use filters to reduce the number of displayed records
+- Avoid excessive grouping levels (max 2-3 recommended)
+- Keep column widths reasonable to reduce horizontal scrolling
+
+## API Reference
+
+Create a grid view programmatically:
+
+```typescript
+const gridView = {
+  fk_view_id: 'view_id',
+  row_height: 2,
+  meta: {}
+}
+```
+
+Update grid view settings:
+
+```typescript
+const updates = {
+  row_height: 4,
+  meta: {
+    custom_setting: 'value'
+  }
+}
+```
+
+<Info>
+Grid view configurations are stored per view and shared across all users with access to that view.
+</Info>

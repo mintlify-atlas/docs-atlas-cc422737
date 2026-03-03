@@ -1,0 +1,465 @@
+---
+title: "Calendar View"
+description: "Learn how to use Calendar view to visualize and manage date-based records in a calendar format"
+---
+
+## Overview
+
+Calendar view displays your records on a calendar grid based on date fields, making it easy to visualize schedules, deadlines, events, and time-based data. Records appear as events on the calendar, and you can drag-and-drop to reschedule them.
+
+<Info>
+Calendar view requires at least one Date or DateTime field in your table to map records to calendar dates.
+</Info>
+
+## When to Use Calendar View
+
+Calendar view is ideal for:
+
+- **Event management** - Schedule and track events, meetings, or appointments
+- **Project timelines** - Visualize task deadlines and milestones
+- **Content calendars** - Plan blog posts, social media, or marketing campaigns
+- **Scheduling** - Manage bookings, reservations, or resource allocation
+- **Deadline tracking** - Monitor due dates and deliverables
+- **Team availability** - Track vacation days, time off, or shift schedules
+- **Editorial planning** - Coordinate publication dates and content releases
+
+## Configuration Options
+
+Calendar view provides the following configuration options:
+
+### Calendar Range
+
+Define which date field(s) to use for displaying records on the calendar:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `calendar_range` | array | Array of date field configurations |
+| `calendar_range[].fk_from_column_id` | string | ID of the date/datetime field to use |
+
+<Tabs>
+  <Tab title="Single Date Field">
+    Display records based on one date field:
+
+    ```json
+    {
+      "calendar_range": [
+        {
+          "fk_from_column_id": "event_date_column_id"
+        }
+      ]
+    }
+    ```
+
+    Use cases:
+    - Task due dates
+    - Event start dates
+    - Publication dates
+    - Appointment times
+  </Tab>
+  <Tab title="Date Range (Coming Soon)">
+    While the model supports it, full date range support (start and end dates) may be available in future versions:
+
+    ```json
+    {
+      "calendar_range": [
+        {
+          "fk_from_column_id": "start_date_column_id",
+          "fk_to_column_id": "end_date_column_id"
+        }
+      ]
+    }
+    ```
+
+    Planned use cases:
+    - Multi-day events
+    - Project duration
+    - Vacation periods
+    - Rental bookings
+  </Tab>
+</Tabs>
+
+### Cover Image
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `fk_cover_image_col_id` | string | ID of attachment column to display on calendar events |
+
+```json
+{
+  "fk_cover_image_col_id": "attachment_column_id",
+  "calendar_range": [
+    {
+      "fk_from_column_id": "event_date_column_id"
+    }
+  ]
+}
+```
+
+<Tip>
+Adding cover images to calendar events makes them more visually distinctive and easier to identify at a glance.
+</Tip>
+
+## Working with Calendar View
+
+<Tabs>
+  <Tab title="Navigating the Calendar">
+    ### Calendar Views
+
+    Switch between different time periods:
+
+    - **Month view** - See an entire month at a glance
+    - **Week view** - Focus on a single week with more detail
+    - **Day view** - Detailed view of a single day's events
+
+    ### Navigation Controls
+
+    - **Today button** - Jump to the current date
+    - **Previous/Next arrows** - Move backward or forward in time
+    - **Date picker** - Jump to any specific date
+
+    ### Time Zones
+
+    - Calendar respects DateTime field timezone settings
+    - All-day events for Date fields
+    - Timed events for DateTime fields
+
+    <Info>
+    The calendar automatically displays events in your local timezone when using DateTime fields.
+    </Info>
+  </Tab>
+  <Tab title="Managing Events">
+    ### Add Events
+
+    Create new records directly on the calendar:
+
+    1. Click any date on the calendar
+    2. A new record form opens with the date pre-filled
+    3. Fill in required fields
+    4. Save to add the event to the calendar
+
+    ### Edit Events
+
+    Modify existing calendar entries:
+
+    - Click any event to open the record detail
+    - Edit fields in the expanded form
+    - Changes save automatically
+    - Event updates on calendar immediately
+
+    ### Drag and Drop
+
+    Reschedule events by dragging:
+
+    1. Click and hold an event
+    2. Drag to a new date
+    3. Release to update the date field
+    4. The underlying record updates automatically
+
+    <Tip>
+    Drag-and-drop is the fastest way to reschedule events. The date field value updates automatically when you drop the event on a new date.
+    </Tip>
+
+    ### Delete Events
+
+    Remove records from the calendar:
+
+    - Open event detail and click delete
+    - Or delete from Grid view
+    - Deleted events disappear from calendar immediately
+  </Tab>
+  <Tab title="Customizing Display">
+    ### Event Colors
+
+    While calendar events inherit some styling, you can enhance visibility:
+
+    - Use a Single Select field with color options
+    - Events can be color-coded by category, priority, etc.
+    - Add the color field as a visible field on events
+
+    ### Visible Fields
+
+    Configure which fields appear on calendar events:
+
+    1. Click "Fields" in the toolbar
+    2. Toggle fields on/off
+    3. Reorder by dragging
+    4. Limited space shows 2-3 fields per event
+
+    ### Event Display Format
+
+    Calendar events show:
+    - Primary field as the event title
+    - Cover image (if configured)
+    - Selected visible fields
+    - Time (for DateTime fields)
+
+    <Info>
+    Keep visible fields minimal on calendar events. Show only the most critical information to avoid clutter.
+    </Info>
+  </Tab>
+</Tabs>
+
+## Advanced Features
+
+### Multiple Date Fields
+
+While the calendar range array supports multiple date fields, the typical use case is a single date field per calendar view. For complex scenarios:
+
+- Create separate calendar views for different date fields
+- Example: "Due Date Calendar" and "Start Date Calendar"
+- Switch between views to see different time perspectives
+
+### Filtering Calendar Events
+
+Apply filters to show specific events:
+
+- Filter by any field (assignee, status, category, etc.)
+- Combine multiple filter conditions
+- Filtered events hide from calendar
+- Useful for creating focused views like "My Events" or "High Priority"
+
+**Example filters:**
+- Status is "Confirmed" (hide tentative events)
+- Assigned to "Me" (show only my calendar)
+- Category is "Meeting" (show only meetings)
+- Priority is "High" (show critical deadlines)
+
+### Search Calendar
+
+Find specific events quickly:
+
+- Use the search bar to filter events by text
+- Search works across all visible fields
+- Matching events remain on calendar
+- Non-matching events are hidden
+
+### Recurring Events
+
+While not built-in, you can manage recurring events by:
+
+- Creating multiple records for each occurrence
+- Using automations to generate recurring instances
+- Filtering by a "Series ID" field to group related events
+
+<Tip>
+For true recurring event support, consider using external calendar integrations or webhooks to create event instances automatically.
+</Tip>
+
+## Use Cases and Examples
+
+### Event Planning Calendar
+
+```json
+{
+  "calendar_range": [
+    {
+      "fk_from_column_id": "event_date_column_id"
+    }
+  ],
+  "fk_cover_image_col_id": "event_poster_column_id"
+}
+```
+
+**Fields:**
+- Event name (primary field)
+- Event date (DateTime)
+- Location
+- Event type (Single Select)
+- Attendee count
+- Status (Planned/Confirmed/Cancelled)
+
+### Content Publication Calendar
+
+```json
+{
+  "calendar_range": [
+    {
+      "fk_from_column_id": "publish_date_column_id"
+    }
+  ],
+  "fk_cover_image_col_id": "featured_image_column_id"
+}
+```
+
+**Fields:**
+- Article title (primary field)
+- Publish date (Date)
+- Author
+- Content type (Blog/Video/Podcast)
+- Platform (Website/Social/Email)
+- Status (Draft/Scheduled/Published)
+
+### Project Deadline Calendar
+
+```json
+{
+  "calendar_range": [
+    {
+      "fk_from_column_id": "due_date_column_id"
+    }
+  ]
+}
+```
+
+**Fields:**
+- Task name (primary field)
+- Due date (Date)
+- Assignee
+- Project (Link to projects table)
+- Priority (Single Select)
+- Status (To Do/In Progress/Done)
+
+### Team Availability Calendar
+
+```json
+{
+  "calendar_range": [
+    {
+      "fk_from_column_id": "start_date_column_id"
+    }
+  ]
+}
+```
+
+**Fields:**
+- Team member (primary field)
+- Start date (Date)
+- Type (Vacation/Sick/Training)
+- Status (Requested/Approved/Declined)
+- Notes
+
+### Marketing Campaign Calendar
+
+```json
+{
+  "calendar_range": [
+    {
+      "fk_from_column_id": "launch_date_column_id"
+    }
+  ],
+  "fk_cover_image_col_id": "campaign_creative_column_id"
+}
+```
+
+**Fields:**
+- Campaign name (primary field)
+- Launch date (DateTime)
+- Channel (Email/Social/Display)
+- Target audience
+- Budget
+- Status (Planning/Active/Completed)
+
+## Best Practices
+
+<Tip>
+**Choose the Right Date Field** - Select the most relevant date field for your use case. For tasks, use due dates; for events, use start dates.
+</Tip>
+
+<Tip>
+**Use DateTime for Specific Times** - Use DateTime fields when exact times matter (meetings, appointments). Use Date fields for all-day events.
+</Tip>
+
+<Tip>
+**Color-Code Events** - Add a Single Select field for categories or types, and use it to visually distinguish different kinds of events.
+</Tip>
+
+<Tip>
+**Keep Event Titles Concise** - The primary field serves as the event title. Keep it short and descriptive for better calendar readability.
+</Tip>
+
+<Tip>
+**Create Multiple Calendar Views** - Set up different calendar views for different purposes: one for deadlines, one for meetings, etc.
+</Tip>
+
+<Info>
+**Date Changes Sync Everywhere** - When you drag an event to a new date in Calendar view, the underlying record updates, and the change reflects in all other views immediately.
+</Info>
+
+## Performance Considerations
+
+Calendar view is optimized for displaying many events:
+
+- Efficient rendering of month/week/day views
+- Lazy loading of events outside visible range
+- Cached calendar configurations
+- Fast drag-and-drop updates
+
+For optimal performance:
+
+- Use filters to reduce the number of visible events
+- Avoid showing too many fields per event (2-3 maximum)
+- Archive old events to keep the calendar focused
+- Consider separate views for past vs. future events
+
+<Info>
+Calendar view performs well with thousands of events, but consider using date range filters to focus on relevant time periods for the best user experience.
+</Info>
+
+## Sharing Calendar Views
+
+Calendar views can be shared externally:
+
+- Create a shared view for public event calendars
+- Share team availability with external stakeholders
+- Publish content calendars for collaborators
+- Embed calendars in websites or portals
+
+<Tip>
+Use password protection and view-only permissions when sharing calendars publicly to protect sensitive information.
+</Tip>
+
+## API Reference
+
+Create a calendar view programmatically:
+
+```typescript
+const calendarView = {
+  fk_view_id: 'view_id',
+  base_id: 'base_id',
+  source_id: 'source_id',
+  calendar_range: [
+    {
+      fk_from_column_id: 'date_column_id'
+    }
+  ],
+  fk_cover_image_col_id: 'attachment_column_id',
+  meta: {}
+}
+```
+
+Update calendar view settings:
+
+```typescript
+const updates = {
+  fk_cover_image_col_id: 'new_attachment_column_id',
+  calendar_range: [
+    {
+      fk_from_column_id: 'new_date_column_id'
+    }
+  ],
+  meta: {
+    custom_setting: 'value'
+  }
+}
+```
+
+<Info>
+Changing the `calendar_range` field restructures which records appear on the calendar and when, so choose your date fields carefully during setup.
+</Info>
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `T` | Jump to today |
+| `Left Arrow` | Previous period |
+| `Right Arrow` | Next period |
+| `M` | Switch to month view |
+| `W` | Switch to week view |
+| `D` | Switch to day view |
+| `Ctrl/Cmd + F` | Search events |
+| `Esc` | Close event detail |
+
+<Tip>
+Master keyboard shortcuts to navigate your calendar efficiently, especially when managing many events across different time periods.
+</Tip>

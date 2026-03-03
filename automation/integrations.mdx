@@ -1,0 +1,359 @@
+---
+title: Integrations
+description: Connect NocoDB with external services and storage providers
+---
+
+NocoDB supports a wide range of integrations to connect your database with external services, notification platforms, email providers, and cloud storage.
+
+## Integration Types
+
+Integrations in NocoDB are categorized by their functionality:
+
+- **Notification** - Send alerts and messages (Slack, Discord, Teams)
+- **Email** - Send emails (SMTP, AWS SES, MailerSend)
+- **Storage** - Store attachments (S3, Google Cloud Storage, MinIO)
+
+## Notification Integrations
+
+### Slack
+
+Send notifications to Slack channels.
+
+**Configuration:**
+```json
+{
+  "type": "Slack",
+  "webhook_url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+  "channel": "#general"
+}
+```
+
+**Use Cases:**
+- Notify team when new records are created
+- Alert on critical data changes
+- Send daily summaries
+
+### Discord
+
+Send messages to Discord channels.
+
+**Configuration:**
+```json
+{
+  "type": "Discord",
+  "webhook_url": "https://discord.com/api/webhooks/YOUR/WEBHOOK/URL",
+  "username": "NocoDB Bot"
+}
+```
+
+**Use Cases:**
+- Community engagement notifications
+- Real-time updates to team channels
+- Automated alerts
+
+### Microsoft Teams
+
+Post messages to Microsoft Teams channels.
+
+**Configuration:**
+```json
+{
+  "type": "Teams",
+  "webhook_url": "https://outlook.office.com/webhook/YOUR/WEBHOOK/URL"
+}
+```
+
+**Use Cases:**
+- Enterprise team notifications
+- Integration with Office 365 workflows
+- Status updates
+
+### Mattermost
+
+Send notifications to Mattermost channels.
+
+**Configuration:**
+```json
+{
+  "type": "Mattermost",
+  "webhook_url": "https://your-mattermost.com/hooks/YOUR_WEBHOOK_ID",
+  "channel": "town-square",
+  "username": "NocoDB"
+}
+```
+
+## Email Integrations
+
+### SMTP
+
+Send emails using any SMTP server.
+
+**Configuration:**
+```json
+{
+  "type": "SMTP",
+  "host": "smtp.gmail.com",
+  "port": 587,
+  "secure": false,
+  "auth": {
+    "user": "your-email@gmail.com",
+    "pass": "your-app-password"
+  },
+  "from": "noreply@yourdomain.com"
+}
+```
+
+**Common SMTP Providers:**
+- Gmail: `smtp.gmail.com:587`
+- Outlook: `smtp-mail.outlook.com:587`
+- SendGrid: `smtp.sendgrid.net:587`
+
+### AWS SES (Simple Email Service)
+
+Send emails using Amazon SES.
+
+**Configuration:**
+```json
+{
+  "type": "SES",
+  "region": "us-east-1",
+  "accessKeyId": "YOUR_ACCESS_KEY",
+  "secretAccessKey": "YOUR_SECRET_KEY",
+  "from": "noreply@yourdomain.com"
+}
+```
+
+**Features:**
+- High deliverability rates
+- Cost-effective for bulk emails
+- Detailed sending statistics
+
+### MailerSend
+
+Modern email delivery service.
+
+**Configuration:**
+```json
+{
+  "type": "MailerSend",
+  "api_key": "YOUR_API_KEY",
+  "from": {
+    "email": "noreply@yourdomain.com",
+    "name": "Your App Name"
+  }
+}
+```
+
+### Twilio SMS
+
+Send SMS notifications.
+
+**Configuration:**
+```json
+{
+  "type": "Twilio",
+  "account_sid": "YOUR_ACCOUNT_SID",
+  "auth_token": "YOUR_AUTH_TOKEN",
+  "from": "+1234567890"
+}
+```
+
+### Twilio WhatsApp
+
+Send WhatsApp messages via Twilio.
+
+**Configuration:**
+```json
+{
+  "type": "TwilioWhatsapp",
+  "account_sid": "YOUR_ACCOUNT_SID",
+  "auth_token": "YOUR_AUTH_TOKEN",
+  "from": "whatsapp:+14155238886"
+}
+```
+
+## Storage Integrations
+
+### Amazon S3
+
+Store attachments in AWS S3 buckets.
+
+**Configuration:**
+```json
+{
+  "client": "s3",
+  "bucket": "your-bucket-name",
+  "region": "us-east-1",
+  "access_key_id": "YOUR_ACCESS_KEY",
+  "access_key_secret": "YOUR_SECRET_KEY"
+}
+```
+
+**Features:**
+- Unlimited storage
+- High availability
+- Global CDN support
+
+### Google Cloud Storage (GCS)
+
+Store files in Google Cloud Storage.
+
+**Configuration:**
+```json
+{
+  "client": "gcs",
+  "bucket": "your-bucket-name",
+  "projectId": "your-project-id",
+  "credentials": {
+    "type": "service_account",
+    "project_id": "your-project-id",
+    "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+    "client_email": "service-account@project.iam.gserviceaccount.com"
+  }
+}
+```
+
+### MinIO
+
+Self-hosted S3-compatible storage.
+
+**Configuration:**
+```json
+{
+  "client": "minio",
+  "endPoint": "play.min.io",
+  "port": 9000,
+  "useSSL": true,
+  "accessKey": "YOUR_ACCESS_KEY",
+  "secretKey": "YOUR_SECRET_KEY",
+  "bucket": "your-bucket"
+}
+```
+
+### Cloudflare R2
+
+S3-compatible storage with zero egress fees.
+
+**Configuration:**
+```json
+{
+  "client": "r2",
+  "accountId": "YOUR_ACCOUNT_ID",
+  "accessKeyId": "YOUR_ACCESS_KEY_ID",
+  "secretAccessKey": "YOUR_SECRET_ACCESS_KEY",
+  "bucket": "your-bucket"
+}
+```
+
+### Backblaze B2
+
+Affordable cloud storage.
+
+**Configuration:**
+```json
+{
+  "client": "backblaze",
+  "applicationKeyId": "YOUR_KEY_ID",
+  "applicationKey": "YOUR_APPLICATION_KEY",
+  "bucket": "your-bucket",
+  "region": "us-west-001"
+}
+```
+
+### DigitalOcean Spaces
+
+S3-compatible object storage from DigitalOcean.
+
+**Configuration:**
+```json
+{
+  "client": "spaces",
+  "region": "nyc3",
+  "accessKeyId": "YOUR_ACCESS_KEY",
+  "secretAccessKey": "YOUR_SECRET_KEY",
+  "bucket": "your-space-name"
+}
+```
+
+### Other Storage Providers
+
+NocoDB also supports:
+
+- **Linode Object Storage** - S3-compatible storage from Linode
+- **Scaleway Object Storage** - European cloud storage provider
+- **Vultr Object Storage** - Global cloud storage
+- **OVH Cloud Storage** - European cloud provider
+- **UpCloud Object Storage** - High-performance cloud storage
+- **Generic S3** - Any S3-compatible storage service
+
+## Integration Management
+
+### Creating an Integration
+
+```javascript
+const integration = await Integration.createIntegration({
+  title: 'My Slack Integration',
+  type: 'Notification',
+  sub_type: 'Slack',
+  config: {
+    webhook_url: 'https://hooks.slack.com/services/...',
+    channel: '#general'
+  },
+  enabled: true,
+  is_private: false
+});
+```
+
+### Integration Properties
+
+<ParamField path="title" type="string" required>
+  Display name for the integration
+</ParamField>
+
+<ParamField path="type" type="string" required>
+  Integration category: `Notification`, `Email`, `Storage`, `Auth`
+</ParamField>
+
+<ParamField path="sub_type" type="string" required>
+  Specific integration service: `Slack`, `Discord`, `SMTP`, `S3`, etc.
+</ParamField>
+
+<ParamField path="config" type="object" required>
+  Service-specific configuration (encrypted at rest)
+</ParamField>
+
+<ParamField path="enabled" type="boolean" default="true">
+  Whether the integration is active
+</ParamField>
+
+<ParamField path="is_private" type="boolean" default="false">
+  Whether the integration is private to the creator
+</ParamField>
+
+<ParamField path="is_default" type="boolean" default="false">
+  Whether this is the default integration for its type
+</ParamField>
+
+<ParamField path="order" type="number">
+  Display order in the integration list
+</ParamField>
+
+## Security
+
+- All integration credentials are **encrypted at rest**
+- Private integrations are only accessible to their creator
+- API tokens and secrets are never exposed in API responses
+- Use workspace-level permissions to control integration access
+
+## Best Practices
+
+1. **Use Environment Variables**: Store sensitive credentials as environment variables
+2. **Test Configurations**: Verify integration settings before using in production
+3. **Set Defaults**: Mark frequently-used integrations as default
+4. **Monitor Usage**: Track integration usage to optimize costs
+5. **Rotate Credentials**: Regularly update API keys and tokens
+6. **Use Private Integrations**: Keep sensitive integrations private when needed
+
+<Note>
+  Integration configurations are validated during creation. Invalid configurations will be rejected with detailed error messages.
+</Note>

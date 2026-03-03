@@ -1,80 +1,222 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Get started with NocoDB in minutes"
 ---
 
-## Get started in three steps
+Get up and running with NocoDB quickly by following this step-by-step guide. You'll go from installation to creating your first base and table in just a few minutes.
 
-Get your documentation site running locally and make your first customization.
+<Steps>
+  <Step title="Install NocoDB with Docker">
+    The fastest way to get started is using Docker. Run this command to start NocoDB:
 
-### Step 1: Set up your local environment
+    ```bash
+    docker run -d \
+      --name noco \
+      -v "$(pwd)"/nocodb:/usr/app/data/ \
+      -p 8080:8080 \
+      nocodb/nocodb:latest
+    ```
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    <Info>
+    NocoDB will be available at [http://localhost:8080/dashboard](http://localhost:8080/dashboard) after the container starts.
+    </Info>
 
-### Step 2: Deploy your changes
+    For other installation methods, see the [Installation guide](/installation).
+  </Step>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+  <Step title="Create your account">
+    When you first access NocoDB, you'll be prompted to create an admin account:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    1. Open [http://localhost:8080/dashboard](http://localhost:8080/dashboard) in your browser
+    2. Enter your email address
+    3. Create a secure password
+    4. Click **Sign up** to create your account
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    <Note>
+    The first account created automatically becomes the workspace owner with full administrative privileges.
+    </Note>
+  </Step>
 
-### Step 3: Go live
+  <Step title="Create your first base">
+    After signing in, you'll be taken to the workspace dashboard:
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    1. Click **Create Base** or **New Base**
+    2. Choose between:
+       - **Create blank base** - Start with an empty base
+       - **Create base from external database** - Connect to existing MySQL, PostgreSQL, or SQLite database
+    3. Enter a name for your base (e.g., "Project Management")
+    4. Click **Create**
+
+    <Tip>
+    Bases are like databases in NocoDB. Each base can contain multiple tables and represents a complete application or project.
+    </Tip>
+  </Step>
+
+  <Step title="Create your first table">
+    Once inside your base:
+
+    1. Click **Add new table** or the **+** button
+    2. Enter a table name (e.g., "Tasks")
+    3. NocoDB automatically creates an `Id` field as the primary key
+    4. Add your first custom field:
+       - Click **+** next to the Id column
+       - Choose a field type (e.g., "SingleLineText")
+       - Name it "Title"
+       - Click **Save**
+    5. Add more fields as needed (Status, Due Date, Assignee, etc.)
+
+    <Info>
+    NocoDB supports 40+ field types including text, numbers, dates, attachments, formulas, links to other tables, and more.
+    </Info>
+  </Step>
+
+  <Step title="Add your first record">
+    Start adding data to your table:
+
+    1. Click the **+** button at the bottom of the table or press **Enter**
+    2. Type in the "Title" field (e.g., "Create project documentation")
+    3. Press **Tab** to move to the next field
+    4. Fill in other fields
+    5. Press **Enter** to save and create another record
+
+    <Tip>
+    Use keyboard shortcuts for faster data entry:
+    - **Enter**: Create new row
+    - **Tab**: Move to next field
+    - **Shift + Tab**: Move to previous field
+    - **Delete**: Delete selected row (with confirmation)
+    </Tip>
+  </Step>
+
+  <Step title="Explore different views">
+    NocoDB offers multiple ways to visualize your data. Try switching between views:
+
+    <Tabs>
+      <Tab title="Grid View">
+        The default spreadsheet-like interface. Perfect for:
+        - Bulk data entry
+        - Sorting and filtering
+        - Quick edits
+        - Viewing all data at once
+      </Tab>
+      
+      <Tab title="Gallery View">
+        Visual card-based layout. Great for:
+        - Product catalogs
+        - Image galleries
+        - Portfolio items
+        - Any content with cover images
+      </Tab>
+      
+      <Tab title="Kanban View">
+        Board with draggable cards. Ideal for:
+        - Project management
+        - Sales pipelines
+        - Task tracking
+        - Workflow management
+      </Tab>
+      
+      <Tab title="Calendar View">
+        Time-based visualization. Perfect for:
+        - Event planning
+        - Deadline tracking
+        - Content calendars
+        - Team scheduling
+      </Tab>
+    </Tabs>
+
+    To create a new view:
+    1. Click **+ Create New View** in the sidebar
+    2. Choose your view type
+    3. Configure the view settings
+    4. Click **Create View**
+  </Step>
+</Steps>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
+Now that you have NocoDB up and running, explore these key features:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Add relationships" icon="link" href="/features/relations">
+    Link tables together to create powerful relational databases
+  </Card>
+  
+  <Card title="Set up filters" icon="filter" href="/features/filters-sorting">
+    Create complex filters to find exactly the data you need
+  </Card>
+  
+  <Card title="Create formulas" icon="calculator" href="/features/formulas">
+    Use Excel-like formulas to compute values automatically
+  </Card>
+  
+  <Card title="Set up webhooks" icon="webhook" href="/automation/webhooks">
+    Automate workflows with webhooks triggered by data changes
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Common actions
+
+<AccordionGroup>
+  <Accordion title="How do I invite team members?">
+    1. Click on your workspace name in the top left
+    2. Select **Workspace Settings**
+    3. Go to **Members** tab
+    4. Click **Invite Member**
+    5. Enter their email and assign a role
+    6. Click **Send Invite**
+    
+    Team members will receive an email invitation to join your workspace.
+  </Accordion>
+
+  <Accordion title="How do I share a view publicly?">
+    1. Open the view you want to share
+    2. Click the **Share** button in the top right
+    3. Enable **Share View**
+    4. Optionally set a password
+    5. Copy the generated link
+    
+    Anyone with the link can access the shared view (with the password if set).
+  </Accordion>
+
+  <Accordion title="How do I connect to my existing database?">
+    1. When creating a new base, select **Create base from external database**
+    2. Choose your database type (PostgreSQL, MySQL, SQLite)
+    3. Enter connection details:
+       - Host
+       - Port
+       - Database name
+       - Username
+       - Password
+    4. Click **Test Connection**
+    5. Once successful, click **Connect**
+    
+    NocoDB will read your existing schema and create a base with all your tables.
+  </Accordion>
+
+  <Accordion title="How do I export my data?">
+    1. Open the view you want to export
+    2. Click the **...** menu in the top right
+    3. Select **Download**
+    4. Choose your format (CSV, Excel, JSON)
+    5. Click **Export**
+    
+    The file will be downloaded to your computer.
+  </Accordion>
+</AccordionGroup>
+
+## Need help?
+
+<CardGroup cols={3}>
+  <Card title="Documentation" icon="book" href="/features/bases">
+    Explore the full documentation
+  </Card>
+  
+  <Card title="Discord Community" icon="discord" href="https://discord.gg/c7GEYrvFtT">
+    Join our Discord community
+  </Card>
+  
+  <Card title="GitHub Issues" icon="github" href="https://github.com/nocodb/nocodb/issues">
+    Report bugs or request features
+  </Card>
+</CardGroup>

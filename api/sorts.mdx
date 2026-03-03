@@ -1,0 +1,419 @@
+---
+title: 'Sorts API'
+description: 'Manage view sorting using NocoDB API'
+---
+
+## Overview
+
+Sorts control the order in which records appear in views. You can apply multiple sorts to a view, creating a hierarchical sorting order.
+
+## Sort Directions
+
+NocoDB supports four sort directions:
+
+- `asc` - Ascending order (A-Z, 0-9, oldest-newest)
+- `desc` - Descending order (Z-A, 9-0, newest-oldest)
+- `count-asc` - Count ascending (for linked records)
+- `count-desc` - Count descending (for linked records)
+
+## List View Sorts
+
+Retrieve all sorts for a specific view.
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/sorts" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view
+</ParamField>
+
+### Response
+
+<ResponseField name="list" type="array">
+  Array of sort objects
+</ResponseField>
+
+<ResponseField name="list[].id" type="string">
+  Unique sort identifier
+</ResponseField>
+
+<ResponseField name="list[].fk_column_id" type="string">
+  Foreign key to the column being sorted
+</ResponseField>
+
+<ResponseField name="list[].fk_model_id" type="string">
+  Foreign key to the table
+</ResponseField>
+
+<ResponseField name="list[].direction" type="string">
+  Sort direction: `asc`, `desc`, `count-asc`, or `count-desc`
+</ResponseField>
+
+<ResponseField name="list[].order" type="number">
+  Position in the sort hierarchy (1 = primary sort)
+</ResponseField>
+
+<ResponseField name="list[].base_id" type="string">
+  Foreign key to the base
+</ResponseField>
+
+<ResponseField name="pageInfo" type="object">
+  Pagination information
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "list": [
+    {
+      "id": "so_xd4t51uv60ghzl",
+      "fk_column_id": "cl_priority",
+      "fk_model_id": "md_ehn5izr99m7d45",
+      "source_id": "ds_3l9qx8xqksenrl",
+      "direction": "desc",
+      "order": 1,
+      "base_id": "p_9sx43moxhqtjm3"
+    },
+    {
+      "id": "so_abc123def456",
+      "fk_column_id": "cl_created_at",
+      "fk_model_id": "md_ehn5izr99m7d45",
+      "source_id": "ds_3l9qx8xqksenrl",
+      "direction": "asc",
+      "order": 2,
+      "base_id": "p_9sx43moxhqtjm3"
+    }
+  ],
+  "pageInfo": {
+    "isFirstPage": true,
+    "isLastPage": true,
+    "page": 1,
+    "pageSize": 10,
+    "totalRows": 2
+  }
+}
+```
+
+## Create Sort
+
+Add a new sort to a view.
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_l11b769pe2j1ce",
+    "direction": "asc"
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view
+</ParamField>
+
+### Request Body
+
+<ParamField body="fk_column_id" type="string" required>
+  Column ID to sort by
+</ParamField>
+
+<ParamField body="direction" type="string" required>
+  Sort direction: `asc` or `desc`
+</ParamField>
+
+<ParamField body="push_to_top" type="boolean">
+  Push this sort to the top of the sort order (default: false)
+</ParamField>
+
+### Example: Sort by Name (Ascending)
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_name_column",
+    "direction": "asc"
+  }'
+```
+
+### Example: Sort by Date (Newest First)
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_created_at",
+    "direction": "desc",
+    "push_to_top": true
+  }'
+```
+
+### Example: Sort by Linked Record Count
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_linked_tasks",
+    "direction": "count-desc"
+  }'
+```
+
+## Get Sort
+
+Retrieve a specific sort by its ID.
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/sorts/{sortId}" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="sortId" type="string" required>
+  Unique identifier for the sort
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique sort identifier
+</ResponseField>
+
+<ResponseField name="fk_column_id" type="string">
+  Column ID being sorted
+</ResponseField>
+
+<ResponseField name="fk_model_id" type="string">
+  Table ID
+</ResponseField>
+
+<ResponseField name="direction" type="string">
+  Sort direction
+</ResponseField>
+
+<ResponseField name="order" type="number">
+  Position in sort hierarchy
+</ResponseField>
+
+## Update Sort
+
+Modify an existing sort.
+
+```bash
+curl -X PATCH "https://app.nocodb.com/api/v1/db/meta/sorts/{sortId}" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "direction": "desc",
+    "fk_column_id": "cl_l11b769pe2j1ce"
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="sortId" type="string" required>
+  Unique identifier for the sort
+</ParamField>
+
+### Request Body
+
+<ParamField body="fk_column_id" type="string">
+  New column ID to sort by
+</ParamField>
+
+<ParamField body="direction" type="string">
+  New sort direction: `asc`, `desc`, `count-asc`, or `count-desc`
+</ParamField>
+
+### Example: Change Sort Direction
+
+```bash
+curl -X PATCH "https://app.nocodb.com/api/v1/db/meta/sorts/so_xyz789" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "direction": "asc"
+  }'
+```
+
+## Delete Sort
+
+Remove a sort from a view.
+
+```bash
+curl -X DELETE "https://app.nocodb.com/api/v1/db/meta/sorts/{sortId}" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="sortId" type="string" required>
+  Unique identifier for the sort to delete
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Returns true if deletion was successful
+</ResponseField>
+
+## Multi-Level Sorting
+
+Apply multiple sorts to create a hierarchical sort order. Records are sorted by the first sort, then by the second sort for records with the same value in the first sort, and so on.
+
+### Example: Sort by Priority (High to Low), then by Date (Newest First)
+
+```bash
+# 1. Add primary sort (Priority - High to Low)
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_priority",
+    "direction": "desc"
+  }'
+
+# 2. Add secondary sort (Created Date - Newest First)
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_created_at",
+    "direction": "desc"
+  }'
+```
+
+This creates a sort order where:
+1. Records are first sorted by Priority (descending)
+2. Records with the same Priority are then sorted by Created Date (descending)
+
+## Sort Order
+
+The `order` field determines the hierarchy of sorts:
+
+- `order: 1` - Primary sort (applied first)
+- `order: 2` - Secondary sort (applied to records with same primary value)
+- `order: 3` - Tertiary sort (and so on)
+
+Sorts are automatically assigned order values based on creation sequence. Use `push_to_top: true` when creating a sort to make it the primary sort.
+
+## Sorting Different Data Types
+
+### Text Columns
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_name",
+    "direction": "asc"
+  }'
+```
+
+Sorts alphabetically (A-Z for asc, Z-A for desc).
+
+### Number Columns
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_price",
+    "direction": "desc"
+  }'
+```
+
+Sorts numerically (0-9 for asc, 9-0 for desc).
+
+### Date/DateTime Columns
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_due_date",
+    "direction": "asc"
+  }'
+```
+
+Sorts chronologically (oldest-newest for asc, newest-oldest for desc).
+
+### Select Columns
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_status",
+    "direction": "asc"
+  }'
+```
+
+Sorts by option order or alphabetically.
+
+### Link to Another Record
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_related_tasks",
+    "direction": "count-desc"
+  }'
+```
+
+Use `count-asc` or `count-desc` to sort by the number of linked records.
+
+## Best Practices
+
+<Tip>
+  **Performance**: Sorting on indexed columns is faster. Consider adding indexes to frequently sorted columns.
+</Tip>
+
+<Tip>
+  **Null Values**: Null values typically appear first in ascending sorts and last in descending sorts.
+</Tip>
+
+<Tip>
+  **Multiple Sorts**: Limit the number of sorts to 3-4 for optimal performance. Excessive sorting can slow down large datasets.
+</Tip>
+
+<Info>
+  Sort changes take effect immediately and apply to all users viewing the same view (unless using personal lock type).
+</Info>
+
+## List View Levels (Grouping)
+
+For List views, you can sort within grouped levels using the `fk_level_id` parameter:
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/sorts" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_priority",
+    "direction": "desc",
+    "fk_level_id": "lv_xyz789"
+  }'
+```
+
+<ParamField body="fk_level_id" type="string">
+  Foreign key to List View Level (for grouped sorts)
+</ParamField>

@@ -1,0 +1,407 @@
+---
+title: Extensions
+description: Extend NocoDB functionality with custom extensions
+---
+
+Extensions allow you to add custom functionality to NocoDB bases. Each extension can store its own configuration and data, enabling powerful customizations tailored to your specific needs.
+
+## Overview
+
+Extensions are base-specific add-ons that can:
+
+- Store custom configuration and settings
+- Maintain their own key-value data store
+- Integrate with external services
+- Provide custom UI components
+- Extend NocoDB's core functionality
+
+## Extension Structure
+
+### Core Properties
+
+<ParamField path="id" type="string">
+  Unique identifier for the extension instance
+</ParamField>
+
+<ParamField path="extension_id" type="string" required>
+  The identifier of the extension type being installed
+</ParamField>
+
+<ParamField path="title" type="string" required>
+  Display name for the extension
+</ParamField>
+
+<ParamField path="base_id" type="string" required>
+  ID of the base where the extension is installed
+</ParamField>
+
+<ParamField path="fk_user_id" type="string">
+  ID of the user who created the extension
+</ParamField>
+
+<ParamField path="order" type="number">
+  Display order for the extension (auto-incremented if not provided)
+</ParamField>
+
+### Data Storage
+
+<ParamField path="kv_store" type="object">
+  Key-value store for extension data. Can store any JSON-serializable data.
+  
+  ```json
+  {
+    "settings": {
+      "theme": "dark",
+      "autoRefresh": true
+    },
+    "cache": {
+      "lastSync": "2026-03-03T10:30:00Z"
+    }
+  }
+  ```
+</ParamField>
+
+<ParamField path="meta" type="object">
+  Metadata for the extension. Used for configuration and settings.
+  
+  ```json
+  {
+    "version": "1.0.0",
+    "author": "Your Name",
+    "description": "Custom analytics dashboard"
+  }
+  ```
+</ParamField>
+
+## Creating Extensions
+
+### Basic Extension
+
+```javascript
+const extension = await Extension.insert(context, {
+  base_id: 'base_abc123',
+  extension_id: 'custom-analytics',
+  title: 'Analytics Dashboard',
+  fk_user_id: 'usr_xyz789',
+  meta: {
+    version: '1.0.0',
+    description: 'Custom analytics for sales data'
+  },
+  kv_store: {
+    settings: {
+      refreshInterval: 60000,
+      defaultView: 'charts'
+    }
+  }
+});
+```
+
+### Extension with Configuration
+
+```javascript
+const extension = await Extension.insert(context, {
+  base_id: 'base_abc123',
+  extension_id: 'data-sync',
+  title: 'External Data Sync',
+  meta: {
+    version: '2.1.0',
+    config: {
+      apiEndpoint: 'https://api.example.com',
+      syncInterval: 3600000, // 1 hour
+      fields: ['name', 'email', 'status']
+    }
+  },
+  kv_store: {
+    lastSync: null,
+    syncCount: 0,
+    errors: []
+  }
+});
+```
+
+## Managing Extensions
+
+### List Extensions
+
+Get all extensions for a base:
+
+```javascript
+const extensions = await Extension.list(context, baseId);
+
+// Extensions are sorted by order
+for (const ext of extensions) {
+  console.log(`${ext.title}: ${ext.extension_id}`);
+}
+```
+
+### Get Extension
+
+Retrieve a specific extension:
+
+```javascript
+const extension = await Extension.get(context, extensionId);
+console.log(extension.kv_store);
+```
+
+### Update Extension
+
+Update extension data:
+
+```javascript
+await Extension.update(context, extensionId, {
+  title: 'Updated Title',
+  kv_store: {
+    ...extension.kv_store,
+    lastSync: new Date().toISOString(),
+    syncCount: extension.kv_store.syncCount + 1
+  },
+  meta: {
+    ...extension.meta,
+    lastModified: new Date().toISOString()
+  }
+});
+```
+
+### Delete Extension
+
+Remove an extension:
+
+```javascript
+await Extension.delete(context, extensionId);
+```
+
+### Delete All Base Extensions
+
+Remove all extensions from a base:
+
+```javascript
+await Extension.deleteByBaseId(context, baseId);
+```
+
+## Extension Use Cases
+
+### 1. Custom Dashboard
+
+```javascript
+const dashboard = await Extension.insert(context, {
+  base_id: baseId,
+  extension_id: 'custom-dashboard',
+  title: 'Sales Dashboard',
+  meta: {
+    widgets: [
+      { type: 'chart', title: 'Revenue', query: 'SELECT SUM(revenue) FROM sales' },
+      { type: 'table', title: 'Top Products', query: 'SELECT * FROM products ORDER BY sales DESC LIMIT 10' }
+    ]
+  },
+  kv_store: {
+    cachedData: {},
+    refreshInterval: 300000 // 5 minutes
+  }
+});
+```
+
+### 2. Data Validation
+
+```javascript
+const validator = await Extension.insert(context, {
+  base_id: baseId,
+  extension_id: 'data-validator',
+  title: 'Custom Validation Rules',
+  meta: {
+    rules: [
+      { field: 'email', pattern: '^[^@]+@[^@]+\\.[^@]+$' },
+      { field: 'phone', pattern: '^\\+?[0-9]{10,15}$' }
+    ]
+  },
+  kv_store: {
+    validationResults: [],
+    lastRun: null
+  }
+});
+```
+
+### 3. Integration Hub
+
+```javascript
+const integration = await Extension.insert(context, {
+  base_id: baseId,
+  extension_id: 'integration-hub',
+  title: 'CRM Integration',
+  meta: {
+    connections: [
+      { service: 'Salesforce', enabled: true },
+      { service: 'HubSpot', enabled: false }
+    ]
+  },
+  kv_store: {
+    tokens: {}, // Store OAuth tokens
+    syncStatus: {},
+    logs: []
+  }
+});
+```
+
+### 4. Automation Workflow
+
+```javascript
+const workflow = await Extension.insert(context, {
+  base_id: baseId,
+  extension_id: 'automation-workflow',
+  title: 'Lead Scoring Automation',
+  meta: {
+    workflow: {
+      triggers: [{ event: 'after.insert', table: 'leads' }],
+      actions: [
+        { type: 'calculate', field: 'score', formula: 'budget * 0.3 + engagement * 0.7' },
+        { type: 'notify', condition: 'score > 80', channel: 'slack' }
+      ]
+    }
+  },
+  kv_store: {
+    executionHistory: [],
+    statistics: {
+      totalRuns: 0,
+      successRate: 0
+    }
+  }
+});
+```
+
+## Data Persistence
+
+### Key-Value Store
+
+The `kv_store` is perfect for:
+
+- Cache data
+- User preferences
+- Temporary state
+- Runtime statistics
+- Error logs
+
+**Example:**
+
+```javascript
+// Initialize KV store
+const extension = await Extension.insert(context, {
+  base_id: baseId,
+  extension_id: 'cache-manager',
+  title: 'Data Cache',
+  kv_store: {
+    cache: {},
+    stats: {
+      hits: 0,
+      misses: 0
+    }
+  }
+});
+
+// Update KV store
+const current = await Extension.get(context, extension.id);
+await Extension.update(context, extension.id, {
+  kv_store: {
+    ...current.kv_store,
+    cache: {
+      ...current.kv_store.cache,
+      [`key_${Date.now()}`]: 'value'
+    },
+    stats: {
+      hits: current.kv_store.stats.hits + 1,
+      misses: current.kv_store.stats.misses
+    }
+  }
+});
+```
+
+### Metadata
+
+The `meta` field is ideal for:
+
+- Extension configuration
+- Schema definitions
+- Static settings
+- Version information
+
+**Example:**
+
+```javascript
+const extension = await Extension.insert(context, {
+  base_id: baseId,
+  extension_id: 'report-generator',
+  title: 'Monthly Reports',
+  meta: {
+    version: '1.2.0',
+    reportTemplates: [
+      {
+        name: 'Sales Summary',
+        schedule: 'monthly',
+        format: 'pdf',
+        recipients: ['manager@example.com']
+      }
+    ],
+    config: {
+      timezone: 'UTC',
+      dateFormat: 'YYYY-MM-DD'
+    }
+  }
+});
+```
+
+## Extension Ordering
+
+Extensions support ordering for display purposes:
+
+```javascript
+// Extension with specific order
+await Extension.insert(context, {
+  base_id: baseId,
+  extension_id: 'priority-extension',
+  title: 'High Priority Extension',
+  order: 1 // Will appear first
+});
+
+// Auto-increment order (default behavior)
+await Extension.insert(context, {
+  base_id: baseId,
+  extension_id: 'normal-extension',
+  title: 'Normal Extension'
+  // order is automatically set
+});
+```
+
+## Workspace Limits
+
+Extensions are subject to workspace limits:
+
+- Maximum extensions per workspace (configurable)
+- Quota tracking via `PlanLimitTypes.LIMIT_EXTENSION_PER_WORKSPACE`
+- Creating an extension increments the workspace counter
+- Deleting an extension decrements the counter
+
+## Best Practices
+
+1. **Use Descriptive IDs**: Choose clear, unique `extension_id` values
+2. **Version Your Extensions**: Include version in `meta` for tracking changes
+3. **Validate Data**: Check `kv_store` and `meta` data before updates
+4. **Handle Errors**: Implement error handling for extension operations
+5. **Document Structure**: Document your `meta` and `kv_store` schemas
+6. **Clean Up**: Delete unused extensions to free up quota
+7. **Order Strategically**: Use `order` to prioritize important extensions
+8. **Separate Concerns**: Use `meta` for config, `kv_store` for runtime data
+
+## Caching
+
+Extensions are cached for performance:
+
+- Individual extensions cached by ID
+- Base extension lists cached
+- Cache automatically invalidated on updates
+- Deep cache deletion on extension removal
+
+<Note>
+  Extensions are base-specific. When a base is deleted, all its extensions are automatically removed.
+</Note>
+
+<Warning>
+  The `kv_store` and `meta` fields are JSON-serialized. Ensure all stored data is JSON-serializable.
+</Warning>

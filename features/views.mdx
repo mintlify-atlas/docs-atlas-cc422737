@@ -1,0 +1,454 @@
+---
+title: 'Views'
+description: 'Visualize and interact with your data using different view types in NocoDB.'
+---
+
+Views provide different ways to visualize and interact with your table data. Each view displays the same underlying data but with different layouts, filters, and sorting options tailored to specific use cases.
+
+## What is a View?
+
+A **view** is a saved configuration that determines how table data is displayed and accessed. Views allow you to:
+
+- Customize which columns are visible
+- Apply filters and sorting
+- Group and organize data differently
+- Share specific data subsets with others
+- Create forms for data collection
+
+<CardGroup cols={2}>
+  <Card title="Multiple Layouts" icon="grid">
+    Display data as Grid, Gallery, Kanban, Calendar, and more
+  </Card>
+  <Card title="Independent Configs" icon="sliders">
+    Each view has its own filters, sorts, and visibility settings
+  </Card>
+  <Card title="Shareable" icon="share-nodes">
+    Generate public links to share views externally
+  </Card>
+  <Card title="Collaborative" icon="users">
+    Team members see the same organized data
+  </Card>
+</CardGroup>
+
+## View Types
+
+NocoDB supports 8 different view types:
+
+### Grid View
+
+The classic spreadsheet-style view:
+- **Best for**: Data entry, bulk editing, detailed analysis
+- **Features**: Inline editing, column resizing, row selection
+- **Use cases**: Managing customer lists, inventory tracking
+
+**ViewTypes.GRID** (Type: 3)
+
+### Gallery View
+
+Card-based visual layout:
+- **Best for**: Image-heavy data, portfolios, catalogs
+- **Features**: Cover images, customizable card content
+- **Use cases**: Product catalogs, team directories, project showcases
+
+**ViewTypes.GALLERY** (Type: 2)
+
+### Form View
+
+Data collection interface:
+- **Best for**: External submissions, surveys, intake forms
+- **Features**: Custom fields, conditional logic, branding
+- **Use cases**: Contact forms, registration, feedback collection
+
+**ViewTypes.FORM** (Type: 1)
+
+### Kanban View
+
+Drag-and-drop board layout:
+- **Best for**: Workflow management, status tracking
+- **Features**: Column grouping, drag-to-update, progress visualization
+- **Use cases**: Project management, sales pipelines, task boards
+
+**ViewTypes.KANBAN** (Type: 4)
+
+### Calendar View
+
+Time-based visualization:
+- **Best for**: Event scheduling, date tracking
+- **Features**: Month/week/day views, date ranges
+- **Use cases**: Event calendars, deadlines, scheduling
+
+**ViewTypes.CALENDAR** (Type: 6)
+
+### Map View
+
+Geospatial data display:
+- **Best for**: Location-based data
+- **Features**: Interactive maps, marker clustering
+- **Use cases**: Store locations, delivery routes, property listings
+
+**ViewTypes.MAP** (Type: 5)
+
+### List View
+
+Hierarchical nested display:
+- **Best for**: Parent-child relationships, nested data
+- **Features**: Expandable levels, linked records
+- **Use cases**: Organization charts, category trees, threaded discussions
+
+**ViewTypes.LIST** (Type: 7)
+
+### Timeline View
+
+Time-range based visualization:
+- **Best for**: Project timelines, scheduling
+- **Features**: Start/end dates, duration display, Gantt-style layout
+- **Use cases**: Project planning, resource allocation, scheduling
+
+**ViewTypes.TIMELINE** (Type: 8)
+
+Source: `globals.ts:36-45`
+
+## Creating a View
+
+<Steps>
+  <Step title="Open the table">
+    Navigate to the table where you want to create a view
+  </Step>
+  
+  <Step title="Click 'Create View'">
+    Click the "+" icon next to the views list or use the view dropdown
+  </Step>
+  
+  <Step title="Select view type">
+    Choose from Grid, Gallery, Form, Kanban, Calendar, Map, List, or Timeline
+  </Step>
+  
+  <Step title="Configure view settings">
+    - **Title**: Name your view
+    - **Description**: Add context (optional)
+    - **Type-specific settings**: Configure view-specific options
+  </Step>
+  
+  <Step title="Customize display">
+    - Show/hide columns
+    - Apply filters and sorting
+    - Set grouping options (view-dependent)
+  </Step>
+</Steps>
+
+## View Properties
+
+| Property | Description | Type |
+|----------|-------------|------|
+| `id` | Unique identifier | string |
+| `title` | Display name | string |
+| `description` | Optional description | string |
+| `type` | View type (Grid, Gallery, etc.) | ViewTypes |
+| `fk_model_id` | Parent table ID | string |
+| `show` | Visibility status | boolean |
+| `order` | Display order | number |
+| `uuid` | Shared view identifier | string |
+| `password` | Shared view password | string |
+| `lock_type` | Collaborative/locked | string |
+| `show_system_fields` | Include system columns | boolean |
+
+Source: `View.ts:93-135`
+
+## View Columns
+
+Each view maintains its own column configuration:
+
+```typescript
+// Get columns for a specific view
+const viewColumns = await View.getColumns(context, viewId);
+
+// Update column visibility and order
+await View.updateColumn(context, viewId, columnId, {
+  show: true,
+  order: 3
+});
+```
+
+Column settings per view:
+- **show**: Whether the column is visible
+- **order**: Column display order
+- **width**: Column width (Grid view)
+
+Reference: `View.ts:1100-1147`
+
+## Filters & Sorts
+
+### View Filters
+
+Filters determine which records appear in the view:
+
+```typescript
+// Get filters for a view
+const filters = await view.getFilters(context);
+
+// Filters form a tree structure with AND/OR logic
+```
+
+See [Filters & Sorting](/features/filters-sorting) for detailed filter configuration.
+
+### View Sorting
+
+Control record order:
+
+```typescript
+// Get sorts for a view
+const sorts = await view.getSorts(context);
+
+// Each sort has:
+// - fk_column_id: Column to sort by
+// - direction: 'asc' or 'desc'
+```
+
+## Sharing Views
+
+Share views publicly with external users:
+
+### Enable Sharing
+
+```typescript
+// Generate shareable link
+const sharedView = await View.share(context, viewId);
+// Returns view with uuid for public access
+```
+
+### Password Protection
+
+```typescript
+// Add password to shared view
+await View.passwordUpdate(context, viewId, {
+  password: 'secure-password'
+});
+```
+
+### Verify Access
+
+```typescript
+// Check password for shared view
+const isValid = await View.verifyPassword(view, inputPassword);
+```
+
+### Disable Sharing
+
+```typescript
+// Remove public access
+await View.sharedViewDelete(context, viewId);
+```
+
+Reference: `View.ts:1564-1679`
+
+## View-Specific Features
+
+### Gallery View Options
+
+```typescript
+// Get gallery configuration
+const galleryView = await GalleryView.get(context, viewId);
+
+// Gallery-specific properties:
+// - fk_cover_image_col_id: Column for card cover image
+```
+
+### Kanban View Options
+
+```typescript
+// Get kanban configuration
+const kanbanView = await KanbanView.get(context, viewId);
+
+// Kanban-specific properties:
+// - fk_grp_col_id: Grouping column (typically SingleSelect)
+// - fk_cover_image_col_id: Cover image column
+```
+
+### Calendar View Options
+
+```typescript
+// Calendar requires date range configuration
+const calendarView = await CalendarView.get(context, viewId);
+const ranges = await CalendarRange.read(context, viewId);
+
+// Calendar ranges define:
+// - fk_from_column_id: Start date column
+// - fk_to_column_id: End date column (optional)
+```
+
+### Form View Options
+
+```typescript
+// Get form configuration
+const formView = await FormView.get(context, viewId);
+
+// Form-specific properties:
+// - heading: Form title
+// - subheading: Form description
+// - submit_another_form: Allow multiple submissions
+// - show_blank_form: Show empty form after submit
+```
+
+## Managing Views
+
+### Listing Views
+
+```typescript
+// Get all views for a table
+const views = await View.list(context, tableId);
+
+// Get views with full details
+const detailedViews = await View.listWithInfo(context, tableId);
+```
+
+### Getting View Details
+
+```typescript
+// Get view by ID
+const view = await View.get(context, viewId);
+
+// Get view by title
+const view = await View.getByTitleOrId(context, {
+  fk_model_id: tableId,
+  titleOrId: 'My View'
+});
+```
+
+### Updating a View
+
+```typescript
+await View.update(context, viewId, {
+  title: 'Updated View Name',
+  description: 'New description',
+  show_system_fields: true,
+  lock_type: 'collaborative'
+});
+```
+
+Reference: `View.ts:1681-1792`
+
+### Duplicating a View
+
+Create a copy with all settings:
+
+```typescript
+await View.insert(context, {
+  fk_model_id: tableId,
+  title: 'Copy of View',
+  type: ViewTypes.GRID,
+  copy_from_id: sourceViewId  // Copy filters, sorts, columns
+}, ncMeta);
+```
+
+Reference: `View.ts:295-799`
+
+### Deleting a View
+
+```typescript
+await View.delete(context, viewId);
+```
+
+<Warning>
+Deleting a view removes all its configurations (filters, sorts, column settings) but does not affect the underlying data.
+</Warning>
+
+## View Permissions
+
+### Lock Types
+
+Control edit access:
+- **collaborative**: Anyone with access can edit
+- **locked**: Only owner can modify view settings
+- **personal**: Private view visible only to creator
+
+### Row Coloring
+
+Conditional formatting based on rules:
+
+```typescript
+// Row coloring modes
+row_coloring_mode: {
+  'field-based',  // Color based on field value
+  'condition-based'  // Color based on filter conditions
+}
+```
+
+## Advanced Features
+
+### Column Insertion
+
+Add columns to all views automatically:
+
+```typescript
+// When adding a new column, it's added to all views
+await View.insertColumnToAllViews(context, {
+  fk_column_id: newColumnId,
+  fk_model_id: tableId,
+  order: 5,
+  column_show: {
+    show: true,
+    view_id: specificViewId  // Optional: show only in specific view
+  }
+});
+```
+
+Reference: `View.ts:829-966`
+
+### View Caching
+
+Optimize performance with query caching:
+
+```typescript
+// Clear cached queries for a view
+await View.clearSingleQueryCache(
+  context,
+  tableId,
+  [view],
+  ncMeta
+);
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Create views for different audiences">
+    Make separate views for different user types (e.g., customer-facing, internal team, executive summary).
+  </Accordion>
+  
+  <Accordion title="Use descriptive view names">
+    Name views based on their purpose: "Active Projects", "Q4 Sales", "Pending Approvals".
+  </Accordion>
+  
+  <Accordion title="Minimize visible columns">
+    Show only relevant columns in each view to reduce clutter and improve performance.
+  </Accordion>
+  
+  <Accordion title="Combine filters strategically">
+    Use view filters instead of manual filtering to save time and ensure consistency.
+  </Accordion>
+  
+  <Accordion title="Share with care">
+    When sharing views externally, review visible data and apply appropriate filters first.
+  </Accordion>
+  
+  <Accordion title="Choose the right view type">
+    Match view type to use case: Kanban for workflows, Calendar for events, Gallery for visual content.
+  </Accordion>
+</AccordionGroup>
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Filters & Sorting" icon="filter" href="/features/filters-sorting">
+    Learn how to filter and sort data in views
+  </Card>
+  <Card title="Tables" icon="table" href="/features/tables">
+    Understand the relationship between tables and views
+  </Card>
+  <Card title="Fields" icon="input-text" href="/features/fields">
+    Configure which fields appear in each view
+  </Card>
+  <Card title="Sharing" icon="share" href="/collaboration/sharing">
+    Share views with team members and external users
+  </Card>
+</CardGroup>

@@ -1,0 +1,631 @@
+---
+title: 'Fields'
+description: 'Comprehensive guide to all 40+ field types available in NocoDB for structuring your data.'
+---
+
+Fields (also called columns) define the structure and data types in your tables. NocoDB supports over 40 field types, from simple text to complex formulas and relationships.
+
+## What is a Field?
+
+A **field** is a column in your table that stores a specific type of data. Each field has:
+
+- **Type (uidt)**: Determines what kind of data it can store
+- **Name**: Column identifier in the database
+- **Title**: Display name in the UI
+- **Validation**: Optional rules and constraints
+- **Options**: Type-specific configuration
+
+<CardGroup cols={2}>
+  <Card title="40+ Types" icon="shapes">
+    From basic text to AI-powered fields
+  </Card>
+  <Card title="Flexible Schema" icon="wand-magic">
+    Add or modify fields anytime without downtime
+  </Card>
+  <Card title="Data Validation" icon="shield-check">
+    Enforce rules to maintain data quality
+  </Card>
+  <Card title="Computed Fields" icon="calculator">
+    Formulas, lookups, and rollups for dynamic data
+  </Card>
+</CardGroup>
+
+## Field Categories
+
+### Text Fields
+
+#### Single Line Text
+Basic text input (up to 255 characters)
+- **UIType**: `SingleLineText`
+- **Use cases**: Names, titles, codes, short descriptions
+- **Validation**: Length limits, pattern matching
+
+#### Long Text
+Multi-line text for longer content
+- **UIType**: `LongText`
+- **Use cases**: Descriptions, notes, comments
+- **Features**: Rich text formatting, AI prompt support
+- **Meta options**: `richMode`, `ai` (for AI-powered text)
+
+#### Email
+Validated email address
+- **UIType**: `Email`
+- **Validation**: Automatic email format validation
+- **Features**: Clickable mailto links
+
+#### URL
+Validated web address
+- **UIType**: `URL`
+- **Validation**: URL format checking
+- **Features**: Clickable links in UI
+
+#### Phone Number
+Formatted phone numbers
+- **UIType**: `PhoneNumber`
+- **Features**: International format support
+
+Source: `UITypes.ts:16-34`
+
+### Numeric Fields
+
+#### Number
+Integer or decimal numbers
+- **UIType**: `Number`
+- **Options**: Decimal places, prefix, suffix
+- **Use cases**: Quantities, IDs, counts
+
+#### Decimal
+High-precision decimal numbers
+- **UIType**: `Decimal`
+- **Precision**: Up to 65 digits
+- **Use cases**: Scientific data, precise measurements
+
+#### Currency
+Monetary values with formatting
+- **UIType**: `Currency`
+- **Options**: Currency symbol, decimal places
+- **Features**: Auto-formatting, thousands separator
+
+#### Percent
+Percentage values
+- **UIType**: `Percent`
+- **Display**: Automatically adds % symbol
+- **Use cases**: Completion rates, discounts, ratios
+
+#### Duration
+Time duration in various formats
+- **UIType**: `Duration`
+- **Formats**: h:mm, h:mm:ss, h:mm:ss.s, h:mm:ss.ss, h:mm:ss.sss
+- **Use cases**: Time tracking, elapsed time
+
+#### Rating
+Star or icon-based rating
+- **UIType**: `Rating`
+- **Options**: Max value, icon style
+- **Styles**: Star, heart, thumbs up, flag, moon
+- **Use cases**: Reviews, priorities, scores
+
+Source: `UITypes.ts:35-40`, `UITypes.ts:778-809`
+
+### Date & Time Fields
+
+#### Date
+Date without time
+- **UIType**: `Date`
+- **Format**: Customizable date format
+- **Use cases**: Birthdays, deadlines, milestones
+
+#### DateTime
+Date with time component
+- **UIType**: `DateTime`
+- **Features**: Timezone support
+- **Use cases**: Timestamps, appointments, logs
+
+#### Time
+Time only (no date)
+- **UIType**: `Time`
+- **Format**: HH:mm:ss
+- **Use cases**: Business hours, time slots
+
+#### Year
+Year value only
+- **UIType**: `Year`
+- **Range**: 1901-2155
+
+#### Created Time
+Auto-populated creation timestamp
+- **UIType**: `CreatedTime`
+- **Auto-fill**: Set once on record creation
+- **Read-only**: Cannot be manually edited
+
+#### Last Modified Time
+Auto-updated modification timestamp
+- **UIType**: `LastModifiedTime`
+- **Auto-update**: Updates on every record change
+- **Read-only**: Cannot be manually edited
+
+Source: `UITypes.ts:28-47`
+
+### Selection Fields
+
+#### Single Select
+Pick one option from a predefined list
+- **UIType**: `SingleSelect`
+- **Options**: Custom values with colors
+- **Features**: Dropdown selection, color coding
+- **Use cases**: Status, priority, category
+
+#### Multi Select
+Pick multiple options from a list
+- **UIType**: `MultiSelect`
+- **Options**: Same as Single Select
+- **Display**: Tag-based in UI
+- **Use cases**: Tags, categories, features
+
+Option properties:
+- `title`: Display text
+- `color`: Background color (from predefined palette)
+- `order`: Display order
+
+Source: `Column.ts:454-517`
+
+### Boolean & Interactive Fields
+
+#### Checkbox
+True/false toggle
+- **UIType**: `Checkbox`
+- **Icons**: Square, circle, star, heart, moon, thumbs, flag
+- **Default**: Unchecked
+- **Use cases**: Completion status, yes/no questions
+
+Source: `UITypes.ts:700-736`
+
+#### Button
+Action button with configurable behavior
+- **UIType**: `Button`
+- **Types**: 
+  - URL: Open a link (can use formulas)
+  - Webhook: Trigger external API
+  - Script: Run custom code
+  - AI: Execute AI actions
+- **Options**: Label, icon, theme, color
+- **Formulas**: Dynamic URLs using field values
+
+Source: `Column.ts:418-438`
+
+### Attachment & Visual Fields
+
+#### Attachment
+File uploads and storage
+- **UIType**: `Attachment`
+- **Supported**: Images, documents, videos, any file type
+- **Storage**: Local, S3, Azure, Google Cloud
+- **Features**: Multiple files per cell, preview thumbnails
+
+#### QR Code
+Generated QR code from another field
+- **UIType**: `QrCode`
+- **Source**: Any text-based field
+- **Output**: SVG QR code image
+- **Use cases**: Product codes, URLs, tickets
+
+Source: `Column.ts:395-403`
+
+#### Barcode
+Generated barcode from another field
+- **UIType**: `Barcode`
+- **Source**: Any text-based field
+- **Formats**: UPC, EAN, Code128, etc.
+- **Use cases**: Product scanning, inventory
+
+Source: `Column.ts:406-416`
+
+#### Colour
+Color picker field
+- **UIType**: `Colour`
+- **Format**: Hex color codes
+- **Use cases**: Theming, categorization, design systems
+
+### User & Collaboration Fields
+
+#### User
+Assign users to records
+- **UIType**: `User`
+- **Selection**: From workspace users
+- **Multiple**: Can assign multiple users
+- **Use cases**: Task assignments, ownership
+
+#### Collaborator
+User field with notification capabilities
+- **UIType**: `Collaborator`
+- **Features**: @mentions, notifications
+- **Use cases**: Team collaboration, assignments
+
+#### Created By
+User who created the record
+- **UIType**: `CreatedBy`
+- **Auto-fill**: Set on creation
+- **Read-only**: Cannot be changed
+
+#### Last Modified By
+User who last updated the record
+- **UIType**: `LastModifiedBy`
+- **Auto-update**: Updates on changes
+- **Read-only**: Cannot be changed
+
+Source: `UITypes.ts:56-58`
+
+### Relationship Fields
+
+#### Link to Another Record
+Create relationships between tables
+- **UIType**: `LinkToAnotherRecord`
+- **Relation Types**:
+  - **Has Many (hm)**: One-to-many
+  - **Belongs To (bt)**: Many-to-one
+  - **Many to Many (mm)**: Many-to-many with junction table
+  - **One to One (oo)**: One-to-one
+  - **One to Many (om)**: V2 one-to-many
+  - **Many to One (mo)**: V2 many-to-one
+
+Source: `LinkToAnotherRecordColumn.ts:50`
+
+#### Links
+Modern relationship field (V2)
+- **UIType**: `Links`
+- **Version**: LinksVersion.V2
+- **Features**: Enhanced performance, better UX
+- **All relation types**: Supports all relationship patterns
+
+Source: `Column.ts:344-393`
+
+#### Foreign Key
+Reference to related table's primary key
+- **UIType**: `ForeignKey`
+- **Display**: Shows linked record's display value
+- **Auto-created**: Generated with relationships
+
+### Computed Fields
+
+#### Formula
+Calculated values using expressions
+- **UIType**: `Formula`
+- **Functions**: 100+ functions available
+- **Data Types**: Numeric, string, boolean, date
+- **Examples**: `{Price} * {Quantity}`, `CONCAT({FirstName}, ' ', {LastName})`
+- **Read-only**: Cannot be manually edited
+
+Source: `Column.ts:440-452`
+
+#### Lookup
+Display field from linked record
+- **UIType**: `Lookup`
+- **Requires**: Link field + field to lookup
+- **Use cases**: Show related data without duplicate storage
+- **Example**: Show customer name in orders table
+
+Source: `Column.ts:317-328`
+
+#### Rollup
+Aggregate values from linked records
+- **UIType**: `Rollup`
+- **Functions**: Count, sum, average, min, max, etc.
+- **Requires**: Link field + field to aggregate
+- **Use cases**: Total order amount, count of related items
+
+Source: `Column.ts:330-342`
+
+#### Count
+Count of linked records
+- **UIType**: `Count`
+- **Auto-calculated**: Updates automatically
+- **Use cases**: Number of orders, related items count
+
+### Special Fields
+
+#### ID
+Auto-generated unique identifier
+- **UIType**: `ID`
+- **Primary Key**: Usually the table's primary key
+- **Auto-increment**: Sequential numbering
+
+#### Auto Number
+Custom auto-increment field
+- **UIType**: `AutoNumber`
+- **Options**: Prefix, starting value
+- **Use cases**: Invoice numbers, ticket IDs
+
+#### UUID
+Universally unique identifier
+- **UIType**: `UUID`
+- **Format**: Standard UUID v4
+- **Auto-generated**: On record creation
+
+#### JSON
+Structured JSON data
+- **UIType**: `JSON`
+- **Storage**: Native JSON column type
+- **Use cases**: API responses, complex data structures
+
+#### Geometry
+Geospatial data
+- **UIType**: `Geometry`
+- **Formats**: Point, LineString, Polygon
+- **Use cases**: Maps, spatial queries
+
+#### Geo Data
+Geographic coordinates
+- **UIType**: `GeoData`
+- **Format**: Latitude, longitude
+- **Use cases**: Location tracking, mapping
+
+#### Specific DB Type
+Database-native data type
+- **UIType**: `SpecificDBType`
+- **Purpose**: Use database-specific column types
+- **Advanced**: For specialized database features
+
+Source: `UITypes.ts:16-62`
+
+## Creating a Field
+
+<Steps>
+  <Step title="Open the table">
+    Navigate to the table where you want to add a field
+  </Step>
+  
+  <Step title="Click '+ Add Field'">
+    Click the "+" button in the column header or use the field dropdown
+  </Step>
+  
+  <Step title="Select field type">
+    Choose from 40+ available field types
+  </Step>
+  
+  <Step title="Configure field settings">
+    - **Field Name**: Column identifier (database name)
+    - **Display Name**: Title shown in UI
+    - **Description**: Optional help text
+    - **Type-specific options**: Configure based on field type
+  </Step>
+  
+  <Step title="Set validation rules">
+    Add constraints like required, unique, or custom validation
+  </Step>
+  
+  <Step title="Save the field">
+    The field is added to all views of the table
+  </Step>
+</Steps>
+
+## Field Properties
+
+| Property | Description | Type |
+|----------|-------------|------|
+| `id` | Unique identifier | string |
+| `fk_model_id` | Parent table ID | string |
+| `column_name` | Database column name | string |
+| `title` | Display title | string |
+| `uidt` | UI data type | UITypes |
+| `dt` | Database data type | string |
+| `pk` | Is primary key | boolean |
+| `pv` | Is display value | boolean |
+| `rqd` | Is required | boolean |
+| `un` | Is unsigned (numeric) | boolean |
+| `unique` | Is unique constraint | boolean |
+| `ai` | Is auto-increment | boolean |
+| `cdf` | Default value | string |
+| `order` | Column order | number |
+| `system` | Is system field | boolean |
+| `readonly` | Is read-only | boolean |
+| `meta` | Field metadata | object |
+| `description` | Help text | string |
+
+Source: `Column.ts:84-128`
+
+## Managing Fields
+
+### Adding a Field
+
+```typescript
+const newField = await Column.insert(context, {
+  fk_model_id: tableId,
+  column_name: 'email',
+  title: 'Email Address',
+  uidt: UITypes.Email,
+  rqd: true,  // Required
+  description: 'Customer email address'
+});
+```
+
+### Updating a Field
+
+```typescript
+await Column.update(context, fieldId, {
+  title: 'Updated Title',
+  description: 'New description',
+  rqd: false  // Make optional
+});
+```
+
+### Deleting a Field
+
+```typescript
+await Column.delete(context, fieldId);
+```
+
+<Warning>
+Deleting a field permanently removes all data in that column. Related fields (formulas, lookups) referencing this field will be affected.
+</Warning>
+
+### Getting Field Details
+
+```typescript
+// Get field by ID
+const field = await Column.get(context, { colId: fieldId });
+
+// Get all fields in a table
+const fields = await Column.list(context, {
+  fk_model_id: tableId
+});
+
+// Access field options (for select, formula, etc.)
+const options = await field.getColOptions(context);
+```
+
+## Field Options by Type
+
+### Select Field Options
+
+```typescript
+// Single/Multi Select options
+const selectOptions = await SelectOption.read(context, fieldId);
+
+// Add option
+await SelectOption.insert(context, {
+  fk_column_id: fieldId,
+  title: 'New Option',
+  color: '#3B82F6',
+  order: 3
+});
+```
+
+### Formula Field Options
+
+```typescript
+const formulaOptions = await FormulaColumn.read(context, fieldId);
+// Properties:
+// - formula: The formula expression
+// - formula_raw: Original formula text
+// - parsed_tree: AST of the formula
+// - error: Validation errors (if any)
+```
+
+### Relationship Field Options
+
+```typescript
+const relationOptions = await LinkToAnotherRecordColumn.read(
+  context,
+  fieldId
+);
+// Properties:
+// - type: Relation type (hm, bt, mm, oo, om, mo)
+// - fk_related_model_id: Related table ID
+// - fk_child_column_id: Child foreign key
+// - fk_parent_column_id: Parent foreign key
+// - fk_mm_model_id: Junction table (for mm)
+```
+
+### Lookup Field Options
+
+```typescript
+const lookupOptions = await LookupColumn.read(context, fieldId);
+// Properties:
+// - fk_relation_column_id: Link field to traverse
+// - fk_lookup_column_id: Field to display
+```
+
+### Rollup Field Options
+
+```typescript
+const rollupOptions = await RollupColumn.read(context, fieldId);
+// Properties:
+// - fk_relation_column_id: Link field
+// - fk_rollup_column_id: Field to aggregate
+// - rollup_function: Aggregation (count, sum, avg, etc.)
+```
+
+## Field Validation
+
+### Built-in Validation
+
+- **Required**: `rqd: true`
+- **Unique**: `unique: true`
+- **Email format**: Automatic for Email fields
+- **URL format**: Automatic for URL fields
+- **Number ranges**: Min/max values
+
+### Custom Validation
+
+```typescript
+await Column.insert(context, {
+  fk_model_id: tableId,
+  uidt: UITypes.Number,
+  title: 'Age',
+  validate: {
+    func: ['GTE', 'LTE'],  // Greater/less than or equal
+    args: [0, 120],
+    msg: 'Age must be between 0 and 120'
+  }
+});
+```
+
+Source: `Column.ts:220-224`
+
+## Read-Only Fields
+
+Some field types are automatically read-only:
+
+- Formula
+- Lookup
+- Rollup
+- Button
+- QR Code
+- Barcode
+- Created Time
+- Last Modified Time
+- Created By
+- Last Modified By
+- Auto Number (after creation)
+- Foreign Key
+
+Source: `UITypes.ts:820-843`
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Choose the right field type">
+    Use specific types (Email, URL, Number) over generic text for better validation and features.
+  </Accordion>
+  
+  <Accordion title="Use formulas for calculations">
+    Don't store computed values—use Formula fields that auto-update when dependencies change.
+  </Accordion>
+  
+  <Accordion title="Set display values wisely">
+    Choose a human-readable field (like name or title) as the display value, not IDs.
+  </Accordion>
+  
+  <Accordion title="Add descriptions">
+    Document field purposes with descriptions to help team members understand the data.
+  </Accordion>
+  
+  <Accordion title="Use validation">
+    Prevent bad data by setting required flags, unique constraints, and format validation.
+  </Accordion>
+  
+  <Accordion title="Normalize with relationships">
+    Use Link fields instead of duplicating data across tables.
+  </Accordion>
+  
+  <Accordion title="Plan field names">
+    Use clear, consistent naming—avoid abbreviations that team members won't understand.
+  </Accordion>
+</AccordionGroup>
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Formulas" icon="calculator" href="/features/formulas">
+    Learn about formula functions and expressions
+  </Card>
+  <Card title="Relations" icon="link" href="/features/relations">
+    Connect tables with relationship fields
+  </Card>
+  <Card title="Tables" icon="table" href="/features/tables">
+    Understand how fields fit into table structure
+  </Card>
+  <Card title="Views" icon="eye" href="/features/views">
+    Control field visibility in different views
+  </Card>
+</CardGroup>

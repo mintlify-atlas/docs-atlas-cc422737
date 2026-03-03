@@ -1,0 +1,435 @@
+---
+title: 'Views API'
+description: 'Manage table views using NocoDB API'
+---
+
+## Overview
+
+Views in NocoDB allow you to display and organize table data in different ways. Each view can have its own filters, sorts, column visibility, and display settings.
+
+## View Types
+
+NocoDB supports multiple view types:
+
+- **Grid (type: 3)**: Traditional spreadsheet-style view
+- **Gallery (type: 2)**: Card-based view for visual data
+- **Form (type: 1)**: Form view for data entry
+- **Kanban (type: 4)**: Kanban board for project management
+- **Calendar (type: 5)**: Calendar view for date-based data
+- **Map**: Geographic visualization
+- **List**: List view for mobile-friendly display
+
+## List Views
+
+Retrieve all views for a specific table.
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/tables/{tableId}/views" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="tableId" type="string" required>
+  Unique identifier for the table
+</ParamField>
+
+### Response
+
+<ResponseField name="list" type="array">
+  Array of view objects
+</ResponseField>
+
+<ResponseField name="list[].id" type="string">
+  Unique view identifier
+</ResponseField>
+
+<ResponseField name="list[].title" type="string">
+  Display title of the view
+</ResponseField>
+
+<ResponseField name="list[].type" type="number">
+  View type: 1 (Form), 2 (Gallery), 3 (Grid), 4 (Kanban), 5 (Calendar)
+</ResponseField>
+
+<ResponseField name="list[].fk_model_id" type="string">
+  Foreign key to the table this view belongs to
+</ResponseField>
+
+<ResponseField name="list[].order" type="number">
+  Display order of the view
+</ResponseField>
+
+<ResponseField name="list[].show" type="boolean">
+  Whether this view is visible
+</ResponseField>
+
+<ResponseField name="list[].lock_type" type="string">
+  Lock type: `collaborative`, `locked`, or `personal`
+</ResponseField>
+
+<ResponseField name="pageInfo" type="object">
+  Pagination information
+</ResponseField>
+
+## Update View
+
+Update a view's properties.
+
+```bash
+curl -X PATCH "https://app.nocodb.com/api/v1/db/meta/views/{viewId}" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Updated View Title",
+    "lock_type": "collaborative",
+    "show_system_fields": false
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view
+</ParamField>
+
+### Request Body
+
+<ParamField body="title" type="string">
+  New display title for the view
+</ParamField>
+
+<ParamField body="lock_type" type="string">
+  Lock type: `collaborative`, `locked`, or `personal`
+</ParamField>
+
+<ParamField body="show_system_fields" type="boolean">
+  Whether to show system fields (CreatedAt, UpdatedAt, etc.)
+</ParamField>
+
+<ParamField body="order" type="number">
+  Display order of the view
+</ParamField>
+
+<ParamField body="show" type="boolean">
+  Whether the view is visible
+</ParamField>
+
+<ParamField body="meta" type="object">
+  Additional metadata (e.g., `{"allowCSVDownload": true}`)
+</ParamField>
+
+<ParamField body="password" type="string">
+  Password for protecting the view (when shared)
+</ParamField>
+
+<ParamField body="description" type="string">
+  View description (max 8192 characters)
+</ParamField>
+
+### Example Response
+
+```json
+{
+  "id": "vw_lg052cnc1c26kf",
+  "title": "Updated View Title",
+  "type": 3,
+  "fk_model_id": "md_mhs9z4r2ak98x0",
+  "lock_type": "collaborative",
+  "show": 1,
+  "order": 1,
+  "base_id": "p_xm3thidrblw4n7",
+  "created_at": "2023-03-02 17:46:31",
+  "updated_at": "2023-03-02 18:30:15"
+}
+```
+
+## Delete View
+
+Delete a view from a table.
+
+```bash
+curl -X DELETE "https://app.nocodb.com/api/v1/db/meta/views/{viewId}" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view to delete
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Returns true if deletion was successful
+</ResponseField>
+
+<Warning>
+  Deleting a view will remove all its filters, sorts, and column visibility settings. This action cannot be undone.
+</Warning>
+
+## Show All Columns
+
+Make all columns visible in a view.
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/show-all" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="ignoreIds" type="array">
+  Array of column IDs to exclude from showing
+</ParamField>
+
+### Example
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/show-all?ignoreIds=cl_xyz789&ignoreIds=cl_def456" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+## Hide All Columns
+
+Hide all columns in a view.
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/hide-all" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="ignoreIds" type="array">
+  Array of column IDs to exclude from hiding (keep visible)
+</ParamField>
+
+<Info>
+  System columns and primary key columns are typically excluded from hide-all operations.
+</Info>
+
+## Share View
+
+Create a shared link for a view.
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/share" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view
+</ParamField>
+
+### Response
+
+<ResponseField name="uuid" type="string">
+  Unique identifier for the shared view
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  Public URL for accessing the shared view
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "uuid": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+  "url": "https://app.nocodb.com/shared/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+}
+```
+
+## List Shared Views
+
+Retrieve all shared views for a table.
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/tables/{tableId}/share" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="tableId" type="string" required>
+  Unique identifier for the table
+</ParamField>
+
+### Response
+
+<ResponseField name="list" type="array">
+  Array of shared view objects
+</ResponseField>
+
+<ResponseField name="list[].uuid" type="string">
+  Unique identifier for the shared view
+</ResponseField>
+
+<ResponseField name="list[].url" type="string">
+  Public URL for the shared view
+</ResponseField>
+
+<ResponseField name="list[].fk_view_id" type="string">
+  Foreign key to the view being shared
+</ResponseField>
+
+## Update Shared View
+
+Update settings for a shared view.
+
+```bash
+curl -X PATCH "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/share" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "password": "secure123",
+    "meta": {
+      "allowCSVDownload": false
+    }
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view
+</ParamField>
+
+### Request Body
+
+<ParamField body="password" type="string">
+  Password to protect the shared view
+</ParamField>
+
+<ParamField body="meta" type="object">
+  Additional settings for the shared view
+</ParamField>
+
+<ParamField body="custom_url_path" type="string">
+  Custom URL path for the shared view
+</ParamField>
+
+## Delete Shared View
+
+Remove public access to a shared view.
+
+```bash
+curl -X DELETE "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/share" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view
+</ParamField>
+
+### Response
+
+<ResponseField name="success" type="boolean">
+  Returns true if the shared view was successfully deleted
+</ResponseField>
+
+<Info>
+  Deleting a shared view only removes public access. The view itself and its data remain intact.
+</Info>
+
+## Row Coloring
+
+### Get Row Color Info
+
+Retrieve row coloring configuration for a view.
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/row-color" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Response
+
+<ResponseField name="mode" type="string">
+  Row coloring mode: `select` or `filter`
+</ResponseField>
+
+<ResponseField name="fk_model_id" type="string">
+  Foreign key to the table
+</ResponseField>
+
+<ResponseField name="fk_view_id" type="string">
+  Foreign key to the view
+</ResponseField>
+
+### Set Row Color from Select Column
+
+Configure row coloring based on a select column.
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/row-color-select" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_abc123",
+    "is_set_as_background": true
+  }'
+```
+
+<ParamField body="fk_column_id" type="string" required>
+  Column ID to use for row coloring (must be a select column)
+</ParamField>
+
+<ParamField body="is_set_as_background" type="boolean" required>
+  Whether to use the color as background or text color
+</ParamField>
+
+### Delete Row Color Info
+
+Remove row coloring from a view.
+
+```bash
+curl -X DELETE "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/row-color" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+## Lock Types
+
+Views support three lock types:
+
+### Collaborative
+
+```json
+{"lock_type": "collaborative"}
+```
+
+All users with access can modify the view configuration.
+
+### Locked
+
+```json
+{"lock_type": "locked"}
+```
+
+Only the view owner and administrators can modify the view.
+
+### Personal
+
+```json
+{"lock_type": "personal"}
+```
+
+Each user gets their own private copy of the view configuration.

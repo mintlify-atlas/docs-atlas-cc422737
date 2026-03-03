@@ -1,0 +1,557 @@
+---
+title: 'Formulas'
+description: 'Create powerful calculated fields using formulas with 100+ functions in NocoDB.'
+---
+
+Formula fields let you create calculated values using expressions and functions. Formulas automatically update when their dependent fields change, eliminating the need to manually calculate values.
+
+## What is a Formula Field?
+
+A **formula field** is a computed column that calculates its value based on other fields in the same record. Formulas can:
+
+- Perform mathematical calculations
+- Concatenate and manipulate text
+- Work with dates and times
+- Apply conditional logic
+- Reference other fields in the same table
+
+<CardGroup cols={2}>
+  <Card title="100+ Functions" icon="function">
+    Math, text, date, logical, and more
+  </Card>
+  <Card title="Auto-Calculate" icon="wand-magic-sparkles">
+    Updates automatically when dependencies change
+  </Card>
+  <Card title="No Code Required" icon="code-slash">
+    Use familiar spreadsheet-like syntax
+  </Card>
+  <Card title="Type Safe" icon="shield-check">
+    Returns specific data types (number, text, boolean, date)
+  </Card>
+</CardGroup>
+
+## Formula Syntax
+
+Formulas use a spreadsheet-like syntax with curly braces for field references:
+
+```
+{FieldName} operator {OtherField}
+```
+
+### Referencing Fields
+
+Wrap field names in curly braces:
+- `{Price}` - References the Price field
+- `{First Name}` - Spaces are allowed
+- `{Total Amount}` - Any field title works
+
+### Operators
+
+| Operator | Description | Example |
+|----------|-------------|----------|
+| `+` | Addition | `{Price} + {Tax}` |
+| `-` | Subtraction | `{Budget} - {Spent}` |
+| `*` | Multiplication | `{Quantity} * {UnitPrice}` |
+| `/` | Division | `{Total} / {Count}` |
+| `&` | Concatenation | `{FirstName} & " " & {LastName}` |
+| `=` | Equals | `{Status} = "Complete"` |
+| `!=` | Not equals | `{Priority} != "Low"` |
+| `>` | Greater than | `{Score} > 80` |
+| `<` | Less than | `{Stock} < 10` |
+| `>=` | Greater or equal | `{Age} >= 18` |
+| `<=` | Less or equal | `{Discount} <= 50` |
+
+## Formula Functions
+
+### Mathematical Functions
+
+#### Basic Math
+
+```javascript
+ABS({Value})           // Absolute value: ABS(-5) = 5
+CEILING({Number})      // Round up: CEILING(4.3) = 5
+FLOOR({Number})        // Round down: FLOOR(4.7) = 4
+ROUND({Number}, decimals) // Round to decimals: ROUND(3.14159, 2) = 3.14
+MOD({Dividend}, {Divisor}) // Remainder: MOD(10, 3) = 1
+POWER({Base}, {Exponent})  // Exponentiation: POWER(2, 3) = 8
+SQRT({Number})         // Square root: SQRT(16) = 4
+EXP({Number})          // e^x: EXP(1) = 2.718...
+LOG({Number})          // Natural log: LOG(10) = 2.302...
+LOG10({Number})        // Base-10 log: LOG10(100) = 2
+```
+
+#### Aggregate Functions
+
+```javascript
+AVERAGE(value1, value2, ...) // Mean of values
+MAX(value1, value2, ...)     // Maximum value
+MIN(value1, value2, ...)     // Minimum value
+SUM(value1, value2, ...)     // Sum of values
+COUNT(value1, value2, ...)   // Count of values
+```
+
+### Text Functions
+
+```javascript
+CONCAT({Text1}, {Text2}, ...) // Combine text: CONCAT("Hello", " ", "World")
+LEFT({Text}, count)           // First N chars: LEFT("NocoDB", 4) = "Noco"
+RIGHT({Text}, count)          // Last N chars: RIGHT("NocoDB", 2) = "DB"
+MID({Text}, start, count)     // Substring: MID("NocoDB", 2, 3) = "oco"
+LEN({Text})                   // Length: LEN("NocoDB") = 6
+LOWER({Text})                 // Lowercase: LOWER("NocoDB") = "nocodb"
+UPPER({Text})                 // Uppercase: UPPER("NocoDB") = "NOCODB"
+TRIM({Text})                  // Remove whitespace: TRIM(" text ") = "text"
+REPLACE({Text}, old, new)     // Replace text: REPLACE("Hello", "ll", "y") = "Heyo"
+REGEX_EXTRACT({Text}, pattern) // Extract with regex
+REGEX_MATCH({Text}, pattern)  // Test regex pattern
+REGEX_REPLACE({Text}, pattern, replacement)
+SEARCH({Text}, find)          // Find position: SEARCH("NocoDB", "co") = 3
+SUBSTITUTE({Text}, old, new)  // Replace occurrences
+```
+
+### Date & Time Functions
+
+```javascript
+// Current date/time
+NOW()                  // Current date and time
+TODAY()                // Current date (no time)
+
+// Date extraction
+DAY({Date})            // Day of month (1-31)
+MONTH({Date})          // Month number (1-12)
+YEAR({Date})           // Year (4 digits)
+HOUR({DateTime})       // Hour (0-23)
+MINUTE({DateTime})     // Minute (0-59)
+SECOND({DateTime})     // Second (0-59)
+WEEKDAY({Date})        // Day of week (1=Sunday)
+WEEKNUM({Date})        // Week number of year
+
+// Date manipulation
+DATE({Year}, {Month}, {Day})     // Create date
+DATEADD({Date}, count, 'unit')   // Add time: DATEADD({Date}, 7, 'day')
+DATEDIF({Start}, {End}, 'unit')  // Difference: DATEDIF({Start}, {End}, 'day')
+DATESTR({Date})                   // Format as string
+
+// Units: 'day', 'week', 'month', 'year', 'hour', 'minute', 'second'
+```
+
+### Logical Functions
+
+```javascript
+IF(condition, trueValue, falseValue)
+// Example: IF({Score} >= 60, "Pass", "Fail")
+
+AND(condition1, condition2, ...)
+// Example: AND({Age} >= 18, {Status} = "Active")
+
+OR(condition1, condition2, ...)
+// Example: OR({Priority} = "High", {Overdue} = TRUE)
+
+NOT(condition)
+// Example: NOT({Archived})
+
+SWITCH(expression, case1, result1, case2, result2, ..., default)
+// Example: SWITCH({Status}, "Open", 1, "InProgress", 2, "Done", 3, 0)
+
+BLANK()               // Returns empty/null value
+ISBLANK({Field})      // Check if field is empty
+```
+
+### Conditional Functions
+
+```javascript
+IF({Condition}, {ThenValue}, {ElseValue})
+IFS(condition1, value1, condition2, value2, ..., defaultValue)
+```
+
+## Formula Data Types
+
+Formulas return one of four data types:
+
+### Numeric Formulas
+
+Return numbers:
+```javascript
+{Quantity} * {Price}           // Returns: 150.00
+ROUND({Total} / {Count}, 2)    // Returns: 42.50
+```
+
+Display as:
+- Number
+- Currency
+- Percent
+- Decimal
+- Rating
+- Duration
+
+### String Formulas
+
+Return text:
+```javascript
+CONCAT({FirstName}, " ", {LastName})  // Returns: "John Doe"
+UPPER({Code})                          // Returns: "ABC123"
+```
+
+Display as:
+- Single Line Text
+- Email
+- URL
+- Phone Number
+
+### Boolean Formulas
+
+Return true/false:
+```javascript
+{Stock} < {ReorderLevel}      // Returns: TRUE or FALSE
+AND({Active}, {Verified})     // Returns: TRUE or FALSE
+```
+
+Display as:
+- Checkbox
+
+### Date Formulas
+
+Return dates:
+```javascript
+DATEADD({StartDate}, 30, 'day')  // Returns: 2024-02-15
+NOW()                             // Returns: 2024-01-15 14:30:00
+```
+
+Display as:
+- Date
+- DateTime
+- Time
+
+Source: `UITypes.ts:640-662`
+
+## Creating a Formula Field
+
+<Steps>
+  <Step title="Add a new field">
+    Click "+" to add a field to your table
+  </Step>
+  
+  <Step title="Select 'Formula' type">
+    Choose "Formula" from the field type dropdown
+  </Step>
+  
+  <Step title="Enter your formula">
+    Type your formula in the editor:
+    - Use curly braces `{}` for field names
+    - Use functions with parentheses
+    - Combine with operators
+  </Step>
+  
+  <Step title="Validate the formula">
+    NocoDB checks syntax automatically and shows errors
+  </Step>
+  
+  <Step title="Choose display format">
+    Select how to display the result (Number, Text, Date, etc.)
+  </Step>
+  
+  <Step title="Save the field">
+    The formula calculates for all records automatically
+  </Step>
+</Steps>
+
+## Formula Examples
+
+### Calculate Total Price
+
+```javascript
+{Quantity} * {UnitPrice}
+```
+
+### Full Name
+
+```javascript
+CONCAT({FirstName}, " ", {LastName})
+```
+
+### Discount Price
+
+```javascript
+{Price} * (1 - {DiscountPercent} / 100)
+```
+
+### Days Until Due
+
+```javascript
+DATEDIF(TODAY(), {DueDate}, 'day')
+```
+
+### Age from Birthdate
+
+```javascript
+DATEDIF({BirthDate}, TODAY(), 'year')
+```
+
+### Overdue Status
+
+```javascript
+AND({Status} != "Complete", {DueDate} < TODAY())
+```
+
+### Email from Name
+
+```javascript
+CONCAT(
+  LOWER({FirstName}),
+  ".",
+  LOWER({LastName}),
+  "@company.com"
+)
+```
+
+### Grade from Score
+
+```javascript
+IF({Score} >= 90, "A",
+  IF({Score} >= 80, "B",
+    IF({Score} >= 70, "C",
+      IF({Score} >= 60, "D", "F")
+    )
+  )
+)
+```
+
+### Nested IF Alternative (using IFS)
+
+```javascript
+IFS(
+  {Score} >= 90, "A",
+  {Score} >= 80, "B",
+  {Score} >= 70, "C",
+  {Score} >= 60, "D",
+  "F"  // default
+)
+```
+
+### Priority Label
+
+```javascript
+SWITCH({PriorityNumber},
+  1, "Low",
+  2, "Medium",
+  3, "High",
+  4, "Urgent",
+  "Unknown"
+)
+```
+
+### Tax Calculation
+
+```javascript
+ROUND({Subtotal} * {TaxRate} / 100, 2)
+```
+
+### Commission
+
+```javascript
+IF({Sales} > {Quota},
+  ({Sales} - {Quota}) * {CommissionRate},
+  0
+)
+```
+
+### Business Days Between Dates
+
+```javascript
+DATEDIF({StartDate}, {EndDate}, 'day') - 
+  (FLOOR(DATEDIF({StartDate}, {EndDate}, 'day') / 7) * 2)
+```
+
+## Formula Field Properties
+
+Formula fields store additional metadata:
+
+| Property | Description |
+|----------|-------------|
+| `formula` | The compiled formula expression |
+| `formula_raw` | The original user-entered formula |
+| `parsed_tree` | Abstract syntax tree for execution |
+| `error` | Validation errors (if any) |
+
+Source: `Column.ts:440-452`
+
+## Managing Formula Fields
+
+### Creating a Formula
+
+```typescript
+await Column.insert(context, {
+  fk_model_id: tableId,
+  title: 'Total Price',
+  uidt: UITypes.Formula,
+  formula_raw: '{Quantity} * {UnitPrice}',
+  // Formula is compiled automatically
+});
+```
+
+### Updating a Formula
+
+```typescript
+await Column.update(context, columnId, {
+  formula_raw: 'ROUND({Quantity} * {UnitPrice}, 2)'
+});
+```
+
+### Getting Formula Details
+
+```typescript
+const column = await Column.get(context, { colId: columnId });
+const formulaOptions = await column.getColOptions();
+
+// formulaOptions contains:
+// - formula: Compiled expression
+// - formula_raw: Original formula
+// - parsed_tree: AST
+// - error: Any errors
+```
+
+## Formula Errors
+
+When a formula has errors, the `error` property contains details:
+
+### Common Errors
+
+- **Missing Field**: Referenced field doesn't exist
+- **Syntax Error**: Invalid formula syntax
+- **Type Mismatch**: Incompatible data types
+- **Circular Reference**: Formula references itself
+- **Invalid Function**: Unknown function name
+
+### Error Handling
+
+Formulas with errors:
+1. Show error in field settings
+2. Display error message in cells
+3. Prevent saving until fixed
+
+```typescript
+// Check for formula errors
+if (formulaColumn.error) {
+  console.error('Formula error:', formulaColumn.error);
+}
+```
+
+Source: `addFormulaErrorIfMissingColumn` helper function
+
+## Advanced Formula Techniques
+
+### Nested Functions
+
+Combine multiple functions:
+
+```javascript
+UPPER(LEFT(TRIM({Name}), 1)) & LOWER(MID(TRIM({Name}), 2, 100))
+// Capitalizes first letter: "john doe" → "John doe"
+```
+
+### Multiple Conditions
+
+Complex logic with AND/OR:
+
+```javascript
+IF(
+  AND(
+    {Status} = "Active",
+    {Balance} > 0,
+    {LastActivity} > DATEADD(TODAY(), -30, 'day')
+  ),
+  "Engaged",
+  "Inactive"
+)
+```
+
+### Conditional Aggregation
+
+```javascript
+IF({Type} = "Premium", {Amount} * 1.2, {Amount})
+```
+
+### Date Range Checks
+
+```javascript
+AND(
+  {StartDate} <= TODAY(),
+  {EndDate} >= TODAY()
+)
+// TRUE if today is within the date range
+```
+
+## Performance Considerations
+
+<AccordionGroup>
+  <Accordion title="Formulas recalculate on dependencies">
+    When a field used in a formula changes, the formula recalculates. Minimize dependencies for better performance.
+  </Accordion>
+  
+  <Accordion title="Complex formulas may slow queries">
+    Very complex formulas with many nested functions can impact query performance. Simplify where possible.
+  </Accordion>
+  
+  <Accordion title="Formulas are computed on read">
+    Values are calculated when records are retrieved, not stored. For very large datasets, consider using views with filters.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use descriptive field names">
+    Clear field names make formulas easier to read: `{TotalAmount}` vs `{field_123}`
+  </Accordion>
+  
+  <Accordion title="Break complex formulas into steps">
+    Create intermediate formula fields for complex calculations instead of one massive formula.
+  </Accordion>
+  
+  <Accordion title="Test with edge cases">
+    Test formulas with:
+    - Empty/null values
+    - Zero values
+    - Negative numbers
+    - Extreme dates
+  </Accordion>
+  
+  <Accordion title="Document your formulas">
+    Add field descriptions explaining what the formula calculates and why.
+  </Accordion>
+  
+  <Accordion title="Use ROUND for currency">
+    Always round currency calculations to 2 decimals: `ROUND({Price}, 2)`
+  </Accordion>
+  
+  <Accordion title="Handle division by zero">
+    Use IF to check for zero: `IF({Divisor} = 0, 0, {Dividend} / {Divisor})`
+  </Accordion>
+</AccordionGroup>
+
+## Formulas vs. Rollups
+
+| Feature | Formula | Rollup |
+|---------|---------|--------|
+| **Scope** | Same record only | Across linked records |
+| **Fields** | Any field in table | Needs link field |
+| **Functions** | 100+ functions | Aggregate only (SUM, AVG, etc.) |
+| **Use Case** | Calculate within record | Summarize related records |
+| **Example** | `{Qty} * {Price}` | Sum of all order amounts |
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Fields" icon="input-text" href="/features/fields">
+    Learn about all field types including formulas
+  </Card>
+  <Card title="Rollups" icon="arrow-down-1-9" href="/features/relations#rollups">
+    Aggregate data from linked records
+  </Card>
+  <Card title="Lookups" icon="arrow-up-right-from-square" href="/features/relations#lookups">
+    Display values from linked records
+  </Card>
+  <Card title="Functions Reference" icon="book" href="/formulas/functions">
+    Complete list of formula functions
+  </Card>
+</CardGroup>

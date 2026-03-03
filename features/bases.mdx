@@ -1,0 +1,231 @@
+---
+title: 'Bases'
+description: 'Learn how to create and manage bases in NocoDB, the foundation for organizing your data and tables.'
+---
+
+A **base** (formerly called "project") is the top-level container in NocoDB that groups related tables, views, and data together. Each base can connect to one or more data sources and contains all the tables, relationships, and automation within that workspace.
+
+## What is a Base?
+
+Bases are the primary organizational unit in NocoDB. Think of a base as a complete database project that contains:
+
+- **Tables** - Your data organized in rows and columns
+- **Data Sources** - Connections to external databases (PostgreSQL, MySQL, etc.)
+- **Views** - Different ways to visualize and interact with your data
+- **Relationships** - Links between tables
+- **Automations** - Webhooks and workflows
+
+<CardGroup cols={2}>
+  <Card title="Workspace Organization" icon="folder-tree">
+    Bases live within workspaces and help you organize related projects together
+  </Card>
+  <Card title="Multi-Source Support" icon="database">
+    Connect multiple external databases to a single base
+  </Card>
+  <Card title="Collaboration" icon="users">
+    Share bases with team members and control access permissions
+  </Card>
+  <Card title="Data Isolation" icon="shield">
+    Each base maintains separate data, users, and configurations
+  </Card>
+</CardGroup>
+
+## Creating a Base
+
+<Steps>
+  <Step title="Navigate to your workspace">
+    Open the workspace where you want to create the base
+  </Step>
+  
+  <Step title="Click 'New Base'">
+    Click the "New Base" button in the workspace dashboard
+  </Step>
+  
+  <Step title="Configure base settings">
+    - **Title**: Give your base a descriptive name
+    - **Description**: Add optional details about the base purpose
+    - **Icon & Color**: Customize the visual appearance
+  </Step>
+  
+  <Step title="Add a data source">
+    Choose to:
+    - Start with a blank base (uses NocoDB's internal database)
+    - Connect to an existing external database
+    - Import data from a spreadsheet or API
+  </Step>
+  
+  <Step title="Create your first table">
+    Add tables to start organizing your data
+  </Step>
+</Steps>
+
+## Base Properties
+
+### Base Metadata
+
+Each base has the following properties:
+
+| Property | Description | Source Reference |
+|----------|-------------|------------------|
+| `id` | Unique identifier for the base | `Base.ts:34` |
+| `title` | Display name of the base | `Base.ts:36` |
+| `description` | Optional description text | `Base.ts:39` |
+| `prefix` | URL-safe identifier | `Base.ts:37` |
+| `status` | Current status (active/archived) | `Base.ts:38` |
+| `color` | UI color customization | `Base.ts:41` |
+| `meta` | Additional metadata (icon, settings) | `Base.ts:40` |
+| `order` | Display order in workspace | `Base.ts:43` |
+| `fk_workspace_id` | Parent workspace ID | `Base.ts:35` |
+
+### Data Sources
+
+Bases can connect to multiple data sources:
+
+- **Internal Database**: NocoDB's built-in SQLite/PostgreSQL database
+- **External Databases**: PostgreSQL, MySQL, SQL Server, SQLite
+- **Cloud Databases**: AWS RDS, Google Cloud SQL, Azure SQL
+
+Access sources programmatically:
+
+```typescript
+const base = await Base.get(context, baseId);
+const sources = await base.getSources();
+```
+
+## Base Sharing & Collaboration
+
+### Shared Bases
+
+You can share a base publicly with view-only or edit access:
+
+- **UUID**: Each shared base gets a unique identifier
+- **Password Protection**: Optional password for shared bases
+- **Access Roles**: Control what shared users can see and do
+
+```typescript
+// Share a base
+const sharedBase = await Base.update(context, baseId, {
+  uuid: uuidv4(),
+  password: 'optional-password',
+  roles: 'viewer' // or 'editor'
+});
+```
+
+### Base Users
+
+Manage who has access to your base:
+
+- **Owner**: Full control over the base
+- **Editor**: Can modify data and structure
+- **Commenter**: Can add comments but not edit
+- **Viewer**: Read-only access
+
+Refer to `BaseUser.ts:609-620` for user management.
+
+## Advanced Features
+
+### Managed Apps
+
+Bases can be configured as managed applications:
+
+- `managed_app_master`: Indicates if the base is a template
+- `managed_app_id`: Links to the managed app definition
+- `managed_app_version_id`: Tracks the current version
+- `auto_update`: Enables automatic version updates
+
+See `Base.ts:58-65` for managed app properties.
+
+### Sandbox Mode
+
+Create isolated testing environments:
+
+- `is_sandbox_master`: Base can spawn sandbox copies
+- `is_sandbox`: Indicates a sandbox instance
+
+Useful for:
+- Testing changes before production
+- Training environments
+- Development workflows
+
+## Base Operations
+
+### Listing Bases
+
+```typescript
+// List all bases in a workspace
+const bases = await Base.list(workspaceId, ncMeta);
+```
+
+### Getting Base Information
+
+```typescript
+// Get base with full details
+const base = await Base.getWithInfo(context, baseId, true);
+
+// Get base by UUID (for shared bases)
+const sharedBase = await Base.getByUuid(context, uuid);
+
+// Get base by title
+const base = await Base.getByTitle(context, 'My Base');
+```
+
+### Updating a Base
+
+```typescript
+await Base.update(context, baseId, {
+  title: 'Updated Title',
+  description: 'New description',
+  color: '#FF5733'
+});
+```
+
+### Deleting a Base
+
+```typescript
+// Soft delete (sets deleted flag)
+await Base.softDelete(context, baseId);
+
+// Permanent delete
+await Base.delete(context, baseId);
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Organize by purpose">
+    Create separate bases for different projects or departments rather than combining everything into one large base.
+  </Accordion>
+  
+  <Accordion title="Use descriptive names">
+    Give bases clear, descriptive titles that indicate their purpose at a glance.
+  </Accordion>
+  
+  <Accordion title="Set up permissions early">
+    Configure base-level permissions before inviting team members to prevent accidental data exposure.
+  </Accordion>
+  
+  <Accordion title="Regular backups">
+    For critical data, set up regular exports or database backups at the source level.
+  </Accordion>
+  
+  <Accordion title="Version control for structure">
+    Document schema changes and use managed apps for versioned deployments.
+  </Accordion>
+</AccordionGroup>
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Tables" icon="table" href="/features/tables">
+    Learn how to create and manage tables within your base
+  </Card>
+  <Card title="Data Sources" icon="plug" href="/datasources/overview">
+    Connect external databases to your base
+  </Card>
+  <Card title="Workspaces" icon="building" href="/workspaces/overview">
+    Understand how bases fit into the workspace hierarchy
+  </Card>
+  <Card title="Sharing" icon="share" href="/collaboration/sharing">
+    Share bases with team members and external users
+  </Card>
+</CardGroup>

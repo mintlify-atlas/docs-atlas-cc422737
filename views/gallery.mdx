@@ -1,0 +1,306 @@
+---
+title: "Gallery View"
+description: "Learn how to use Gallery view to display your data as visual cards with images"
+---
+
+## Overview
+
+Gallery view displays your records as visual cards, similar to a Pinterest or Instagram layout. Each card can feature a cover image with key fields displayed below, making it perfect for visual content like products, portfolios, or image-heavy datasets.
+
+<Info>
+Gallery view automatically detects attachment fields in your table and uses them as cover images.
+</Info>
+
+## When to Use Gallery View
+
+Gallery view is ideal for:
+
+- **Product catalogs** - Display products with images, prices, and descriptions
+- **Portfolio management** - Showcase projects, designs, or creative work
+- **Real estate listings** - View properties with photos and key details
+- **Team directories** - Display team members with profile photos
+- **Asset management** - Track visual assets like marketing materials or inventory
+- **Media libraries** - Organize photos, videos, or documents with previews
+
+## Configuration Options
+
+Gallery view provides several configuration options to customize the card display:
+
+### Cover Image
+
+Choose which attachment field to use as the card's cover image.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `fk_cover_image_col_id` | string | ID of the attachment column to use as cover image |
+| `cover_image_idx` | number | Index of the attachment to display (for multi-file fields) |
+| `meta.fk_cover_image_object_fit` | string | Image fit mode: "fit" (contain) or "cover" (fill) |
+
+<Tabs>
+  <Tab title="Fit (Contain)">
+    The entire image is visible within the card, with possible letterboxing.
+
+    ```json
+    {
+      "meta": {
+        "fk_cover_image_object_fit": "fit"
+      }
+    }
+    ```
+
+    Best for:
+    - Product images on white backgrounds
+    - Logos and graphics
+    - When aspect ratio must be preserved
+  </Tab>
+  <Tab title="Cover (Fill)">
+    The image fills the entire card area, potentially cropping the edges.
+
+    ```json
+    {
+      "meta": {
+        "fk_cover_image_object_fit": "cover"
+      }
+    }
+    ```
+
+    Best for:
+    - Photographs and scenic images
+    - Profile pictures
+    - When uniform card sizes are important
+  </Tab>
+</Tabs>
+
+### Navigation Controls
+
+Control how users navigate through cards:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `next_enabled` | boolean | Show "Next" button on cards |
+| `prev_enabled` | boolean | Show "Previous" button on cards |
+
+<Tip>
+Enable navigation buttons when users need to browse through records sequentially, like reviewing submissions or approvals.
+</Tip>
+
+### File Restrictions
+
+Optionally restrict which files can be uploaded:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `restrict_types` | string | Allowed MIME types (e.g., "image/png,image/jpeg") |
+| `restrict_size` | string | Maximum file size in bytes |
+| `restrict_number` | string | Maximum number of files |
+
+### Display Options
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `show_all_fields` | boolean | Display all fields on the card or only selected ones |
+
+## Working with Gallery View
+
+<Tabs>
+  <Tab title="Browsing Cards">
+    ### Navigation
+
+    - **Scroll** - Scroll vertically to browse through cards
+    - **Grid layout** - Cards automatically arrange in responsive columns
+    - **Click to expand** - Click any card to open the full record details
+    - **Arrow navigation** - Use next/previous buttons if enabled
+
+    ### Card Information
+
+    Each card displays:
+    - Cover image from the selected attachment field
+    - Primary field value as the card title
+    - Additional fields configured in the view
+    - Record action buttons (edit, delete, etc.)
+
+    <Info>
+    The number of columns automatically adjusts based on your screen width, providing an optimal viewing experience on any device.
+    </Info>
+  </Tab>
+  <Tab title="Customizing Cards">
+    ### Select Cover Image Field
+
+    1. Open the view menu
+    2. Select "Cover Image Field"
+    3. Choose from available attachment fields
+    4. Select image fit mode (fit or cover)
+
+    ### Configure Visible Fields
+
+    1. Click "Fields" in the toolbar
+    2. Toggle fields on/off to show on cards
+    3. Drag to reorder field display
+    4. Fields appear below the cover image
+
+    ### Adjust Card Size
+
+    The card size is automatically optimized, but you can:
+    - Zoom in/out using browser zoom (Ctrl/Cmd + Plus/Minus)
+    - Adjust window size to show more or fewer columns
+  </Tab>
+  <Tab title="Filtering & Sorting">
+    ### Apply Filters
+
+    Gallery view supports all standard filtering options:
+
+    - Filter by any field type
+    - Combine multiple filter conditions
+    - Use advanced operators (contains, is empty, etc.)
+    - Save filters as part of the view
+
+    ### Sort Records
+
+    Control the order in which cards appear:
+
+    - Sort by any field (text, number, date, etc.)
+    - Multiple sort levels supported
+    - Ascending or descending order
+    - Sorted cards flow from left to right, top to bottom
+
+    <Tip>
+    Combine sorting and filtering to create curated galleries, like "Products under $50, sorted by popularity".
+    </Tip>
+  </Tab>
+</Tabs>
+
+## Use Cases and Examples
+
+### E-commerce Product Gallery
+
+```json
+{
+  "fk_cover_image_col_id": "product_image_column_id",
+  "meta": {
+    "fk_cover_image_object_fit": "cover"
+  },
+  "show_all_fields": false
+}
+```
+
+Display fields:
+- Product name (primary field)
+- Price
+- Stock status
+- Category
+
+### Team Directory
+
+```json
+{
+  "fk_cover_image_col_id": "profile_photo_column_id",
+  "meta": {
+    "fk_cover_image_object_fit": "fit"
+  },
+  "next_enabled": true,
+  "prev_enabled": true
+}
+```
+
+Display fields:
+- Name (primary field)
+- Title
+- Department
+- Email
+
+### Real Estate Listings
+
+```json
+{
+  "fk_cover_image_col_id": "property_photos_column_id",
+  "cover_image_idx": 0,
+  "meta": {
+    "fk_cover_image_object_fit": "cover"
+  }
+}
+```
+
+Display fields:
+- Property address (primary field)
+- Price
+- Bedrooms/Bathrooms
+- Square footage
+- Status (For Sale/Sold)
+
+## Best Practices
+
+<Tip>
+**Choose High-Quality Images** - Gallery view is visual-first. Ensure cover images are high resolution and properly sized for best results.
+</Tip>
+
+<Tip>
+**Limit Visible Fields** - Show only the most important 3-5 fields on cards to avoid clutter. Users can click to see full details.
+</Tip>
+
+<Tip>
+**Use Consistent Image Sizes** - When using "cover" fit mode, images with similar aspect ratios create a more uniform and professional appearance.
+</Tip>
+
+<Tip>
+**Set Default Cover Image** - For records without images, consider adding a default placeholder image to maintain visual consistency.
+</Tip>
+
+<Info>
+**Missing Images** - If a record doesn't have an image in the cover image field, the card will still display with visible fields but without a cover photo.
+</Info>
+
+## Performance Considerations
+
+Gallery view is optimized for performance:
+
+- **Lazy loading** - Images load as you scroll
+- **Thumbnail generation** - Automatically creates optimized image sizes
+- **Virtual scrolling** - Handles thousands of records efficiently
+- **Responsive layout** - Adapts to screen size automatically
+
+For best performance:
+
+- Use appropriately sized source images (1000-2000px wide is ideal)
+- Avoid showing too many fields per card (5-7 maximum)
+- Apply filters to reduce the number of displayed records
+- Consider pagination for very large datasets (1000+ records)
+
+## Sharing Gallery Views
+
+Gallery view is perfect for public sharing:
+
+- Create a shared view for external stakeholders
+- Share product catalogs with customers
+- Publish portfolios publicly
+- Embed galleries in websites
+
+<Info>
+Shared gallery views can be password-protected and have download restrictions to protect your images and data.
+</Info>
+
+## API Reference
+
+Create a gallery view programmatically:
+
+```typescript
+const galleryView = {
+  fk_view_id: 'view_id',
+  fk_cover_image_col_id: 'attachment_column_id',
+  next_enabled: true,
+  prev_enabled: true,
+  meta: {
+    fk_cover_image_object_fit: 'cover'
+  }
+}
+```
+
+Update gallery view settings:
+
+```typescript
+const updates = {
+  fk_cover_image_col_id: 'new_attachment_column_id',
+  meta: {
+    fk_cover_image_object_fit: 'fit'
+  }
+}
+```

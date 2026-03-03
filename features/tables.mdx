@@ -1,0 +1,356 @@
+---
+title: 'Tables'
+description: 'Create and manage tables in NocoDB to organize your data in rows and columns.'
+---
+
+Tables are the fundamental data structure in NocoDB. Each table consists of rows (records) and columns (fields) that store your data in an organized, queryable format.
+
+## What is a Table?
+
+A **table** is a collection of structured data organized in rows and columns. In NocoDB:
+
+- **Rows** represent individual records (e.g., a customer, task, or product)
+- **Columns** represent fields that describe attributes (e.g., name, email, date)
+- **Relationships** link tables together for complex data models
+
+<CardGroup cols={2}>
+  <Card title="Flexible Schema" icon="wand-magic-sparkles">
+    Add, remove, and modify columns without downtime
+  </Card>
+  <Card title="Multiple Views" icon="eye">
+    Visualize the same data in Grid, Gallery, Kanban, and more
+  </Card>
+  <Card title="Rich Field Types" icon="list">
+    Support for 40+ field types from text to formulas
+  </Card>
+  <Card title="Data Validation" icon="shield-check">
+    Enforce rules and constraints on your data
+  </Card>
+</CardGroup>
+
+## Table Types
+
+NocoDB supports two main types of tables:
+
+### Standard Tables
+
+Regular tables that store data directly:
+- Full CRUD operations (Create, Read, Update, Delete)
+- Support all field types and relationships
+- Can be sorted, filtered, and grouped
+
+Reference: `Model.ts:54-56`
+
+### Database Views
+
+Read-only tables that represent SQL views:
+- Reflect data from underlying database views
+- Limited modification capabilities
+- Useful for reporting and aggregations
+
+Reference: `Model.ts:57-60`
+
+## Creating a Table
+
+<Steps>
+  <Step title="Navigate to your base">
+    Open the base where you want to create the table
+  </Step>
+  
+  <Step title="Click 'Add Table'">
+    Click the "+" icon or "Add Table" button in the sidebar
+  </Step>
+  
+  <Step title="Configure table settings">
+    - **Table Name**: Choose a descriptive name (e.g., "Customers", "Orders")
+    - **Icon** (optional): Select an emoji or icon
+    - **Source**: Choose which data source to use
+  </Step>
+  
+  <Step title="Add initial fields">
+    Define your columns:
+    - The first column is automatically created as the primary field
+    - Add additional fields as needed
+    - Set field types (Text, Number, Date, etc.)
+  </Step>
+  
+  <Step title="Set up views">
+    A default Grid view is created automatically. Add more views as needed.
+  </Step>
+</Steps>
+
+## Table Properties
+
+| Property | Description | Type |
+|----------|-------------|------|
+| `id` | Unique identifier | string |
+| `table_name` | Database table name | string |
+| `title` | Display name in UI | string |
+| `description` | Optional description | string |
+| `type` | Table type (table/view) | ModelTypes |
+| `base_id` | Parent base ID | string |
+| `source_id` | Data source ID | string |
+| `order` | Display order | number |
+| `schema` | Table schema metadata | object |
+| `enabled` | Active status | boolean |
+| `mm` | Is junction table flag | boolean |
+| `tags` | Categorization tags | string |
+
+Source: `Model.ts:65-96`
+
+## Primary Key & Display Value
+
+### Primary Key
+
+Every table must have a primary key column:
+
+- **Auto-generated**: NocoDB creates an `Id` field by default
+- **Composite Keys**: Multiple columns can form a primary key
+- **Auto-increment**: Optional automatic numbering
+
+```typescript
+// Get the primary key column
+const pkColumn = model.primaryKey;
+
+// Get all primary key columns (for composite keys)
+const pkColumns = model.primaryKeys;
+```
+
+Reference: `Model.ts:163-176`
+
+### Display Value
+
+The **display value** is the human-readable identifier for each record:
+
+- Shows in link fields and relationships
+- Defaults to the first non-primary column
+- Can be customized to any suitable field
+
+```typescript
+// Get the display value column
+const displayCol = model.displayValue;
+```
+
+Reference: `Model.ts:178-193`
+
+## Managing Tables
+
+### Listing Tables
+
+```typescript
+// List all tables in a base
+const tables = await Model.list(context, {
+  base_id: baseId,
+  source_id: sourceId
+});
+```
+
+### Getting Table Details
+
+```typescript
+// Get table with full metadata
+const table = await Model.getWithInfo(context, { id: tableId });
+
+// Access columns
+const columns = await table.getColumns(context);
+
+// Access views
+const views = await table.getViews(context);
+```
+
+### Updating Table Metadata
+
+```typescript
+// Update table title and description
+await Model.updateMeta(context, tableId, {
+  description: 'Customer information and contacts',
+  meta: {
+    icon: 'user',
+    color: '#3B82F6'
+  }
+});
+```
+
+### Renaming a Table
+
+```typescript
+// Update both display title and database table name
+await Model.updateAliasAndTableName(
+  context,
+  tableId,
+  'Customers',        // Display title
+  'customers_table'   // Database table name
+);
+```
+
+Reference: `Model.ts:902-972`
+
+### Deleting a Table
+
+```typescript
+// Delete table and all associated data
+await table.delete(context);
+```
+
+<Warning>
+Deleting a table permanently removes all data, views, and relationships. This action cannot be undone. Always backup important data before deletion.
+</Warning>
+
+## Table Operations
+
+### Column Management
+
+```typescript
+// Get all columns
+const columns = await table.getColumns(context);
+
+// Get columns hash (for caching)
+const hash = await table.getColumnsHash(context);
+
+// Get column by ID
+const columnMap = table.columnsById;
+```
+
+### View Management
+
+```typescript
+// Get all views for a table
+const views = await table.getViews(context);
+
+// Views include: Grid, Gallery, Form, Kanban, Calendar, etc.
+```
+
+### Setting Primary Display Column
+
+```typescript
+// Change which column is the display value
+await Model.updatePrimaryColumn(
+  context,
+  tableId,
+  newColumnId
+);
+```
+
+Reference: `Model.ts:1040-1120`
+
+## Junction Tables (Many-to-Many)
+
+Junction tables enable many-to-many relationships:
+
+- Created automatically when establishing M2M relations
+- Marked with `mm: true` flag
+- Usually hidden from the UI
+- Contain foreign keys to both related tables
+
+```typescript
+// Mark table as junction table
+await Model.markAsMmTable(context, tableId, true);
+```
+
+Reference: `Model.ts:974-996`
+
+## Advanced Features
+
+### Table Ordering
+
+Control the display order of tables in the sidebar:
+
+```typescript
+await Model.updateOrder(context, tableId, newOrder);
+```
+
+### Alias Mapping
+
+Map between column names and display titles:
+
+```typescript
+// Get mapping of display titles to column names
+const aliasMap = await table.getAliasColMapping(context);
+
+// Get mapping of column names to display titles
+const colAliasMap = await table.getColAliasMapping(context);
+```
+
+### Table Validation
+
+```typescript
+// Check if title is available
+const isAvailable = await Model.checkAliasAvailable(context, {
+  title: 'NewTable',
+  source_id: sourceId,
+  exclude_id: currentTableId  // Optional: exclude current table
+});
+
+// Check if table name is available
+const isTableNameAvailable = await Model.checkTitleAvailable(context, {
+  table_name: 'new_table',
+  source_id: sourceId
+});
+```
+
+Reference: `Model.ts:1226-1294`
+
+## Working with Data
+
+### BaseModelSqlv2
+
+NocoDB provides a powerful query interface for working with table data:
+
+```typescript
+// Get base model for querying
+const baseModel = await Model.getBaseModelSQL(context, {
+  id: tableId,
+  dbDriver: knex,
+  viewId: viewId  // Optional: apply view filters
+});
+
+// Now you can query data using the base model
+const records = await baseModel.list();
+```
+
+Reference: `Model.ts:593-650`
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use descriptive table names">
+    Choose clear, plural nouns (e.g., "Customers", "Orders") that describe the data.
+  </Accordion>
+  
+  <Accordion title="Design schema upfront">
+    Plan your table structure and relationships before creating tables to avoid major restructuring later.
+  </Accordion>
+  
+  <Accordion title="Choose appropriate display values">
+    Select a display value column that uniquely identifies records (like name or title, not ID).
+  </Accordion>
+  
+  <Accordion title="Use consistent naming">
+    Follow a naming convention across all tables (e.g., snake_case for database names, Title Case for display).
+  </Accordion>
+  
+  <Accordion title="Index for performance">
+    Add indexes on frequently queried or filtered columns for better performance.
+  </Accordion>
+  
+  <Accordion title="Normalize your data">
+    Split data into multiple related tables rather than duplicating information.
+  </Accordion>
+</AccordionGroup>
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Fields" icon="input-text" href="/features/fields">
+    Learn about the 40+ field types available
+  </Card>
+  <Card title="Views" icon="table-cells" href="/features/views">
+    Visualize your table data in different ways
+  </Card>
+  <Card title="Relations" icon="link" href="/features/relations">
+    Connect tables with relationships
+  </Card>
+  <Card title="Filters & Sorting" icon="filter" href="/features/filters-sorting">
+    Query and organize your data
+  </Card>
+</CardGroup>

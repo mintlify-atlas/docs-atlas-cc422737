@@ -1,0 +1,292 @@
+---
+title: 'Sharing'
+description: 'Share your bases and views publicly with password protection'
+---
+
+## Overview
+
+NocoDB allows you to share your data with people outside your workspace through:
+
+- **Shared Bases**: Share entire bases with read-only or collaborative access
+- **Shared Views**: Share individual views (forms, galleries, grids, etc.) publicly
+- **Password Protection**: Secure shared content with passwords
+- **Public Forms**: Collect data from external users
+
+## Shared Views
+
+### What is a Shared View?
+
+A shared view allows you to publish a specific view (Grid, Form, Gallery, Kanban, Map, Calendar, Timeline) as a public link. Anyone with the link can access the view without needing a NocoDB account.
+
+### View Sharing Properties
+
+Each view can be configured with:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `uuid` | string | Unique identifier for the shared view |
+| `password` | string | Hashed password for access control |
+| `title` | string | Display name of the view |
+| `type` | ViewTypes | View type (form, grid, gallery, etc.) |
+| `show_system_fields` | boolean | Display system fields in shared view |
+| `meta` | object | Additional view configuration |
+
+### Creating a Shared View
+
+1. Navigate to the view you want to share
+2. Enable sharing to generate a unique UUID
+3. Optionally set a password for protection
+4. Share the generated public URL
+
+### Shared View Types
+
+#### Grid View
+- Read-only access to table data
+- Respects view filters and sorts
+- Can hide/show specific columns
+- Export capabilities (if enabled)
+
+#### Form View
+- Public data collection
+- Customizable fields and validation
+- Submit data without authentication
+- Can redirect after submission
+- Optional CAPTCHA protection
+
+#### Gallery View
+- Visual card-based display
+- Image-focused presentation
+- Filtering and search
+
+#### Kanban View
+- Board-style organization
+- Group by specific fields
+- Read-only or collaborative
+
+#### Calendar View
+- Date-based visualization
+- Event display
+- Time-based filtering
+
+#### Map View
+- Geographic data visualization
+- Location-based filtering
+
+#### Timeline View
+- Gantt-style display
+- Date range visualization
+
+### Password Protection
+
+Views can be password-protected to control access:
+
+```typescript
+// Password is hashed using bcrypt before storage
+password: await bcrypt.hash(userPassword, 10)
+```
+
+#### Password Validation
+
+NocoDB supports both:
+
+1. **Bcrypt hashed passwords** (recommended, current standard)
+2. **Legacy plaintext passwords** (for backward compatibility)
+
+```typescript
+// Validation checks for both formats
+if (view.password.startsWith('$2a$') || view.password.startsWith('$2b$')) {
+  // Compare bcrypt hash
+  await bcrypt.compare(inputPassword, view.password)
+} else {
+  // Legacy plaintext comparison (for migration)
+  inputPassword === view.password
+}
+```
+
+<Warning>
+Always use password protection for sensitive data. Shared view links are public and can be accessed by anyone who has the URL.
+</Warning>
+
+### Updating Shared View Settings
+
+You can update the following properties for shared views:
+
+- **Password**: Add, change, or remove password protection
+- **Title**: Change the display name
+- **Meta**: Update view-specific settings
+- **Column visibility**: Show/hide specific columns
+- **Filters and sorts**: Modify data display rules
+
+### Removing Shared Access
+
+To stop sharing a view:
+
+1. Delete the shared view configuration
+2. The UUID becomes invalid
+3. The public link stops working immediately
+
+## Shared Bases
+
+### What is a Shared Base?
+
+A shared base allows external users to access an entire base with specific permissions.
+
+### Base Sharing Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `uuid` | string | Unique identifier for shared base |
+| `password` | string | Password protection |
+| `roles` | string | Access role for shared base users |
+| `fk_custom_url_id` | string | Custom URL for branding |
+
+### Shared Base Roles
+
+Users accessing a shared base can have different permission levels:
+
+- **Viewer**: Read-only access to all tables and views
+- **Commenter**: Can add comments to records
+- **Editor**: Can modify data but not schema
+- **Creator**: Can create tables and modify schema
+
+<Warning>
+Be cautious when sharing bases with Editor or Creator roles. These permissions allow users to modify your data and schema.
+</Warning>
+
+## Public Forms
+
+### Form Sharing Features
+
+Public forms are ideal for:
+
+- Survey collection
+- Event registration
+- Customer feedback
+- Job applications
+- Contact forms
+- Order submissions
+
+### Form Configuration
+
+Customize your public forms with:
+
+- **Field validation**: Required fields, formats, constraints
+- **Field descriptions**: Help text for users
+- **Conditional logic**: Show/hide fields based on values
+- **Success message**: Custom thank you message
+- **Redirect URL**: Send users to another page after submission
+- **CAPTCHA**: Prevent spam submissions
+- **Submit limit**: Limit number of submissions per user
+- **Submission branding**: Add logo and custom styling
+
+## Security Best Practices
+
+### Password Protection
+
+1. **Use strong passwords**: Combine letters, numbers, and symbols
+2. **Rotate passwords regularly**: Change passwords periodically
+3. **Unique passwords per view**: Don't reuse passwords across views
+4. **Share passwords securely**: Use encrypted channels to share passwords
+
+<Warning>
+Passwords are hashed before storage using bcrypt. However, the shared URL itself should still be treated as sensitive information.
+</Warning>
+
+### Access Control
+
+1. **Principle of least privilege**: Share only what's necessary
+2. **Use view-level sharing**: Share specific views instead of entire bases when possible
+3. **Regularly audit shared content**: Review and remove unused shared links
+4. **Monitor access logs**: Check who's accessing your shared content
+5. **Set expiration**: Manually disable sharing when no longer needed
+
+### Data Privacy
+
+1. **Review visible columns**: Hide sensitive fields before sharing
+2. **Apply filters**: Use view filters to limit visible data
+3. **Validate form inputs**: Ensure form submissions are properly validated
+4. **Test before sharing**: Always test shared views as an anonymous user
+
+<Warning>
+Shared views expose data to the internet. Never share views containing:
+- Personal identifiable information (PII)
+- Financial data
+- Authentication credentials
+- Confidential business information
+
+Unless absolutely necessary and properly secured.
+</Warning>
+
+## Managing Shared Content
+
+### Listing Shared Views
+
+Get all shared views for a table:
+
+```typescript
+// Returns all views with non-null uuid
+const sharedViews = await View.getSharedViewList(context, tableId);
+```
+
+### Updating Passwords
+
+Change password for a shared view:
+
+```typescript
+await View.passwordUpdate(context, viewId, { 
+  password: 'new-secure-password' 
+});
+```
+
+### Deleting Shared Views
+
+Remove public access:
+
+```typescript
+await View.sharedViewDelete(context, viewId);
+```
+
+## Custom URLs
+
+Brand your shared views with custom URLs:
+
+- Set `fk_custom_url_id` on views or bases
+- Create memorable, branded links
+- Improve professional appearance
+- Easier to share and remember
+
+## Use Cases
+
+### Public Data Collection
+
+- **Customer Surveys**: Collect feedback via forms
+- **Event Registration**: Manage attendee information
+- **Product Orders**: Accept public orders
+- **Bug Reports**: Allow users to submit issues
+
+### Read-Only Data Sharing
+
+- **Company Directory**: Share employee contacts
+- **Product Catalog**: Display inventory publicly
+- **Event Calendar**: Share upcoming events
+- **Resource Library**: Provide access to documents
+
+### Collaborative Workspaces
+
+- **Partner Access**: Share specific tables with partners
+- **Client Portals**: Give clients access to their data
+- **Vendor Management**: Allow vendors to update information
+
+## Limitations
+
+- Shared views are read-only by default (except forms)
+- Password changes require updating the URL recipients
+- No built-in expiration dates (must be manually disabled)
+- Shared base access is all-or-nothing for the entire base
+- Cannot share individual tables (must use views)
+
+## Related
+
+- [Permissions](/collaboration/permissions) - Understand role-based access
+- [Comments](/collaboration/comments) - Collaborate with team members
+- [Workspaces](/collaboration/workspaces) - Organize bases and teams

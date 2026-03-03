@@ -1,0 +1,391 @@
+---
+title: Kubernetes Deployment
+description: Deploy NocoDB on Kubernetes using Helm charts
+---
+
+Deploy NocoDB on Kubernetes clusters using the official Helm chart. This guide covers installation, configuration, and production best practices.
+
+## Prerequisites
+
+- Kubernetes cluster (v1.19+)
+- Helm 3.x installed
+- kubectl configured to access your cluster
+- (Optional) Ingress controller for external access
+
+## Quick Start
+
+### Add Helm Repository
+
+First, clone the NocoDB repository to access the Helm chart:
+
+```bash
+git clone https://github.com/nocodb/nocodb.git
+cd nocodb/charts/nocodb
+```
+
+### Install with Default Configuration
+
+Install NocoDB with SQLite (development only):
+
+```bash
+helm install nocodb . \
+  --set extraSecretEnvs.NC_AUTH_JWT_SECRET="your-secret-key"
+```
+
+<Warning>
+The default configuration uses ephemeral storage. For production, configure persistent storage and an external database.
+</Warning>
+
+## Production Configuration
+
+### values.yaml Overview
+
+The Helm chart supports extensive configuration through `values.yaml`:
+
+```yaml
+replicaCount: 1
+
+image:
+  repository: nocodb/nocodb
+  pullPolicy: IfNotPresent
+  tag: ""  # Defaults to chart appVersion (0.100.2)
+
+service:
+  type: ClusterIP
+  port: 8080
+
+storage:
+  enabled: true
+  size: 3Gi
+  storageClassName: ""
+
+extraEnvs:
+  NC_PUBLIC_URL: https://nocodb.local.org
+
+extraSecretEnvs:
+  NC_AUTH_JWT_SECRET: secretString
+  NC_DB: "mysql2://mysql:3306?u=nocodb&p=secretPass&d=nocodb"
+```
+
+### Deploy with PostgreSQL
+
+Create a custom `values.yaml` file:
+
+<CodeGroup>
+```yaml values-production.yaml
+replicaCount: 2
+
+image:
+  repository: nocodb/nocodb
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+storage:
+  enabled: true
+  size: 10Gi
+  storageClassName: "standard"  # Use your storage class
+
+extraEnvs:
+  NC_PUBLIC_URL: https://nocodb.example.com
+  NC_DISABLE_TELE: "true"
+
+extraSecretEnvs:
+  NC_AUTH_JWT_SECRET: "your-very-secure-jwt-secret"
+  NC_DB: "pg://postgres.default.svc.cluster.local:5432?u=nocodb&p=secretPass&d=nocodb"
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: nocodb.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: nocodb-tls
+      hosts:
+        - nocodb.example.com
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+```
+
+```bash install.sh
+helm install nocodb . \
+  -f values-production.yaml \
+  --namespace nocodb \
+  --create-namespace
+```
+</CodeGroup>
+
+### Deploy with Built-in PostgreSQL
+
+The chart includes optional PostgreSQL and MySQL dependencies:
+
+```yaml
+postgresql:
+  enabled: true
+  auth:
+    database: nocodb
+    username: nocodb
+    password: secretPass
+  persistence:
+    size: 8Gi
+
+extraSecretEnvs:
+  NC_AUTH_JWT_SECRET: "your-jwt-secret"
+  NC_DB: "pg://nocodb-postgresql:5432?u=nocodb&p=secretPass&d=nocodb"
+```
+
+Install:
+
+```bash
+helm install nocodb . \
+  --set postgresql.enabled=true \
+  --set postgresql.auth.password=secretPass \
+  --set extraSecretEnvs.NC_AUTH_JWT_SECRET="your-jwt-secret" \
+  --set extraSecretEnvs.NC_DB="pg://nocodb-postgresql:5432?u=nocodb&p=secretPass&d=nocodb" \
+  --namespace nocodb \
+  --create-namespace
+```
+
+### Deploy with MySQL
+
+```yaml
+mysql:
+  enabled: true
+  auth:
+    database: nocodb
+    username: nocodb
+    password: secretPass
+  persistence:
+    enabled: true
+    size: 8Gi
+
+extraSecretEnvs:
+  NC_AUTH_JWT_SECRET: "your-jwt-secret"
+  NC_DB: "mysql2://nocodb-mysql:3306?u=nocodb&p=secretPass&d=nocodb"
+```
+
+## Configuration Options
+
+### Image Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `image.repository` | NocoDB image repository | `nocodb/nocodb` |
+| `image.tag` | Image tag (overrides appVersion) | `""` |
+| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
+
+### Storage Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `storage.enabled` | Enable persistent storage | `true` |
+| `storage.size` | PVC size | `3Gi` |
+| `storage.storageClassName` | Storage class name | `""` |
+
+<Warning>
+If `storage.enabled` is false, configure S3-compatible storage using environment variables (`NC_S3_BUCKET_NAME`, etc.) to avoid data loss.
+</Warning>
+
+### Service Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `service.type` | Kubernetes service type | `ClusterIP` |
+| `service.port` | Service port | `8080` |
+
+### Ingress Configuration
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `ingress.enabled` | Enable ingress | `false` |
+| `ingress.annotations` | Ingress annotations | `{}` |
+| `ingress.hosts` | Ingress hosts | See values.yaml |
+| `ingress.tls` | TLS configuration | `[]` |
+
+### Autoscaling
+
+| Parameter | Description | Default |
+|-----------|-------------|----------|
+| `autoscaling.enabled` | Enable HPA | `false` |
+| `autoscaling.minReplicas` | Minimum replicas | `1` |
+| `autoscaling.maxReplicas` | Maximum replicas | `100` |
+| `autoscaling.targetCPUUtilizationPercentage` | Target CPU % | `80` |
+
+## Managing the Deployment
+
+### Verify Installation
+
+```bash
+# Check pod status
+kubectl get pods -n nocodb
+
+# View logs
+kubectl logs -n nocodb deployment/nocodb -f
+
+# Check services
+kubectl get svc -n nocodb
+```
+
+### Upgrade
+
+```bash
+helm upgrade nocodb . \
+  -f values-production.yaml \
+  --namespace nocodb
+```
+
+### Rollback
+
+```bash
+# List releases
+helm history nocodb -n nocodb
+
+# Rollback to previous version
+helm rollback nocodb -n nocodb
+```
+
+### Uninstall
+
+```bash
+helm uninstall nocodb -n nocodb
+```
+
+<Warning>
+Uninstalling does not delete PersistentVolumeClaims. Delete them manually if needed:
+```bash
+kubectl delete pvc -n nocodb -l app.kubernetes.io/name=nocodb
+```
+</Warning>
+
+## Production Best Practices
+
+### Use External Databases
+
+For production, use managed database services:
+
+```yaml
+extraSecretEnvs:
+  NC_DB: "pg://your-rds-endpoint:5432?u=nocodb&p=secretPass&d=nocodb&ssl=true"
+```
+
+### Configure Resource Limits
+
+Always set resource requests and limits:
+
+```yaml
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+```
+
+### Enable Horizontal Pod Autoscaling
+
+```yaml
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+```
+
+### Use Secrets for Sensitive Data
+
+Store secrets in Kubernetes Secrets or external secret managers:
+
+```bash
+kubectl create secret generic nocodb-secrets \
+  --from-literal=NC_AUTH_JWT_SECRET=your-secret \
+  --from-literal=NC_DB=pg://... \
+  -n nocodb
+```
+
+Reference in values.yaml:
+
+```yaml
+envFrom:
+  - secretRef:
+      name: nocodb-secrets
+```
+
+### Configure Persistence
+
+Use appropriate storage classes for your cloud provider:
+
+- **AWS**: `gp3` or `gp2`
+- **GCP**: `standard-rwo` or `pd-ssd`
+- **Azure**: `managed-premium` or `managed`
+
+## Monitoring and Logging
+
+### View Logs
+
+```bash
+kubectl logs -n nocodb -l app.kubernetes.io/name=nocodb --tail=100 -f
+```
+
+### Access Shell
+
+```bash
+kubectl exec -it -n nocodb deployment/nocodb -- sh
+```
+
+### Port Forward for Testing
+
+```bash
+kubectl port-forward -n nocodb svc/nocodb 8080:8080
+```
+
+Access at: `http://localhost:8080/dashboard`
+
+## Troubleshooting
+
+### Pod Not Starting
+
+```bash
+kubectl describe pod -n nocodb <pod-name>
+kubectl logs -n nocodb <pod-name>
+```
+
+### Database Connection Issues
+
+Verify the `NC_DB` connection string:
+
+```bash
+kubectl get secret -n nocodb nocodb -o jsonpath='{.data.NC_DB}' | base64 -d
+```
+
+### Storage Issues
+
+```bash
+kubectl get pvc -n nocodb
+kubectl describe pvc -n nocodb <pvc-name>
+```
+
+## Next Steps
+
+- [Configure environment variables](/deployment/environment-variables)
+- [Set up external database](/deployment/database-setup)
+- [Docker deployment options](/deployment/docker)

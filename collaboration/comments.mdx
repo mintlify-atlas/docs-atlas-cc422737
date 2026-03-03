@@ -1,0 +1,425 @@
+---
+title: 'Comments'
+description: 'Collaborate with your team using record-level comments'
+---
+
+## Overview
+
+NocoDB provides a commenting system that allows team members to collaborate on specific records. Comments enable:
+
+- **Record-level discussions**: Comment on individual rows
+- **Threaded conversations**: Reply to existing comments
+- **Comment resolution**: Mark comments as resolved
+- **Audit trail**: Track who said what and when
+- **Team collaboration**: Notify team members about updates
+
+## Comment Model
+
+Each comment in NocoDB has the following structure:
+
+```typescript
+{
+  id: string,                    // Unique comment identifier
+  fk_model_id: string,           // Table ID
+  row_id: string,                // Record ID
+  comment: string,               // Comment text
+  parent_comment_id?: string,    // For threaded replies
+  source_id: string,             // Data source ID
+  fk_workspace_id: string,       // Workspace ID
+  base_id: string,               // Base ID
+  created_by: string,            // User ID of creator
+  resolved_by?: string,          // User ID who resolved it
+  created_by_email: string,      // Creator's email
+  resolved_by_email?: string,    // Resolver's email
+  is_deleted: boolean            // Soft delete flag
+}
+```
+
+## Creating Comments
+
+### Add a Comment
+
+Comments are created at the record level:
+
+```typescript
+await Comment.insert(context, {
+  fk_model_id: tableId,      // The table containing the record
+  row_id: recordId,          // The specific record
+  comment: 'This needs review',
+  created_by: userId,
+  created_by_email: userEmail
+});
+```
+
+### Comment Properties
+
+| Property | Required | Description |
+|----------|----------|-------------|
+| `fk_model_id` | Yes | ID of the table |
+| `row_id` | Yes | ID of the record |
+| `comment` | Yes | The comment text |
+| `created_by` | Yes | User ID of commenter |
+| `created_by_email` | Yes | Email of commenter |
+| `parent_comment_id` | No | ID of parent comment (for replies) |
+| `source_id` | Auto | Automatically set from model |
+
+## Viewing Comments
+
+### List Comments for a Record
+
+Get all comments for a specific record:
+
+```typescript
+const comments = await Comment.list(context, {
+  row_id: recordId,
+  fk_model_id: tableId
+});
+```
+
+Comments are returned:
+- Ordered by creation date (ascending)
+- Excluding deleted comments
+- Including creator and resolver information
+
+### List Comments for a Table
+
+Get all comments across an entire table:
+
+```typescript
+const comments = await Comment.listByModel(context, tableId, {
+  limit: 100,
+  offset: 0
+});
+```
+
+### Get Comment Count
+
+Get the number of comments for multiple records:
+
+```typescript
+const counts = await Comment.commentsCount(context, {
+  ids: [recordId1, recordId2, recordId3],
+  fk_model_id: tableId
+});
+
+// Returns: [{ row_id: 'rec1', count: 5 }, { row_id: 'rec2', count: 3 }]
+```
+
+## Updating Comments
+
+### Edit Comment Text
+
+Users can update their own comments:
+
+```typescript
+await Comment.update(context, commentId, {
+  comment: 'Updated comment text'
+});
+```
+
+### Resolve a Comment
+
+Mark a comment as resolved:
+
+```typescript
+await Comment.resolve(context, commentId, {
+  resolved_by: userId,
+  resolved_by_email: userEmail
+});
+```
+
+<Warning>
+Only users with **Creator** or **Owner** roles can resolve comments. The resolution is tracked with the resolver's user ID and email.
+</Warning>
+
+## Deleting Comments
+
+### Soft Delete
+
+Comments are soft-deleted (marked as deleted but not removed from database):
+
+```typescript
+await Comment.delete(context, commentId);
+// Sets is_deleted = true
+```
+
+Deleted comments:
+- Are hidden from list queries
+- Remain in the database for audit purposes
+- Cannot be restored (currently)
+
+### Delete All Table Comments
+
+When a table is deleted, all its comments are removed:
+
+```typescript
+await Comment.deleteModelComments(context, tableId);
+```
+
+<Warning>
+Deleting a table permanently removes all associated comments. This action cannot be undone.
+</Warning>
+
+## Threaded Comments
+
+### Creating Replies
+
+Create a threaded reply to an existing comment:
+
+```typescript
+await Comment.insert(context, {
+  fk_model_id: tableId,
+  row_id: recordId,
+  comment: 'I agree with this assessment',
+  parent_comment_id: parentCommentId,  // Links to parent comment
+  created_by: userId,
+  created_by_email: userEmail
+});
+```
+
+### Comment Threads
+
+Comments can be organized hierarchically:
+
+- **Top-level comments**: `parent_comment_id` is null
+- **Replies**: `parent_comment_id` references another comment
+- **Nested threads**: Replies can have their own replies
+
+## Permissions
+
+### Who Can Comment?
+
+| Role | View Comments | Add Comments | Edit Own | Delete Own | Resolve |
+|------|---------------|--------------|----------|------------|----------|
+| Viewer | ✓ | | | | |
+| Commenter | ✓ | ✓ | ✓ | ✓ | |
+| Editor | ✓ | ✓ | ✓ | ✓ | |
+| Creator | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Owner | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+### Permission Details
+
+#### Viewing Comments
+- All authenticated users with base access can view comments
+- Comments are visible at the record level
+- Deleted comments are hidden from view
+
+#### Adding Comments
+- Requires **Commenter** role or higher
+- Comments are attributed to the creator
+- Email is stored with the comment
+
+#### Editing Comments
+- Users can edit their own comments
+- No time limit on edits
+- Edit history is not tracked (only current version stored)
+
+#### Deleting Comments
+- Users can delete their own comments
+- Deletion is soft (comment is marked as deleted)
+- Creator and Owner roles may have additional deletion rights
+
+#### Resolving Comments
+- Requires **Creator** or **Owner** role
+- Tracks who resolved the comment and when
+- Resolution can be used for approval workflows
+
+## Use Cases
+
+### Review and Approval Workflow
+
+1. Reviewer adds comment: "Please verify the data in column X"
+2. Data owner replies: "Updated as requested"
+3. Reviewer resolves comment after verification
+
+### Team Collaboration
+
+1. Team member flags issue: "This customer needs follow-up"
+2. Another team member replies: "I'll handle this tomorrow"
+3. Record owner gets notified of discussion
+
+### Data Quality Management
+
+1. Add comment on suspicious data: "Value seems too high"
+2. Data analyst investigates and replies with findings
+3. Comment resolved after correction
+
+### Customer Support Tracking
+
+1. Comment on customer record: "Customer reported bug X"
+2. Support thread tracks resolution progress
+3. Final comment confirms issue resolved
+
+## Best Practices
+
+### Writing Effective Comments
+
+1. **Be specific**: Reference exact fields or values
+2. **Be actionable**: Clearly state what needs to be done
+3. **Be contextual**: Provide necessary background information
+4. **Be professional**: Comments are visible to all team members
+5. **Use @mentions**: Reference team members (if supported)
+
+### Managing Comments
+
+1. **Resolve when complete**: Mark comments as resolved to keep discussions organized
+2. **Use threads**: Reply to existing comments rather than creating new ones
+3. **Regular cleanup**: Review and resolve old comments
+4. **Archive patterns**: Use consistent language for searchability
+
+### Security Considerations
+
+1. **Access control**: Comments inherit record-level permissions
+2. **Sensitive information**: Don't include passwords or secrets in comments
+3. **Audit trail**: Remember comments create a permanent record
+4. **User attribution**: All comments are linked to creator's email
+
+<Warning>
+Comments are visible to all users who can access the record. Do not include confidential information that should be restricted to specific users.
+</Warning>
+
+## Integration with Other Features
+
+### Comment Notifications
+
+Comments can trigger notifications:
+- Email notifications to mentioned users
+- Webhook events for external integrations
+- Activity feed updates
+
+### Audit Logs
+
+Comment activity is tracked in audit logs:
+- Comment creation
+- Comment updates
+- Comment deletion
+- Comment resolution
+
+### API Access
+
+Comments are accessible via:
+- REST API endpoints
+- GraphQL queries (if enabled)
+- Webhooks for automation
+
+### Comment Count Display
+
+UI can display comment counts:
+- Record list views show comment indicator
+- Badge shows number of unresolved comments
+- Quick access to comment panel
+
+## Programmatic Access
+
+### Via REST API
+
+```bash
+# List comments for a record
+GET /api/v2/tables/{tableId}/records/{recordId}/comments
+
+# Create a comment
+POST /api/v2/tables/{tableId}/records/{recordId}/comments
+{
+  "comment": "This needs review"
+}
+
+# Update a comment
+PATCH /api/v2/comments/{commentId}
+{
+  "comment": "Updated comment text"
+}
+
+# Delete a comment
+DELETE /api/v2/comments/{commentId}
+
+# Resolve a comment
+POST /api/v2/comments/{commentId}/resolve
+```
+
+### Via SDK
+
+```typescript
+import { Comment } from 'nocodb-sdk';
+
+// Create comment
+const comment = await Comment.insert(context, {
+  fk_model_id: tableId,
+  row_id: recordId,
+  comment: 'Review needed',
+  created_by: user.id,
+  created_by_email: user.email
+});
+
+// Get comments
+const comments = await Comment.list(context, {
+  row_id: recordId,
+  fk_model_id: tableId
+});
+
+// Update comment
+await Comment.update(context, commentId, {
+  comment: 'Updated text'
+});
+
+// Resolve comment
+await Comment.resolve(context, commentId, {
+  resolved_by: user.id,
+  resolved_by_email: user.email
+});
+
+// Delete comment
+await Comment.delete(context, commentId);
+```
+
+## Limitations
+
+- **No edit history**: Only the current version of a comment is stored
+- **No rich text**: Comments are plain text only
+- **No file attachments**: Cannot attach files to comments
+- **No reactions**: No emoji reactions or upvoting
+- **No mentions**: @mention functionality depends on implementation
+- **Soft delete only**: Deleted comments remain in database
+
+## Future Enhancements
+
+Potential future features:
+- Rich text formatting (bold, italic, links)
+- File attachments
+- User mentions with notifications
+- Comment reactions and voting
+- Comment templates
+- Comment search and filtering
+- Bulk comment operations
+- Comment export
+
+## Troubleshooting
+
+### Comments Not Showing
+
+**Check**:
+1. User has view permission on the record
+2. Comments are not marked as deleted
+3. Record ID and table ID are correct
+4. Database connection is active
+
+### Cannot Add Comment
+
+**Check**:
+1. User has Commenter role or higher
+2. Record exists and is accessible
+3. Comment text is not empty
+4. User authentication is valid
+
+### Cannot Resolve Comment
+
+**Check**:
+1. User has Creator or Owner role
+2. Comment ID is valid
+3. Comment is not already deleted
+4. User has base-level permissions
+
+## Related
+
+- [Permissions](/collaboration/permissions) - Role-based access control
+- [Workspaces](/collaboration/workspaces) - Team organization
+- [Sharing](/collaboration/sharing) - Public access and forms

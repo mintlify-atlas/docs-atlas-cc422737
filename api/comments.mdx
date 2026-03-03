@@ -1,0 +1,346 @@
+---
+title: 'Comments'
+description: 'Learn how to manage row comments in NocoDB using the API'
+icon: 'comment'
+---
+
+Comments allow you to add notes and discussions to individual records in your NocoDB tables. The Comments API provides endpoints to create, read, update, and delete comments.
+
+## List Comments
+
+Retrieve comments for a specific row or table.
+
+```bash GET /api/v1/db/meta/comments
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/comments?fk_model_id={modelId}&row_id={rowId}" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField query="fk_model_id" type="string" required>
+  Model/Table ID to fetch comments from
+</ParamField>
+
+<ParamField query="row_id" type="string" required>
+  Row ID to fetch comments for
+</ParamField>
+
+<ResponseField name="list" type="array">
+  Array of comment objects
+  
+  <ResponseField name="id" type="string">
+    Unique Comment ID
+  </ResponseField>
+  
+  <ResponseField name="row_id" type="string">
+    Row ID this comment belongs to
+  </ResponseField>
+  
+  <ResponseField name="comment" type="string">
+    Comment text content (max 3000 characters)
+  </ResponseField>
+  
+  <ResponseField name="created_by" type="string">
+    User ID of the comment creator
+  </ResponseField>
+  
+  <ResponseField name="created_by_email" type="string">
+    Email of the comment creator
+  </ResponseField>
+  
+  <ResponseField name="resolved_by" type="string">
+    User ID who resolved the comment (if applicable)
+  </ResponseField>
+  
+  <ResponseField name="resolved_by_email" type="string">
+    Email of the user who resolved the comment
+  </ResponseField>
+  
+  <ResponseField name="parent_comment_id" type="string">
+    Parent Comment ID for threaded comments
+  </ResponseField>
+  
+  <ResponseField name="fk_model_id" type="string">
+    Foreign Key to Model/Table
+  </ResponseField>
+  
+  <ResponseField name="source_id" type="string">
+    Source ID
+  </ResponseField>
+  
+  <ResponseField name="base_id" type="string">
+    Base ID
+  </ResponseField>
+  
+  <ResponseField name="created_at" type="string">
+    Comment creation timestamp
+  </ResponseField>
+  
+  <ResponseField name="updated_at" type="string">
+    Comment last update timestamp
+  </ResponseField>
+  
+  <ResponseField name="is_deleted" type="boolean">
+    Whether the comment has been deleted
+  </ResponseField>
+</ResponseField>
+
+### Response Example
+
+```json
+{
+  "list": [
+    {
+      "id": "cmt_abc123",
+      "row_id": "rec0Adp9PMG9o7uJy",
+      "comment": "This is a comment on the record",
+      "created_by": "usr_xyz789",
+      "created_by_email": "user@example.com",
+      "fk_model_id": "md_ehn5izr99m7d45",
+      "created_at": "2023-03-03T10:15:30Z",
+      "updated_at": "2023-03-03T10:15:30Z",
+      "is_deleted": false
+    }
+  ],
+  "pageInfo": {
+    "totalRows": 1,
+    "page": 1,
+    "pageSize": 25,
+    "isFirstPage": true,
+    "isLastPage": true
+  }
+}
+```
+
+## Create Comment
+
+Add a new comment to a row.
+
+```bash POST /api/v1/db/meta/comments
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/comments" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_model_id": "md_ehn5izr99m7d45",
+    "row_id": "rec0Adp9PMG9o7uJy",
+    "comment": "This is a new comment"
+  }'
+```
+
+<ParamField body="fk_model_id" type="string" required>
+  Model/Table ID where the row exists
+</ParamField>
+
+<ParamField body="row_id" type="string" required>
+  Row ID to add the comment to
+</ParamField>
+
+<ParamField body="comment" type="string">
+  Comment text content (max 3000 characters)
+</ParamField>
+
+### Response Example
+
+```json
+{
+  "id": "cmt_new123",
+  "row_id": "rec0Adp9PMG9o7uJy",
+  "comment": "This is a new comment",
+  "created_by": "usr_xyz789",
+  "created_by_email": "user@example.com",
+  "fk_model_id": "md_ehn5izr99m7d45",
+  "created_at": "2023-03-03T14:20:00Z",
+  "updated_at": "2023-03-03T14:20:00Z",
+  "is_deleted": false
+}
+```
+
+## Update Comment
+
+Update an existing comment.
+
+```bash PATCH /api/v1/db/meta/comment/{commentId}
+curl -X PATCH "https://app.nocodb.com/api/v1/db/meta/comment/{commentId}" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "comment": "Updated comment text",
+    "fk_model_id": "md_ehn5izr99m7d45"
+  }'
+```
+
+<ParamField path="commentId" type="string" required>
+  Unique Comment ID to update
+</ParamField>
+
+<ParamField body="comment" type="string">
+  Updated comment text (max 3000 characters)
+</ParamField>
+
+<ParamField body="fk_model_id" type="string">
+  Model/Table ID (for validation)
+</ParamField>
+
+### Response Example
+
+```json
+{
+  "id": "cmt_abc123",
+  "row_id": "rec0Adp9PMG9o7uJy",
+  "comment": "Updated comment text",
+  "created_by": "usr_xyz789",
+  "created_by_email": "user@example.com",
+  "fk_model_id": "md_ehn5izr99m7d45",
+  "created_at": "2023-03-03T10:15:30Z",
+  "updated_at": "2023-03-03T14:25:00Z",
+  "is_deleted": false
+}
+```
+
+## Delete Comment
+
+Delete a comment from a row.
+
+```bash DELETE /api/v1/db/meta/comment/{commentId}
+curl -X DELETE "https://app.nocodb.com/api/v1/db/meta/comment/{commentId}" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField path="commentId" type="string" required>
+  Unique Comment ID to delete
+</ParamField>
+
+<ResponseField name="success" type="boolean">
+  Whether the deletion was successful
+</ResponseField>
+
+## Count Comments
+
+Get the comment count for one or more rows.
+
+```bash GET /api/v1/db/meta/comments/count
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/comments/count?fk_model_id={modelId}&ids[]={rowId1}&ids[]={rowId2}" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField query="fk_model_id" type="string" required>
+  Model/Table ID
+</ParamField>
+
+<ParamField query="ids" type="array" required>
+  Array of Row IDs to count comments for
+</ParamField>
+
+### Response Example
+
+```json
+{
+  "rec0Adp9PMG9o7uJy": 5,
+  "rec1Bdq0QNH0p8vKz": 3,
+  "rec2Cdr1ROI1q9wLa": 0
+}
+```
+
+## Comment Features
+
+### Threading
+
+Comments support threading through the `parent_comment_id` field. To create a reply to an existing comment:
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/comments" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_model_id": "md_ehn5izr99m7d45",
+    "row_id": "rec0Adp9PMG9o7uJy",
+    "comment": "Reply to the comment",
+    "parent_comment_id": "cmt_abc123"
+  }'
+```
+
+### Resolving Comments
+
+Comments can be resolved by setting the `resolved_by` field. This is useful for tracking which comments have been addressed.
+
+### Mentions
+
+You can mention users in comments using `@` syntax. Mentioned users may receive notifications depending on their preferences.
+
+### Soft Delete
+
+Deleted comments are soft-deleted by default, setting `is_deleted` to `true` rather than removing them from the database. This preserves comment history and threading.
+
+## Best Practices
+
+### Comment Length
+
+- Keep comments concise and relevant
+- Maximum length is 3000 characters
+- Use multiple comments for lengthy discussions
+
+### Permissions
+
+- Users can only edit or delete their own comments
+- Table/view permissions apply to comment visibility
+- Admins can manage all comments
+
+### Performance
+
+- Use the count endpoint to efficiently check comment counts for multiple rows
+- Implement pagination when fetching comments for rows with many comments
+- Consider caching comment counts for frequently accessed records
+
+## Use Cases
+
+### Collaborative Review
+
+```javascript
+// Add review comment
+await fetch('https://app.nocodb.com/api/v1/db/meta/comments', {
+  method: 'POST',
+  headers: {
+    'xc-auth': 'YOUR_API_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    fk_model_id: 'md_tasks',
+    row_id: 'rec_task123',
+    comment: 'Reviewed and approved. Ready for deployment.'
+  })
+});
+```
+
+### Issue Tracking
+
+```javascript
+// Add issue resolution comment
+await fetch('https://app.nocodb.com/api/v1/db/meta/comments', {
+  method: 'POST',
+  headers: {
+    'xc-auth': 'YOUR_API_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    fk_model_id: 'md_issues',
+    row_id: 'rec_issue456',
+    comment: 'Bug fixed in commit abc123. Closing issue.'
+  })
+});
+```
+
+### Customer Feedback
+
+```javascript
+// Log customer feedback
+await fetch('https://app.nocodb.com/api/v1/db/meta/comments', {
+  method: 'POST',
+  headers: {
+    'xc-auth': 'YOUR_API_TOKEN',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    fk_model_id: 'md_customers',
+    row_id: 'rec_customer789',
+    comment: 'Customer requested feature X. Priority: High'
+  })
+});
+```

@@ -1,0 +1,549 @@
+---
+title: 'Record Operations'
+description: 'Perform CRUD operations on table records using the NocoDB SDK'
+---
+
+## Overview
+
+Records represent individual rows in your NocoDB tables. The SDK provides comprehensive methods for creating, reading, updating, and deleting records through the `dbTableRow` namespace.
+
+## List Records
+
+Retrieve records from a table with pagination, filtering, and sorting:
+
+```typescript
+const orgName = 'noco';
+const baseName = 'my-base';
+const tableName = 'Users';
+
+try {
+  const response = await api.dbTableRow.list(
+    orgName,
+    baseName,
+    tableName,
+    {
+      limit: 25,
+      offset: 0,
+      sort: '-created_at',  // Descending order
+      fields: ['id', 'name', 'email', 'created_at']
+    }
+  );
+  
+  console.log(`Total rows: ${response.pageInfo.totalRows}`);
+  console.log(`Current page: ${response.pageInfo.page}`);
+  console.log(`Page size: ${response.pageInfo.pageSize}`);
+  
+  response.list.forEach(record => {
+    console.log(record);
+  });
+} catch (error) {
+  console.error('Error listing records:', error);
+}
+```
+
+### Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `limit` | number | Maximum records to return (min: 1) |
+| `offset` | number | Number of records to skip (min: 0) |
+| `sort` | string\|string[] | Sort fields (prefix with `-` for descending) |
+| `fields` | any[] | Specific fields to return |
+| `where` | string | Filter condition |
+| `pks` | string | Comma-separated primary keys |
+
+### Response Type
+
+```typescript
+interface ListResponse {
+  list: object[];           // Array of record objects
+  pageInfo: {
+    totalRows?: number;     // Total number of records
+    page?: number;          // Current page number
+    pageSize?: number;      // Records per page
+    isFirstPage?: boolean;
+    isLastPage?: boolean;
+  };
+}
+```
+
+## Create Record
+
+Insert a new record into a table:
+
+<CodeGroup>
+
+```typescript Single Record
+const newRecord = await api.dbTableRow.create(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    Name: 'John Doe',
+    Email: 'john@example.com',
+    Age: 30,
+    Department: 'Engineering',
+    Active: true
+  }
+);
+
+console.log('Created record:', newRecord);
+```
+
+```typescript With Options
+const newRecord = await api.dbTableRow.create(
+  'noco',
+  'my-base',
+  'Tasks',
+  {
+    Title: 'New Task',
+    Description: 'Task description',
+    Status: 'Todo'
+  },
+  {
+    before: 'rec_xxxxxxxxxx',  // Insert before this record
+    undo: false                 // Disable undo functionality
+  }
+);
+```
+
+</CodeGroup>
+
+## Read Single Record
+
+Retrieve a specific record by its ID:
+
+```typescript
+const recordId = 'rec_xxxxxxxxxx';
+
+try {
+  const record = await api.dbTableRow.read(
+    'noco',
+    'my-base',
+    'Users',
+    recordId
+  );
+  
+  console.log('Record data:', record);
+} catch (error) {
+  console.error('Error reading record:', error);
+}
+```
+
+## Update Record
+
+Modify an existing record:
+
+<CodeGroup>
+
+```typescript Partial Update
+const recordId = 'rec_xxxxxxxxxx';
+
+await api.dbTableRow.update(
+  'noco',
+  'my-base',
+  'Users',
+  recordId,
+  {
+    Department: 'Sales',
+    Active: false
+  }
+);
+
+console.log('Record updated successfully');
+```
+
+```typescript Full Update
+await api.dbTableRow.update(
+  'noco',
+  'my-base',
+  'Users',
+  'rec_xxxxxxxxxx',
+  {
+    Name: 'Jane Smith',
+    Email: 'jane@example.com',
+    Age: 28,
+    Department: 'Marketing',
+    Active: true
+  }
+);
+```
+
+</CodeGroup>
+
+## Delete Record
+
+Remove a record from the table:
+
+```typescript
+const recordId = 'rec_xxxxxxxxxx';
+
+try {
+  await api.dbTableRow.delete(
+    'noco',
+    'my-base',
+    'Users',
+    recordId
+  );
+  
+  console.log('Record deleted successfully');
+} catch (error) {
+  console.error('Error deleting record:', error);
+}
+```
+
+<Warning>
+  Deleting a record is permanent and cannot be undone unless you have backups.
+</Warning>
+
+## Bulk Operations
+
+### Bulk Create
+
+Insert multiple records at once:
+
+```typescript
+try {
+  const records = await api.dbTableRow.bulkCreate(
+    'noco',
+    'my-base',
+    'Users',
+    [
+      { Name: 'Alice', Email: 'alice@example.com', Age: 25 },
+      { Name: 'Bob', Email: 'bob@example.com', Age: 32 },
+      { Name: 'Charlie', Email: 'charlie@example.com', Age: 28 }
+    ]
+  );
+  
+  console.log(`Created ${records.length} records`);
+} catch (error) {
+  console.error('Error in bulk create:', error);
+}
+```
+
+### Bulk Update
+
+Update multiple records with a single API call:
+
+```typescript
+await api.dbTableRow.bulkUpdate(
+  'noco',
+  'my-base',
+  'Tasks',
+  [
+    { id: 'rec_1', Status: 'Completed' },
+    { id: 'rec_2', Status: 'Completed' },
+    { id: 'rec_3', Status: 'In Progress' }
+  ]
+);
+```
+
+### Bulk Delete
+
+Delete multiple records:
+
+```typescript
+const recordIds = [
+  'rec_xxxxxxxxxx',
+  'rec_yyyyyyyyyy',
+  'rec_zzzzzzzzzz'
+];
+
+await api.dbTableRow.bulkDelete(
+  'noco',
+  'my-base',
+  'Users',
+  recordIds
+);
+
+console.log(`Deleted ${recordIds.length} records`);
+```
+
+## Advanced Queries
+
+### Find One Record
+
+Get the first record matching criteria:
+
+```typescript
+const record = await api.dbTableRow.findOne(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    where: '(Email,eq,john@example.com)',
+    fields: ['id', 'Name', 'Email']
+  }
+);
+
+if (record) {
+  console.log('Found:', record);
+} else {
+  console.log('No matching record');
+}
+```
+
+### Group By
+
+Aggregate records by a column:
+
+```typescript
+const grouped = await api.dbTableRow.groupBy(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    column_name: 'Department',
+    limit: 10,
+    offset: 0
+  }
+);
+
+console.log('Groups:', grouped);
+```
+
+### Count Records
+
+Get the total number of records:
+
+```typescript
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  { limit: 1 }
+);
+
+const totalRecords = response.pageInfo.totalRows;
+console.log(`Total records: ${totalRecords}`);
+```
+
+## Sorting Records
+
+<CodeGroup>
+
+```typescript Single Sort
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    sort: 'Name'  // Ascending
+  }
+);
+```
+
+```typescript Descending Sort
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    sort: '-created_at'  // Descending (note the minus prefix)
+  }
+);
+```
+
+```typescript Multiple Sorts
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    sort: ['Department', '-Age']  // By department, then age descending
+  }
+);
+```
+
+</CodeGroup>
+
+## Pagination
+
+Implement efficient pagination:
+
+```typescript
+class RecordPaginator {
+  constructor(
+    private org: string,
+    private base: string,
+    private table: string,
+    private pageSize: number = 25
+  ) {}
+  
+  async getPage(page: number) {
+    const offset = (page - 1) * this.pageSize;
+    
+    const response = await api.dbTableRow.list(
+      this.org,
+      this.base,
+      this.table,
+      {
+        limit: this.pageSize,
+        offset: offset
+      }
+    );
+    
+    return {
+      records: response.list,
+      totalPages: Math.ceil(
+        (response.pageInfo.totalRows || 0) / this.pageSize
+      ),
+      currentPage: page,
+      totalRecords: response.pageInfo.totalRows
+    };
+  }
+  
+  async *getAllRecords() {
+    let page = 1;
+    let hasMore = true;
+    
+    while (hasMore) {
+      const result = await this.getPage(page);
+      
+      for (const record of result.records) {
+        yield record;
+      }
+      
+      hasMore = page < result.totalPages;
+      page++;
+    }
+  }
+}
+
+// Usage
+const paginator = new RecordPaginator('noco', 'my-base', 'Users', 50);
+
+// Get specific page
+const page1 = await paginator.getPage(1);
+
+// Iterate all records
+for await (const record of paginator.getAllRecords()) {
+  console.log(record);
+}
+```
+
+## Field Selection
+
+Optimize performance by requesting only needed fields:
+
+```typescript
+const response = await api.dbTableRow.list(
+  'noco',
+  'my-base',
+  'Users',
+  {
+    fields: ['id', 'Name', 'Email'],  // Only return these fields
+    limit: 100
+  }
+);
+
+// Each record will only contain id, Name, and Email
+response.list.forEach(record => {
+  console.log(record.Name, record.Email);
+});
+```
+
+## Error Handling
+
+```typescript
+async function safeRecordOperation<T>(
+  operation: () => Promise<T>
+): Promise<T | null> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error.response) {
+      const status = error.response.status;
+      const message = error.response.data?.msg;
+      
+      switch (status) {
+        case 400:
+          console.error('Bad Request:', message);
+          break;
+        case 404:
+          console.error('Record not found');
+          break;
+        case 422:
+          console.error('Validation error:', message);
+          break;
+        default:
+          console.error('Error:', message);
+      }
+    } else {
+      console.error('Network error:', error.message);
+    }
+    return null;
+  }
+}
+
+// Usage
+const record = await safeRecordOperation(() =>
+  api.dbTableRow.read('noco', 'base', 'Users', 'rec_123')
+);
+```
+
+## Best Practices
+
+### 1. Use Bulk Operations for Multiple Records
+
+```typescript
+// Good - Single API call
+await api.dbTableRow.bulkCreate('org', 'base', 'table', records);
+
+// Avoid - Multiple API calls
+for (const record of records) {
+  await api.dbTableRow.create('org', 'base', 'table', record);
+}
+```
+
+### 2. Validate Data Before Creating
+
+```typescript
+function validateUser(user: any) {
+  if (!user.Email || !user.Email.includes('@')) {
+    throw new Error('Invalid email');
+  }
+  if (!user.Name || user.Name.trim() === '') {
+    throw new Error('Name is required');
+  }
+  return true;
+}
+
+try {
+  validateUser(userData);
+  await api.dbTableRow.create('org', 'base', 'Users', userData);
+} catch (error) {
+  console.error('Validation failed:', error.message);
+}
+```
+
+### 3. Handle Rate Limits
+
+```typescript
+async function createWithRetry(data: any, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await api.dbTableRow.create('org', 'base', 'table', data);
+    } catch (error) {
+      if (error.response?.status === 429) {
+        // Rate limited - wait and retry
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Filters" icon="filter" href="/sdk/filters">
+    Learn how to filter and query records
+  </Card>
+  <Card title="Tables" icon="table" href="/sdk/tables">
+    Go back to table management
+  </Card>
+</CardGroup>

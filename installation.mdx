@@ -1,0 +1,367 @@
+---
+title: "Installation"
+description: "Install NocoDB using Docker, binaries, or auto-upstall script"
+---
+
+NocoDB can be installed using various methods depending on your requirements. This guide covers all available installation options.
+
+## Docker Installation
+
+Docker is the recommended way to install NocoDB for both development and production use.
+
+### Docker with SQLite
+
+The simplest way to get started. SQLite is embedded and requires no additional database setup:
+
+```bash
+docker run -d \
+  --name noco \
+  -v "$(pwd)"/nocodb:/usr/app/data/ \
+  -p 8080:8080 \
+  nocodb/nocodb:latest
+```
+
+<Note>
+  SQLite is perfect for development and small to medium workloads. For production deployments with multiple users, consider using PostgreSQL or MySQL.
+</Note>
+
+### Docker with PostgreSQL
+
+For production deployments, PostgreSQL offers better performance and scalability:
+
+```bash
+docker run -d \
+  --name noco \
+  -v "$(pwd)"/nocodb:/usr/app/data/ \
+  -p 8080:8080 \
+  -e NC_DB="pg://host.docker.internal:5432?u=root&p=password&d=d1" \
+  -e NC_AUTH_JWT_SECRET="569a1821-0a93-45e8-87ab-eb857f20a010" \
+  nocodb/nocodb:latest
+```
+
+<Warning>
+  Always change the `NC_AUTH_JWT_SECRET` to a secure random string in production. You can generate one using: `openssl rand -hex 32`
+</Warning>
+
+### Docker Compose with PostgreSQL
+
+For a complete setup with both NocoDB and PostgreSQL in containers:
+
+<CodeGroup>
+```yaml docker-compose.yml
+version: '2.1'
+services: 
+  nocodb: 
+    depends_on: 
+      root_db: 
+        condition: service_healthy
+    environment: 
+      NC_DB: "pg://root_db:5432?u=postgres&p=password&d=root_db"
+    image: "nocodb/nocodb:latest"
+    ports: 
+      - "8080:8080"
+    restart: always
+    volumes: 
+      - "nc_data:/usr/app/data"
+  root_db: 
+    environment: 
+      POSTGRES_DB: root_db
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+    healthcheck: 
+      interval: 10s
+      retries: 10
+      test: "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""
+      timeout: 2s
+    image: postgres:16.6
+    restart: always
+    volumes: 
+      - "db_data:/var/lib/postgresql/data"
+volumes: 
+  db_data: {}
+  nc_data: {}
+```
+
+```bash Run
+docker-compose up -d
+```
+</CodeGroup>
+
+This configuration:
+- Sets up PostgreSQL 16.6 with automatic health checks
+- Configures NocoDB to wait for the database to be ready
+- Persists data in Docker volumes
+- Automatically restarts containers on failure
+
+## Auto-upstall (Production)
+
+Auto-upstall is a single command that sets up a production-ready NocoDB instance with all necessary services.
+
+```bash
+bash <(curl -sSL http://install.nocodb.com/noco.sh) <(mktemp)
+```
+
+### What Auto-upstall Does
+
+This powerful script automatically:
+
+- 🐳 Installs all pre-requisites (Docker, Docker Compose)
+- 🚀 Installs NocoDB with PostgreSQL, Redis, Minio, and Traefik gateway
+- 🔄 Upgrades NocoDB to the latest version when run again
+- 🔒 Sets up SSL certificates and automatic renewal
+
+<Note>
+  Auto-upstall requires a domain or subdomain. You'll be prompted to enter it during installation.
+</Note>
+
+### Requirements for Auto-upstall
+
+- A server running Linux (Ubuntu, Debian, CentOS, etc.)
+- Root or sudo access
+- A domain or subdomain pointing to your server
+- Ports 80 and 443 available
+
+<Warning>
+  The auto-upstall script will modify your system by installing Docker and other dependencies. Review the [script source](https://raw.githubusercontent.com/nocodb/nocodb/develop/docker-compose/1_Auto_Upstall/noco.sh) before running.
+</Warning>
+
+## Binary Installation
+
+Binaries are available for quick local testing. They are **not recommended for production use**.
+
+<Warning>
+  Binaries are only for quick testing locally. For production deployments, use Docker or auto-upstall.
+</Warning>
+
+<Tabs>
+  <Tab title="macOS">
+    <CodeGroup>
+    ```bash macOS ARM64 (Apple Silicon)
+    curl http://get.nocodb.com/macos-arm64 -o nocodb -L && \
+    chmod +x nocodb && \
+    ./nocodb
+    ```
+
+    ```bash macOS x64 (Intel)
+    curl http://get.nocodb.com/macos-x64 -o nocodb -L && \
+    chmod +x nocodb && \
+    ./nocodb
+    ```
+    </CodeGroup>
+  </Tab>
+
+  <Tab title="Linux">
+    <CodeGroup>
+    ```bash Linux ARM64
+    curl http://get.nocodb.com/linux-arm64 -o nocodb -L && \
+    chmod +x nocodb && \
+    ./nocodb
+    ```
+
+    ```bash Linux x64
+    curl http://get.nocodb.com/linux-x64 -o nocodb -L && \
+    chmod +x nocodb && \
+    ./nocodb
+    ```
+    </CodeGroup>
+  </Tab>
+
+  <Tab title="Windows">
+    <CodeGroup>
+    ```powershell Windows ARM64
+    iwr http://get.nocodb.com/win-arm64.exe -OutFile Noco-win-arm64.exe
+    .\Noco-win-arm64.exe
+    ```
+
+    ```powershell Windows x64
+    iwr http://get.nocodb.com/win-x64.exe -OutFile Noco-win-x64.exe
+    .\Noco-win-x64.exe
+    ```
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+After running the binary, access NocoDB at:
+```
+http://localhost:8080/dashboard
+```
+
+## Environment Variables
+
+Customize your NocoDB installation with environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|----------|
+| `NC_DB` | Database connection string | SQLite in `/usr/app/data` |
+| `NC_AUTH_JWT_SECRET` | JWT secret for authentication | Auto-generated |
+| `NC_PUBLIC_URL` | Public URL for your instance | `http://localhost:8080` |
+| `NC_DISABLE_TELE` | Disable telemetry | `false` |
+| `PORT` | Port to run NocoDB | `8080` |
+
+### Database Connection Strings
+
+<CodeGroup>
+```bash PostgreSQL
+NC_DB="pg://host:port?u=user&p=password&d=database"
+```
+
+```bash MySQL
+NC_DB="mysql2://host:port?u=user&p=password&d=database"
+```
+
+```bash SQL Server
+NC_DB="mssql://host:port?u=user&p=password&d=database"
+```
+</CodeGroup>
+
+## Production Deployment with Traefik
+
+For a complete production setup with SSL, reverse proxy, and automatic updates:
+
+<Steps>
+  <Step title="Prepare Environment Variables">
+    Create a `.env` file with your configuration:
+
+    ```bash
+    DOMAINNAME=yourdomain.com
+    DATABASE_USER=nocodb
+    DATABASE_PW=your_secure_password
+    DATABASE_NAME=nocodb
+    CF_DNS_API_TOKEN=your_cloudflare_token
+    ```
+  </Step>
+
+  <Step title="Deploy with Docker Compose">
+    Use the production docker-compose configuration that includes:
+    - NocoDB application
+    - PostgreSQL database
+    - Traefik reverse proxy with automatic SSL
+    - Watchtower for automatic updates
+
+    The complete configuration is available in the source repository at `/docker-compose/3_traefik/`.
+  </Step>
+
+  <Step title="Access Your Instance">
+    Once deployed, access your instance at:
+    ```
+    https://nocodb.yourdomain.com
+    ```
+
+    SSL certificates will be automatically generated and renewed by Let's Encrypt.
+  </Step>
+</Steps>
+
+## Verification
+
+After installation, verify NocoDB is running correctly:
+
+<Steps>
+  <Step title="Check Container Status">
+    ```bash
+    docker ps | grep noco
+    ```
+    
+    You should see the container running.
+  </Step>
+
+  <Step title="Check Logs">
+    ```bash
+    docker logs noco
+    ```
+    
+    Look for messages indicating successful startup.
+  </Step>
+
+  <Step title="Access Dashboard">
+    Open your browser and navigate to `http://localhost:8080/dashboard`
+    
+    You should see the NocoDB interface.
+  </Step>
+</Steps>
+
+## Upgrading
+
+To upgrade your NocoDB installation:
+
+<Tabs>
+  <Tab title="Docker">
+    ```bash
+    docker pull nocodb/nocodb:latest
+    docker stop noco
+    docker rm noco
+    docker run -d \
+      --name noco \
+      -v "$(pwd)"/nocodb:/usr/app/data/ \
+      -p 8080:8080 \
+      nocodb/nocodb:latest
+    ```
+  </Tab>
+
+  <Tab title="Docker Compose">
+    ```bash
+    docker-compose pull
+    docker-compose up -d
+    ```
+  </Tab>
+
+  <Tab title="Auto-upstall">
+    Simply run the auto-upstall command again:
+    ```bash
+    bash <(curl -sSL http://install.nocodb.com/noco.sh) <(mktemp)
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Your data is safely stored in Docker volumes and will persist across upgrades.
+</Note>
+
+## Troubleshooting
+
+### Port Already in Use
+
+If port 8080 is already in use, specify a different port:
+
+```bash
+docker run -d \
+  --name noco \
+  -v "$(pwd)"/nocodb:/usr/app/data/ \
+  -p 3000:8080 \
+  nocodb/nocodb:latest
+```
+
+Access at `http://localhost:3000/dashboard`
+
+### Database Connection Issues
+
+Verify your database connection string format and ensure:
+- Database server is accessible from the Docker container
+- Credentials are correct
+- Database exists and user has necessary permissions
+
+### Container Won't Start
+
+Check logs for specific errors:
+```bash
+docker logs noco
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Create your first base and table
+  </Card>
+
+  <Card title="Database Configuration" icon="database" href="/databases">
+    Connect to external databases
+  </Card>
+
+  <Card title="Environment Variables" icon="gear" href="/configuration">
+    Advanced configuration options
+  </Card>
+
+  <Card title="Security Best Practices" icon="shield" href="/security">
+    Secure your NocoDB instance
+  </Card>
+</CardGroup>

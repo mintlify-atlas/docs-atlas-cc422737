@@ -1,0 +1,211 @@
+---
+title: 'Database (Base) Operations'
+description: 'Learn how to manage NocoDB bases programmatically'
+---
+
+## Overview
+
+In NocoDB, a "Base" (formerly called "Project") is a container for tables, similar to a database. The SDK provides methods to retrieve base information and metadata.
+
+## Get Base Info
+
+Retrieve detailed information about a base including node version, platform, and database type.
+
+```typescript
+const baseId = 'p_xxxxxxxxxx';
+
+try {
+  const info = await api.base.metaGet(baseId);
+  
+  console.log('Node Version:', info.Node);
+  console.log('Platform:', info.Platform);
+  console.log('Architecture:', info.Arch);
+  console.log('Database Type:', info.Database);
+  console.log('Root DB Type:', info.RootDB);
+  console.log('Package Version:', info.PackageVersion);
+  console.log('Is Docker:', info.Docker);
+  console.log('Project on Root DB:', info.ProjectOnRootDB);
+} catch (error) {
+  console.error('Error getting base info:', error);
+}
+```
+
+### Response Type
+
+```typescript
+interface BaseInfo {
+  Node?: string;           // e.g., "v18.16.1"
+  Arch?: string;           // e.g., "x64"
+  Platform?: string;       // e.g., "linux"
+  Docker?: boolean;        // true if running in Docker
+  Database?: string;       // e.g., "postgres"
+  ProjectOnRootDB?: boolean;
+  RootDB?: string;         // e.g., "postgres"
+  PackageVersion?: string; // e.g., "0.301.3"
+}
+```
+
+## Get UI ACL (Model Visibility)
+
+Retrieve visibility rules for tables based on user roles:
+
+```typescript
+const baseId = 'p_xxxxxxxxxx';
+
+try {
+  const visibilityRules = await api.base.modelVisibilityList(
+    baseId,
+    {
+      includeM2M: false  // Include many-to-many junction tables
+    }
+  );
+  
+  console.log('Visibility rules:', visibilityRules);
+} catch (error) {
+  console.error('Error getting visibility rules:', error);
+}
+```
+
+## Set UI ACL (Model Visibility)
+
+Update visibility rules to show or hide tables for specific roles:
+
+```typescript
+const baseId = 'p_xxxxxxxxxx';
+
+try {
+  await api.base.modelVisibilitySet(
+    baseId,
+    [
+      {
+        fk_model_id: 'md_xxxxxxxxxx',
+        disabled: false,  // true to hide, false to show
+        order: 1
+      },
+      {
+        fk_model_id: 'md_yyyyyyyyyy',
+        disabled: true,
+        order: 2
+      }
+    ]
+  );
+  
+  console.log('Visibility rules updated');
+} catch (error) {
+  console.error('Error updating visibility rules:', error);
+}
+```
+
+## Working with Multiple Bases
+
+If you need to work with multiple bases, you can create separate API instances or reuse the same instance:
+
+<CodeGroup>
+
+```typescript Separate Instances
+const base1Api = new Api({
+  baseURL: 'https://app.nocodb.com',
+  headers: { 'xc-auth': 'TOKEN_1' }
+});
+
+const base2Api = new Api({
+  baseURL: 'https://app.nocodb.com',
+  headers: { 'xc-auth': 'TOKEN_2' }
+});
+
+const info1 = await base1Api.base.metaGet('base_1_id');
+const info2 = await base2Api.base.metaGet('base_2_id');
+```
+
+```typescript Single Instance
+const api = new Api({
+  baseURL: 'https://app.nocodb.com',
+  headers: { 'xc-auth': 'YOUR_TOKEN' }
+});
+
+// Access multiple bases with the same API instance
+const bases = ['base_1_id', 'base_2_id', 'base_3_id'];
+
+for (const baseId of bases) {
+  const info = await api.base.metaGet(baseId);
+  console.log(`Base ${baseId}:`, info.PackageVersion);
+}
+```
+
+</CodeGroup>
+
+## Base Identification
+
+Base IDs in NocoDB typically follow the pattern `p_` followed by random characters:
+
+```typescript
+// Example base ID
+const baseId = 'p_b3xo2i44nx5y9l';
+
+// You can find your base ID from:
+// 1. The NocoDB URL: https://app.nocodb.com/nc/p_b3xo2i44nx5y9l
+// 2. From the API when listing workspaces and bases
+// 3. From base metadata in the UI
+```
+
+## Common Patterns
+
+### Check Base Health
+
+```typescript
+async function checkBaseHealth(baseId: string) {
+  try {
+    const info = await api.base.metaGet(baseId);
+    
+    return {
+      healthy: true,
+      version: info.PackageVersion,
+      database: info.Database,
+      platform: info.Platform
+    };
+  } catch (error) {
+    return {
+      healthy: false,
+      error: error.message
+    };
+  }
+}
+```
+
+### Cache Base Information
+
+```typescript
+class BaseManager {
+  private cache = new Map<string, any>();
+  
+  async getBaseInfo(baseId: string, useCache = true) {
+    if (useCache && this.cache.has(baseId)) {
+      return this.cache.get(baseId);
+    }
+    
+    const info = await api.base.metaGet(baseId);
+    this.cache.set(baseId, info);
+    
+    return info;
+  }
+  
+  clearCache(baseId?: string) {
+    if (baseId) {
+      this.cache.delete(baseId);
+    } else {
+      this.cache.clear();
+    }
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Tables" icon="table" href="/sdk/tables">
+    Learn how to manage tables in a base
+  </Card>
+  <Card title="Records" icon="database" href="/sdk/records">
+    Work with records in your tables
+  </Card>
+</CardGroup>

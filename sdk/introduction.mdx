@@ -1,0 +1,56 @@
+---
+title: 'Introduction'
+description: 'Learn about the NocoDB SDK for programmatic access to your NocoDB databases'
+---
+
+## Overview
+
+The NocoDB SDK (`nocodb-sdk`) is a TypeScript/JavaScript library that provides programmatic access to your NocoDB databases. It is used in both the NocoDB frontend and backend, offering a consistent API for interacting with your data.
+
+## Key Features
+
+- **Full TypeScript Support**: Complete type definitions for all API methods and data structures
+- **Database Operations**: Create, read, update, and delete records across tables
+- **Table Management**: Programmatically manage tables and their schemas
+- **Advanced Filtering**: Build complex queries with filters, sorting, and pagination
+- **Authentication**: Built-in support for JWT-based authentication
+- **Base Management**: Work with multiple bases and workspaces
+- **Column Utilities**: Helper functions for working with different column types
+
+## Architecture
+
+The SDK is built on top of Axios and provides a strongly-typed interface to the NocoDB REST API. All API endpoints are organized into logical namespaces:
+
+- `auth` - User authentication and session management
+- `base` - Base-level operations and metadata
+- `dbTable` - Table creation, listing, and management
+- `dbTableRow` - CRUD operations on table records
+- `userProfile` - User profile management
+
+And many more specialized endpoints for views, filters, sorts, integrations, and workflows.
+
+## Version
+
+Current version: **0.301.3**
+
+## Requirements
+
+- Node.js >= 18
+- NocoDB instance (self-hosted or cloud)
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/sdk/installation">
+    Install the SDK in your project
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/sdk/quickstart">
+    Get started with your first API call
+  </Card>
+  <Card title="Tables" icon="table" href="/sdk/tables">
+    Learn to work with tables
+  </Card>
+  <Card title="Records" icon="database" href="/sdk/records">
+    Perform CRUD operations on records
+  </Card>
+</CardGroup>

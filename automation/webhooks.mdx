@@ -1,0 +1,296 @@
+---
+title: Webhooks
+description: Automate actions using webhooks in NocoDB
+---
+
+Webhooks allow you to trigger automated actions when specific events occur in your database. NocoDB supports flexible webhook configuration with conditions, custom payloads, and retry mechanisms.
+
+## Overview
+
+Webhooks in NocoDB can be triggered by various database operations and can send data to external URLs or execute custom scripts. Each webhook can have filters, custom headers, and configurable retry logic.
+
+## Hook Events
+
+Webhooks can be triggered by the following events:
+
+- **after.insert** - Triggered after a new record is created
+- **after.update** - Triggered after a record is updated
+- **after.delete** - Triggered after a record is deleted
+- **after.bulkInsert** - Triggered after multiple records are created
+- **after.bulkUpdate** - Triggered after multiple records are updated
+- **after.bulkDelete** - Triggered after multiple records are deleted
+- **manual** - Triggered manually via API or button click
+
+## Webhook Configuration
+
+### Basic Properties
+
+<ParamField path="title" type="string" required>
+  Name of the webhook
+</ParamField>
+
+<ParamField path="description" type="string">
+  Description of what the webhook does
+</ParamField>
+
+<ParamField path="event" type="string" required>
+  The event that triggers the webhook (e.g., "after", "manual")
+</ParamField>
+
+<ParamField path="operation" type="array" required>
+  Operations that trigger the webhook: `insert`, `update`, `delete`, `bulkInsert`, `bulkUpdate`, `bulkDelete`
+</ParamField>
+
+<ParamField path="active" type="boolean" default="true">
+  Whether the webhook is active
+</ParamField>
+
+<ParamField path="async" type="boolean" default="true">
+  Whether to execute the webhook asynchronously
+</ParamField>
+
+### URL Webhooks
+
+<ParamField path="url" type="string">
+  The endpoint URL to send webhook data to
+</ParamField>
+
+<ParamField path="headers" type="string">
+  JSON string of custom headers to include in the request
+  
+  ```json
+  {
+    "Authorization": "Bearer YOUR_TOKEN",
+    "Content-Type": "application/json"
+  }
+  ```
+</ParamField>
+
+### Notification Integrations
+
+<ParamField path="notification" type="object">
+  Configuration for notification services (Slack, Discord, Email, etc.)
+  
+  ```json
+  {
+    "type": "Slack",
+    "webhook_url": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+    "channel": "#general"
+  }
+  ```
+</ParamField>
+
+### Retry Configuration
+
+<ParamField path="retries" type="number" default="0">
+  Number of retry attempts on failure (0-10)
+</ParamField>
+
+<ParamField path="retry_interval" type="number" default="60000">
+  Interval between retries in milliseconds
+</ParamField>
+
+<ParamField path="timeout" type="number" default="60000">
+  Request timeout in milliseconds
+</ParamField>
+
+### Conditional Triggers
+
+<ParamField path="condition" type="boolean" default="false">
+  Whether to use filter conditions
+</ParamField>
+
+Webhooks support filtering with conditions. You can add filters to only trigger the webhook when specific criteria are met.
+
+<ParamField path="trigger_field" type="boolean" default="false">
+  Only trigger on specific field updates (for update operations)
+</ParamField>
+
+<ParamField path="trigger_fields" type="array">
+  Array of column IDs that will trigger the webhook when updated
+  
+  ```json
+  ["col_abc123", "col_def456"]
+  ```
+</ParamField>
+
+## Webhook Payload
+
+Webhooks send a structured JSON payload containing event details and record data.
+
+### Payload Structure (v3)
+
+<ParamField path="type" type="string">
+  Event type in format: `records.after.{operation}`
+  
+  Example: `records.after.insert`
+</ParamField>
+
+<ParamField path="id" type="string">
+  Unique event ID (UUID)
+</ParamField>
+
+<ParamField path="version" type="string">
+  Payload version: `v3`
+</ParamField>
+
+<ParamField path="user" type="object">
+  User who triggered the event (if available)
+  
+  ```json
+  {
+    "id": "usr_abc123",
+    "email": "user@example.com",
+    "display_name": "John Doe"
+  }
+  ```
+</ParamField>
+
+<ParamField path="data" type="object">
+  Event data containing table information and records
+</ParamField>
+
+<ParamField path="data.table_id" type="string">
+  ID of the table
+</ParamField>
+
+<ParamField path="data.table_name" type="string">
+  Name of the table
+</ParamField>
+
+<ParamField path="data.rows" type="array">
+  Array of affected records (for insert/delete operations)
+</ParamField>
+
+<ParamField path="data.previous_rows" type="array">
+  Array of records before update (for update operations)
+</ParamField>
+
+<ParamField path="data.row_inserted" type="number">
+  Number of rows inserted (for bulkInsert operations)
+</ParamField>
+
+## Example Payloads
+
+### After Insert
+
+```json
+{
+  "type": "records.after.insert",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "version": "v3",
+  "user": {
+    "id": "usr_sample_user_id",
+    "email": "user@example.com",
+    "display_name": "Sample User"
+  },
+  "data": {
+    "table_id": "tbl_abc123",
+    "table_name": "Users",
+    "rows": [
+      {
+        "Id": 1,
+        "Name": "Sample Text",
+        "Email": "test@nocodb.com",
+        "PhoneNumber": "0000000000",
+        "Active": true,
+        "CreatedAt": "2026-03-03T10:30:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+### After Update
+
+```json
+{
+  "type": "records.after.update",
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "version": "v3",
+  "data": {
+    "table_id": "tbl_abc123",
+    "table_name": "Users",
+    "previous_rows": [
+      {
+        "Id": 1,
+        "Name": "Old Name",
+        "Email": "old@nocodb.com"
+      }
+    ],
+    "rows": [
+      {
+        "Id": 1,
+        "Name": "New Name",
+        "Email": "new@nocodb.com"
+      }
+    ]
+  }
+}
+```
+
+### After Bulk Insert
+
+```json
+{
+  "type": "records.after.insert",
+  "id": "550e8400-e29b-41d4-a716-446655440002",
+  "version": "v3",
+  "data": {
+    "table_id": "tbl_abc123",
+    "table_name": "Users",
+    "row_inserted": 10
+  }
+}
+```
+
+## Custom Payload Templates
+
+You can customize webhook payloads using Handlebars templates:
+
+```handlebars
+{
+  "text": "New record created: {{data.rows.0.Name}}",
+  "user_email": "{{data.rows.0.Email}}",
+  "timestamp": "{{data.rows.0.CreatedAt}}"
+}
+```
+
+## Filter Conditions
+
+Webhooks support complex filter conditions:
+
+- **eq** - Equals
+- **neq** - Not equals
+- **like** - Contains
+- **nlike** - Does not contain
+- **gt** / **gte** - Greater than / Greater than or equal
+- **lt** / **lte** - Less than / Less than or equal
+- **empty** / **notempty** - Is empty / Is not empty
+- **null** / **notnull** - Is null / Is not null
+- **anyof** / **nanyof** - Any of / None of
+- **allof** / **nallof** - All of / Not all of
+- **checked** / **notchecked** - Checkbox is checked / not checked
+
+## Best Practices
+
+1. **Use Async Webhooks**: Enable async execution for better performance
+2. **Configure Retries**: Set appropriate retry counts for critical webhooks
+3. **Add Filters**: Use conditions to reduce unnecessary webhook calls
+4. **Monitor Logs**: Check webhook logs to troubleshoot issues
+5. **Secure Endpoints**: Always use HTTPS and authentication headers
+6. **Test First**: Use the test webhook feature before activating
+7. **Field-Specific Triggers**: For updates, only trigger on specific field changes to reduce noise
+
+## Webhook Versions
+
+NocoDB currently uses webhook version **v3**, which provides:
+
+- Multi-operation support (can trigger on multiple operations)
+- Field-specific triggers for updates
+- Improved payload structure
+- Better performance and reliability
+
+<Note>
+  Webhook versions v1 and v2 are deprecated and not supported for new webhooks.
+</Note>

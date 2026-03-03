@@ -1,0 +1,172 @@
+---
+title: 'Workspaces & Bases'
+description: 'Learn how NocoDB organizes your data into workspaces and bases'
+---
+
+## Overview
+
+NocoDB uses a hierarchical structure to organize your databases and collaborate with your team:
+
+- **Workspaces**: Top-level containers that group related bases together
+- **Bases**: Individual database projects within a workspace (formerly called "projects")
+- **Tables**: Data tables within each base
+
+## Workspace Organization
+
+### What is a Workspace?
+
+A workspace is a collaborative environment where teams can manage multiple bases. Each workspace has:
+
+- Its own set of members with workspace-level roles
+- Multiple bases (database projects)
+- Shared integrations and settings
+- Workspace-level permissions that can be inherited by bases
+
+### Workspace Identification
+
+Each workspace is identified by:
+
+- `fk_workspace_id`: Unique identifier for the workspace
+- Workspace name and metadata
+
+## Base Organization
+
+### What is a Base?
+
+A base (previously called a "project") is an individual database project that contains:
+
+- Tables with your data
+- Views (Grid, Form, Gallery, Kanban, etc.)
+- Relationships between tables
+- API endpoints
+- Webhooks and automation
+
+### Base Properties
+
+| Property | Description |
+|----------|-------------|
+| `id` | Unique identifier for the base |
+| `title` | Display name of the base |
+| `fk_workspace_id` | Parent workspace ID |
+| `prefix` | URL-safe identifier |
+| `status` | Base status |
+| `meta` | Additional metadata |
+| `order` | Display order in workspace |
+| `starred` | User-specific starred status |
+| `hidden` | User-specific visibility |
+
+### Base User Mapping
+
+Users are connected to bases through the `BaseUser` model:
+
+```typescript
+{
+  base_id: string,           // Base identifier
+  fk_user_id: string,        // User identifier
+  roles: string,             // Base-level role
+  invited_by: string,        // User who sent the invitation
+  starred: boolean,          // User starred this base
+  order: number,             // Custom ordering
+  hidden: boolean            // User hid this base
+}
+```
+
+## Role Inheritance
+
+### How Roles Work
+
+NocoDB supports role inheritance from workspace to base:
+
+1. **Explicit Base Role**: If a user has a specific role assigned at the base level, that role takes precedence
+2. **Inherited Workspace Role**: If no base role is assigned (or role is set to `INHERIT`), the user's workspace role determines their base permissions
+3. **Default Role**: Bases can set a `default_role` that overrides workspace role inheritance
+
+### Role Mapping
+
+Workspace roles map to base roles as follows:
+
+| Workspace Role | Inherited Base Role |
+|----------------|---------------------|
+| Owner | Owner |
+| Creator | Creator |
+| Editor | Editor |
+| Commenter | Commenter |
+| Viewer | Viewer |
+| No Access | No Access |
+
+### Priority Order
+
+1. **Explicit base role** (highest priority)
+2. **Base default_role** (if set)
+3. **Workspace role** (inherited)
+4. **No Access** (default)
+
+<Warning>
+The `INHERIT` role explicitly tells NocoDB to use the workspace role. Users with `NO_ACCESS` at the base level will not have access even if they have workspace-level permissions.
+</Warning>
+
+## User Base List
+
+### Filtering Bases
+
+Users can filter their base list by:
+
+- **Starred**: Bases marked as favorites (`starred: true`)
+- **Shared**: Bases where the user is not the owner
+- **Recent**: Ordered by last accessed time
+- **Workspace**: Scoped to a specific workspace
+
+### Access Control
+
+A user can access a base if:
+
+1. They have an explicit base role that is not `NO_ACCESS` or `INHERIT`, OR
+2. They have a workspace role and:
+   - No explicit base role is set (null or `INHERIT`), AND
+   - Workspace role is not `NO_ACCESS`
+
+## Managing Base Users
+
+### Adding Users to a Base
+
+Users can be added to a base through:
+
+1. **Direct invitation**: Invite users via email with a specific base role
+2. **Workspace inheritance**: Users with workspace access automatically inherit access based on their workspace role
+3. **Bulk operations**: Invite multiple users at once
+
+### User States
+
+- **Mapped**: User has a `base_user` entry (explicit relationship)
+- **Unmapped**: User accesses via workspace role inheritance only
+- **Invited**: User has been sent an invitation but hasn't accepted yet
+
+### Base Ownership
+
+<Warning>
+Every base must have at least one Owner. NocoDB prevents removing or downgrading the last owner's role. If attempting to change the only owner's role, another user with inherited or explicit Owner role must exist.
+</Warning>
+
+## Base Metadata
+
+Users can customize their base experience:
+
+- **Star/Unstar**: Mark bases as favorites for quick access
+- **Show/Hide**: Hide bases from the main list
+- **Custom Order**: Arrange bases in preferred sequence
+
+These settings are user-specific and don't affect other team members.
+
+## Best Practices
+
+1. **Use workspaces for team organization**: Group related bases in the same workspace
+2. **Set appropriate workspace roles**: Leverage inheritance to simplify permission management
+3. **Assign explicit base roles when needed**: Override workspace inheritance for specific cases
+4. **Maintain multiple owners**: Always ensure bases have backup owners
+5. **Use default_role sparingly**: Only set base default roles when you need to override workspace inheritance for all users
+
+## Related
+
+- [Permissions](/collaboration/permissions) - Detailed role capabilities
+- [Sharing](/collaboration/sharing) - Public sharing and view access
+- [Comments](/collaboration/comments) - Team collaboration features

@@ -1,0 +1,370 @@
+---
+title: 'Webhooks'
+description: 'Learn how to manage webhooks in NocoDB using the API'
+icon: 'webhook'
+---
+
+Webhooks allow you to trigger external services when specific events occur in your NocoDB tables. You can configure webhooks to fire after insert, update, or delete operations.
+
+## List Table Hooks
+
+Retrieve all webhooks configured for a specific table.
+
+```bash GET /api/v1/db/meta/tables/{tableId}/hooks
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/tables/{tableId}/hooks" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField path="tableId" type="string" required>
+  Unique Table ID
+</ParamField>
+
+<ResponseField name="list" type="array">
+  Array of hook objects
+  
+  <ResponseField name="id" type="string">
+    Unique Hook ID
+  </ResponseField>
+  
+  <ResponseField name="title" type="string">
+    Hook Title
+  </ResponseField>
+  
+  <ResponseField name="event" type="string">
+    Event type: `after`, `before`, `manual`, `view`, or `field`
+  </ResponseField>
+  
+  <ResponseField name="operation" type="array">
+    Array of operations: `insert`, `update`, `delete`, or `trigger`
+  </ResponseField>
+  
+  <ResponseField name="active" type="boolean">
+    Whether the hook is active
+  </ResponseField>
+  
+  <ResponseField name="notification" type="object">
+    Hook notification configuration including type, payload, method, body, headers, and path
+  </ResponseField>
+  
+  <ResponseField name="fk_model_id" type="string">
+    Foreign Key to Model/Table
+  </ResponseField>
+  
+  <ResponseField name="async" type="boolean">
+    Whether the hook executes asynchronously
+  </ResponseField>
+  
+  <ResponseField name="retries" type="number">
+    Number of retry attempts (default: 10)
+  </ResponseField>
+  
+  <ResponseField name="retry_interval" type="number">
+    Retry interval in milliseconds (default: 60000)
+  </ResponseField>
+  
+  <ResponseField name="timeout" type="number">
+    Timeout in milliseconds (default: 60000)
+  </ResponseField>
+</ResponseField>
+
+## Create Table Hook
+
+Create a new webhook for a table.
+
+```bash POST /api/v1/db/meta/tables/{tableId}/hooks
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/tables/{tableId}/hooks" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "My Webhook",
+    "event": "after",
+    "operation": ["insert"],
+    "notification": {
+      "type": "URL",
+      "payload": {
+        "method": "POST",
+        "body": "{{ json data }}",
+        "headers": [{}],
+        "parameters": [{}],
+        "path": "https://webhook.site/your-webhook-id"
+      }
+    },
+    "active": true,
+    "async": false,
+    "retries": 10,
+    "retry_interval": 60000,
+    "timeout": 60000
+  }'
+```
+
+<ParamField path="tableId" type="string" required>
+  Unique Table ID
+</ParamField>
+
+<ParamField body="title" type="string" required>
+  Hook Title
+</ParamField>
+
+<ParamField body="event" type="string" required>
+  Event type: `after`, `before`, `manual`, `view`, or `field`
+</ParamField>
+
+<ParamField body="operation" type="array" required>
+  Array of operations: `insert`, `update`, `delete`, or `trigger`
+</ParamField>
+
+<ParamField body="notification" type="object" required>
+  Hook notification configuration
+  
+  <ParamField body="type" type="string">
+    Notification type (e.g., `URL`)
+  </ParamField>
+  
+  <ParamField body="payload" type="object">
+    Payload configuration with method, body, headers, and path
+  </ParamField>
+</ParamField>
+
+<ParamField body="active" type="boolean">
+  Whether the hook is active (default: true)
+</ParamField>
+
+<ParamField body="async" type="boolean">
+  Whether the hook executes asynchronously
+</ParamField>
+
+<ParamField body="description" type="string">
+  Hook description
+</ParamField>
+
+<ParamField body="retries" type="number">
+  Number of retry attempts (default: 10)
+</ParamField>
+
+<ParamField body="retry_interval" type="number">
+  Retry interval in milliseconds (default: 60000)
+</ParamField>
+
+<ParamField body="timeout" type="number">
+  Timeout in milliseconds (default: 60000)
+</ParamField>
+
+<ParamField body="trigger_field" type="boolean">
+  Whether this hook only triggers when specific fields are affected
+</ParamField>
+
+<ParamField body="trigger_fields" type="array">
+  Array of field IDs that trigger this hook
+</ParamField>
+
+## Update Hook
+
+Update an existing webhook.
+
+```bash PATCH /api/v1/db/meta/hooks/{hookId}
+curl -X PATCH "https://app.nocodb.com/api/v1/db/meta/hooks/{hookId}" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Updated Webhook",
+    "active": false
+  }'
+```
+
+<ParamField path="hookId" type="string" required>
+  Unique Hook ID
+</ParamField>
+
+## Delete Hook
+
+Delete a webhook.
+
+```bash DELETE /api/v1/db/meta/hooks/{hookId}
+curl -X DELETE "https://app.nocodb.com/api/v1/db/meta/hooks/{hookId}" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField path="hookId" type="string" required>
+  Unique Hook ID
+</ParamField>
+
+## Test Hook
+
+Test a webhook configuration before saving it.
+
+```bash POST /api/v1/db/meta/tables/{tableId}/hooks/test
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/tables/{tableId}/hooks/test" \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "hook": {
+      "title": "Test Webhook",
+      "event": "after",
+      "operation": ["insert"],
+      "notification": {
+        "type": "URL",
+        "payload": {
+          "method": "POST",
+          "body": "{{ json data }}",
+          "path": "https://webhook.site/your-webhook-id"
+        }
+      }
+    },
+    "payload": {
+      "data": {
+        "Id": 1,
+        "Title": "Sample Text",
+        "CreatedAt": "2023-03-03T10:03:06.484Z"
+      }
+    }
+  }'
+```
+
+<ParamField path="tableId" type="string" required>
+  Unique Table ID
+</ParamField>
+
+<ParamField body="hook" type="object" required>
+  Hook configuration to test
+</ParamField>
+
+<ParamField body="payload" type="object" required>
+  Sample payload to send to the webhook
+</ParamField>
+
+## Get Sample Hook Payload
+
+Get a sample payload for webhook testing based on table schema.
+
+```bash GET /api/v1/db/meta/tables/{tableId}/hooks/samplePayload/{event}/{operation}/{version}
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/tables/{tableId}/hooks/samplePayload/after/insert/v3" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField path="tableId" type="string" required>
+  Unique Table ID
+</ParamField>
+
+<ParamField path="event" type="string" required>
+  Hook event: `after`, `before`, `manual`, `view`, or `field`
+</ParamField>
+
+<ParamField path="operation" type="string" required>
+  Hook operation: `insert`, `update`, `delete`, or `trigger`
+</ParamField>
+
+<ParamField path="version" type="string" required>
+  Hook version: `v1`, `v2`, or `v3`
+</ParamField>
+
+<ParamField query="includeUser" type="string">
+  Include user information in sample payload ("true" or "false")
+</ParamField>
+
+## List Hook Logs
+
+Retrieve execution logs for a specific hook.
+
+```bash GET /api/v1/db/meta/hooks/{hookId}/logs
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/hooks/{hookId}/logs" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+<ParamField path="hookId" type="string" required>
+  Unique Hook ID
+</ParamField>
+
+<ResponseField name="list" type="array">
+  Array of hook log objects
+  
+  <ResponseField name="id" type="string">
+    Unique Log ID
+  </ResponseField>
+  
+  <ResponseField name="fk_hook_id" type="string">
+    Foreign Key to Hook
+  </ResponseField>
+  
+  <ResponseField name="event" type="string">
+    Hook event type
+  </ResponseField>
+  
+  <ResponseField name="operation" type="string">
+    Hook operation
+  </ResponseField>
+  
+  <ResponseField name="execution_time" type="string">
+    Execution time in milliseconds
+  </ResponseField>
+  
+  <ResponseField name="response" type="string">
+    HTTP response from the webhook endpoint
+  </ResponseField>
+  
+  <ResponseField name="payload" type="string">
+    Payload sent to the webhook
+  </ResponseField>
+  
+  <ResponseField name="error" type="string">
+    Error message if the webhook failed
+  </ResponseField>
+  
+  <ResponseField name="triggered_by" type="string">
+    User who triggered the hook
+  </ResponseField>
+  
+  <ResponseField name="test_call" type="boolean">
+    Whether this was a test call
+  </ResponseField>
+</ResponseField>
+
+## Webhook Payload Structure
+
+When a webhook is triggered, NocoDB sends a POST request to the configured URL with the following structure:
+
+### v3 Payload Structure
+
+```json
+{
+  "type": "records.after.insert",
+  "id": "hook-execution-id",
+  "data": {
+    "table_id": "md_abc123",
+    "table_name": "TableName",
+    "view_id": "vw_xyz789",
+    "view_name": "ViewName",
+    "rows": [
+      {
+        "Id": 1,
+        "Title": "Sample Record",
+        "CreatedAt": "2023-03-03T10:03:06.484Z",
+        "UpdatedAt": "2023-03-03T10:03:06.484Z"
+      }
+    ]
+  },
+  "user": {
+    "id": "usr_abc123",
+    "email": "user@example.com"
+  }
+}
+```
+
+### Event Types
+
+The `type` field follows this pattern: `records.{event}.{operation}`
+
+- `records.after.insert` - After a record is inserted
+- `records.after.update` - After a record is updated
+- `records.after.delete` - After a record is deleted
+- `records.before.insert` - Before a record is inserted
+- `records.before.update` - Before a record is updated
+- `records.before.delete` - Before a record is deleted
+
+### Using Webhook Data
+
+You can use template variables in your webhook configuration:
+
+- `{{ json data }}` - Full JSON payload
+- `{{ json data.rows }}` - Array of affected rows
+- `{{ data.table_name }}` - Table name
+- `{{ user.email }}` - User email who triggered the action

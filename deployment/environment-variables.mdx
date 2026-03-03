@@ -1,0 +1,558 @@
+---
+title: Environment Variables
+description: Complete reference for NocoDB environment variables
+---
+
+NocoDB can be configured using environment variables. This page documents all available configuration options extracted from the source code.
+
+## Database Configuration
+
+### NC_DB
+
+Primary database connection string for metadata storage.
+
+```bash
+# PostgreSQL
+NC_DB="pg://hostname:5432?u=username&p=password&d=database"
+
+# MySQL
+NC_DB="mysql2://hostname:3306?u=username&p=password&d=database"
+
+# SQLite (default)
+NC_DB="sqlite:///path/to/database.db"
+```
+
+**Default**: SQLite in `NC_TOOL_DIR/noco.db`
+
+### NC_DB_JSON
+
+Provide database configuration as JSON string:
+
+```bash
+NC_DB_JSON='{"client":"pg","connection":{"host":"localhost","port":5432,"user":"postgres","password":"password","database":"nocodb"}}'
+```
+
+### NC_DB_JSON_FILE
+
+Path to a JSON file containing database configuration:
+
+```bash
+NC_DB_JSON_FILE="/path/to/db-config.json"
+```
+
+### NC_DATABASE_URL / DATABASE_URL
+
+Alternative database URL formats (JDBC-style):
+
+```bash
+DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
+```
+
+### NC_DATABASE_URL_FILE / DATABASE_URL_FILE
+
+Path to file containing database URL:
+
+```bash
+NC_DATABASE_URL_FILE="/run/secrets/db_url"
+```
+
+### NC_DB_POOL_MAX
+
+Maximum database connection pool size.
+
+```bash
+NC_DB_POOL_MAX="10"
+```
+
+**Default**: `10`
+
+## Authentication & Security
+
+### NC_AUTH_JWT_SECRET
+
+**Required for production.** Secret key for JWT token generation.
+
+```bash
+NC_AUTH_JWT_SECRET="569a1821-0a93-45e8-87ab-eb857f20a010"
+```
+
+<Warning>
+Generate a secure random string for production. This secret is used for authentication tokens.
+</Warning>
+
+### NC_REFRESH_TOKEN_EXP_IN_DAYS
+
+Refresh token expiration in days.
+
+```bash
+NC_REFRESH_TOKEN_EXP_IN_DAYS="30"
+```
+
+**Default**: `30`
+
+### NC_ADMIN_EMAIL
+
+Initialize admin user email on first startup:
+
+```bash
+NC_ADMIN_EMAIL="admin@example.com"
+```
+
+Requires `NC_ADMIN_PASSWORD` to be set.
+
+### NC_ADMIN_PASSWORD
+
+Initialize admin user password:
+
+```bash
+NC_ADMIN_PASSWORD="SecurePassword123!"
+```
+
+<Warning>
+Only used on first startup. Change the password through the UI after initial setup.
+</Warning>
+
+### NC_CONNECTION_ENCRYPT_KEY
+
+Key for encrypting database connection strings:
+
+```bash
+NC_CONNECTION_ENCRYPT_KEY="your-encryption-key"
+```
+
+## Application Configuration
+
+### NC_PORT
+
+Port for NocoDB to listen on.
+
+```bash
+NC_PORT="8080"
+```
+
+**Default**: `8080`
+
+### NC_PUBLIC_URL
+
+Public URL for NocoDB instance:
+
+```bash
+NC_PUBLIC_URL="https://nocodb.example.com"
+```
+
+Used for generating links in emails and webhooks.
+
+### NC_DASHBOARD_URL
+
+Custom dashboard path:
+
+```bash
+NC_DASHBOARD_URL="/dashboard"
+```
+
+**Default**: `/dashboard`
+
+### NC_TOOL_DIR
+
+Directory for NocoDB to store data:
+
+```bash
+NC_TOOL_DIR="/usr/app/data"
+```
+
+**Default**: Current working directory
+
+### NC_MINIMAL_DBS
+
+When enabled, creates a separate SQLite file for each base:
+
+```bash
+NC_MINIMAL_DBS="true"
+```
+
+**Default**: `false`
+
+## Redis Configuration
+
+### NC_REDIS_URL
+
+Redis connection URL for caching:
+
+```bash
+NC_REDIS_URL="redis://localhost:6379/0"
+```
+
+### NC_REDIS_JOB_URL
+
+Separate Redis instance for job queue:
+
+```bash
+NC_REDIS_JOB_URL="redis://localhost:6379/1"
+```
+
+### NC_THROTTLER_REDIS
+
+Redis instance for rate limiting:
+
+```bash
+NC_THROTTLER_REDIS="redis://localhost:6379/2"
+```
+
+### NC_REDIS_TTL
+
+Redis cache TTL in seconds:
+
+```bash
+NC_REDIS_TTL="259200"  # 3 days
+```
+
+**Default**: `259200` (3 days)
+
+### NC_REDIS_GRACE_TTL
+
+Grace period TTL in seconds:
+
+```bash
+NC_REDIS_GRACE_TTL="86400"  # 1 day
+```
+
+**Default**: `86400` (1 day)
+
+### NC_CACHE_PREFIX
+
+Prefix for cache keys:
+
+```bash
+NC_CACHE_PREFIX="nocodb"
+```
+
+## Storage Configuration
+
+### NC_S3_BUCKET_NAME
+
+S3 bucket name for file storage:
+
+```bash
+NC_S3_BUCKET_NAME="nocodb-files"
+```
+
+### NC_S3_REGION
+
+AWS region:
+
+```bash
+NC_S3_REGION="us-east-1"
+```
+
+### NC_S3_ACCESS_KEY
+
+AWS access key ID:
+
+```bash
+NC_S3_ACCESS_KEY="AKIAIOSFODNN7EXAMPLE"
+```
+
+### NC_S3_ACCESS_SECRET
+
+AWS secret access key:
+
+```bash
+NC_S3_ACCESS_SECRET="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+```
+
+### NC_SECURE_ATTACHMENTS
+
+Enable secure attachment URLs:
+
+```bash
+NC_SECURE_ATTACHMENTS="true"
+```
+
+**Default**: `false`
+
+## Limits & Performance
+
+### NC_ATTACHMENT_FIELD_SIZE
+
+Maximum attachment field size in bytes:
+
+```bash
+NC_ATTACHMENT_FIELD_SIZE="20971520"  # 20 MB
+```
+
+**Default**: `20971520` (20 MB)
+
+### NC_NON_ATTACHMENT_FIELD_SIZE
+
+Maximum size for non-attachment fields:
+
+```bash
+NC_NON_ATTACHMENT_FIELD_SIZE="10485760"  # 10 MB
+```
+
+**Default**: `10485760` (10 MB)
+
+### NC_MAX_ATTACHMENTS_ALLOWED
+
+Maximum number of attachments per field:
+
+```bash
+NC_MAX_ATTACHMENTS_ALLOWED="10"
+```
+
+**Default**: `10`
+
+### NC_MAX_TEXT_LENGTH
+
+Maximum text length for text fields:
+
+```bash
+NC_MAX_TEXT_LENGTH="100000"
+```
+
+**Default**: `100000`
+
+### NC_REQUEST_BODY_SIZE
+
+Maximum request body size:
+
+```bash
+NC_REQUEST_BODY_SIZE="50mb"
+```
+
+**Default**: `50mb`
+
+### NC_DATA_PAYLOAD_LIMIT
+
+Data payload limit for API requests:
+
+```bash
+NC_DATA_PAYLOAD_LIMIT="100"
+```
+
+**Default**: `100` (v1/v2), `10` (v3)
+
+### NC_THUMBNAIL_MAX_SIZE
+
+Maximum thumbnail size in bytes:
+
+```bash
+NC_THUMBNAIL_MAX_SIZE="3145728"  # 3 MB
+```
+
+**Default**: `3145728` (3 MB)
+
+## Worker & Queue Configuration
+
+### NC_WORKER
+
+Run as worker container (no HTTP server):
+
+```bash
+NC_WORKER="true"
+```
+
+**Default**: `false`
+
+### NC_WORKER_CONTAINER
+
+Identify worker container:
+
+```bash
+NC_WORKER_CONTAINER="true"
+```
+
+**Default**: `false`
+
+## Feature Flags
+
+### NC_DISABLE_TELE
+
+Disable telemetry:
+
+```bash
+NC_DISABLE_TELE="true"
+```
+
+**Default**: `false`
+
+### NC_ENABLE_AUDIT
+
+Enable audit logging:
+
+```bash
+NC_ENABLE_AUDIT="true"
+```
+
+**Default**: `false`
+
+### NC_ALLOW_LOCAL_HOOKS
+
+Allow webhooks to local network:
+
+```bash
+NC_ALLOW_LOCAL_HOOKS="true"
+```
+
+**Default**: `false`
+
+<Warning>
+Enabling local hooks can be a security risk. Only enable in trusted environments.
+</Warning>
+
+### NC_DISABLE_SUPPORT_CHAT
+
+Disable support chat widget:
+
+```bash
+NC_DISABLE_SUPPORT_CHAT="true"
+```
+
+**Default**: `false`
+
+### NC_DISABLE_GROUP_BY_LIMIT
+
+Disable group by result limit:
+
+```bash
+NC_DISABLE_GROUP_BY_LIMIT="true"
+```
+
+**Default**: `false`
+
+### NC_DISABLE_GROUP_BY_AGG
+
+Disable group by aggregation:
+
+```bash
+NC_DISABLE_GROUP_BY_AGG="true"
+```
+
+**Default**: `false`
+
+## Automation & Logging
+
+### NC_AUTOMATION_LOG_LEVEL
+
+Automation log level:
+
+```bash
+NC_AUTOMATION_LOG_LEVEL="ALL"  # ALL, ERROR, or OFF
+```
+
+**Options**: `ALL`, `ERROR`
+
+## UI Customization
+
+### NC_IFRAME_WHITELIST_DOMAINS
+
+Whitelist domains for iframe embedding:
+
+```bash
+NC_IFRAME_WHITELIST_DOMAINS="example.com,trusted-site.org"
+```
+
+**Default**: Empty (no whitelisting)
+
+## Cloud & License
+
+### NC_LICENSE_KEY
+
+Enterprise license key:
+
+```bash
+NC_LICENSE_KEY="your-license-key"
+```
+
+### NC_ONE_CLICK
+
+Mark as one-click installation:
+
+```bash
+NC_ONE_CLICK="true"
+```
+
+### NC_SERVER_UUID
+
+Server UUID for telemetry:
+
+```bash
+NC_SERVER_UUID="auto-generated-uuid"
+```
+
+## Development & Testing
+
+### NC_TRY
+
+Run in try mode (in-memory SQLite):
+
+```bash
+NC_TRY="true"
+```
+
+**Default**: `false`
+
+### NODE_ENV
+
+Node environment:
+
+```bash
+NODE_ENV="production"  # production, development, or test
+```
+
+### NODE_TLS_REJECT_UNAUTHORIZED
+
+Disable TLS certificate validation (development only):
+
+```bash
+NODE_TLS_REJECT_UNAUTHORIZED="0"
+```
+
+<Warning>
+Never disable TLS validation in production.
+</Warning>
+
+## Example Configurations
+
+### Minimal Production Setup
+
+```bash
+NC_DB="pg://postgres:5432?u=nocodb&p=password&d=nocodb"
+NC_AUTH_JWT_SECRET="your-very-secure-random-string"
+NC_PUBLIC_URL="https://nocodb.example.com"
+```
+
+### Production with Redis and S3
+
+```bash
+NC_DB="pg://postgres.example.com:5432?u=nocodb&p=password&d=nocodb"
+NC_AUTH_JWT_SECRET="your-secure-secret"
+NC_PUBLIC_URL="https://nocodb.example.com"
+NC_REDIS_URL="redis://redis.example.com:6379/0"
+NC_S3_BUCKET_NAME="nocodb-attachments"
+NC_S3_REGION="us-east-1"
+NC_S3_ACCESS_KEY="AKIAIOSFODNN7EXAMPLE"
+NC_S3_ACCESS_SECRET="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+NC_DISABLE_TELE="true"
+NC_ENABLE_AUDIT="true"
+```
+
+### High-Performance Setup
+
+```bash
+NC_DB="pg://primary-db:5432?u=nocodb&p=password&d=nocodb"
+NC_AUTH_JWT_SECRET="your-secret"
+NC_REDIS_URL="redis://cache:6379/0"
+NC_REDIS_JOB_URL="redis://queue:6379/1"
+NC_THROTTLER_REDIS="redis://throttle:6379/2"
+NC_DB_POOL_MAX="20"
+NC_REQUEST_BODY_SIZE="100mb"
+NC_MAX_ATTACHMENTS_ALLOWED="20"
+NC_WORKER_CONTAINER="true"
+```
+
+## Next Steps
+
+- [Docker deployment](/deployment/docker)
+- [Kubernetes deployment](/deployment/kubernetes)
+- [Database setup guide](/deployment/database-setup)

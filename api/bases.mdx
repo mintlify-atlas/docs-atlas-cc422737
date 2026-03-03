@@ -1,0 +1,287 @@
+---
+title: 'Bases'
+description: 'Manage bases (projects) in NocoDB via API'
+---
+
+## List Bases
+
+Retrieve all bases in the workspace.
+
+```bash GET /api/v1/db/meta/projects/
+curl -X GET https://app.nocodb.com/api/v1/db/meta/projects/ \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Query Parameters
+
+<ParamField query="page" type="number">
+  Page number for pagination
+</ParamField>
+
+<ParamField query="pageSize" type="number">
+  Number of records per page
+</ParamField>
+
+### Response
+
+<ResponseField name="list" type="array">
+  Array of base objects
+  <ResponseField name="id" type="string">
+    Unique base identifier (e.g., `p_124hhlkbeasewh`)
+  </ResponseField>
+  <ResponseField name="title" type="string">
+    Base title
+  </ResponseField>
+  <ResponseField name="description" type="string">
+    Base description
+  </ResponseField>
+  <ResponseField name="color" type="string">
+    Base color code (e.g., `#24716E`)
+  </ResponseField>
+  <ResponseField name="sources" type="array">
+    Array of data sources connected to the base
+  </ResponseField>
+  <ResponseField name="created_at" type="string">
+    Timestamp of creation
+  </ResponseField>
+  <ResponseField name="updated_at" type="string">
+    Timestamp of last update
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="pageInfo" type="object">
+  Pagination information
+  <ResponseField name="totalRows" type="number">
+    Total number of bases
+  </ResponseField>
+  <ResponseField name="page" type="number">
+    Current page number
+  </ResponseField>
+  <ResponseField name="pageSize" type="number">
+    Records per page
+  </ResponseField>
+  <ResponseField name="isFirstPage" type="boolean">
+    Whether this is the first page
+  </ResponseField>
+  <ResponseField name="isLastPage" type="boolean">
+    Whether this is the last page
+  </ResponseField>
+</ResponseField>
+
+## Get Base
+
+Retrieve details of a specific base.
+
+```bash GET /api/v1/db/meta/projects/{baseId}
+curl -X GET https://app.nocodb.com/api/v1/db/meta/projects/p_124hhlkbeasewh \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="baseId" type="string" required>
+  Unique base identifier (e.g., `p_124hhlkbeasewh`)
+</ParamField>
+
+### Response
+
+Returns a base object with all metadata including sources, tables, and configuration.
+
+## Create Base
+
+Create a new base in the workspace.
+
+```bash POST /api/v1/db/meta/projects
+curl -X POST https://app.nocodb.com/api/v1/db/meta/projects \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "my-base",
+    "description": "This is my base description",
+    "color": "#24716E",
+    "external": false
+  }'
+```
+
+### Request Body
+
+<ParamField body="title" type="string" required>
+  Base title
+</ParamField>
+
+<ParamField body="description" type="string">
+  Base description
+</ParamField>
+
+<ParamField body="color" type="string">
+  Base color code (e.g., `#24716E`)
+</ParamField>
+
+<ParamField body="external" type="boolean" default="false">
+  If true, the base will use an external database. If false, it will use the root database.
+</ParamField>
+
+<ParamField body="sources" type="array">
+  Array of data source configurations
+  <ParamField body="type" type="string">
+    Database type (e.g., `mysql2`, `pg`, `sqlite3`)
+  </ParamField>
+  <ParamField body="config" type="object">
+    Database connection configuration
+  </ParamField>
+</ParamField>
+
+### Response
+
+Returns the created base object.
+
+## Update Base
+
+Update an existing base.
+
+```bash PATCH /api/v1/db/meta/projects/{baseId}
+curl -X PATCH https://app.nocodb.com/api/v1/db/meta/projects/p_124hhlkbeasewh \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Updated Base Name",
+    "color": "#FF5733",
+    "order": 1
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="baseId" type="string" required>
+  Unique base identifier
+</ParamField>
+
+### Request Body
+
+<ParamField body="title" type="string">
+  Updated base title
+</ParamField>
+
+<ParamField body="color" type="string">
+  Updated color code
+</ParamField>
+
+<ParamField body="order" type="number">
+  Display order
+</ParamField>
+
+<ParamField body="meta" type="object">
+  Additional metadata
+</ParamField>
+
+### Response
+
+Returns `1` on successful update.
+
+## Delete Base
+
+Soft delete a base.
+
+```bash DELETE /api/v1/db/meta/projects/{baseId}
+curl -X DELETE https://app.nocodb.com/api/v1/db/meta/projects/p_124hhlkbeasewh \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="baseId" type="string" required>
+  Unique base identifier
+</ParamField>
+
+### Response
+
+Returns `true` on successful deletion.
+
+## Get Base Info
+
+Get technical information about the base environment.
+
+```bash GET /api/v1/db/meta/projects/{baseId}/info
+curl -X GET https://app.nocodb.com/api/v1/db/meta/projects/p_124hhlkbeasewh/info \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="baseId" type="string" required>
+  Unique base identifier
+</ParamField>
+
+### Response
+
+<ResponseField name="Node" type="string">
+  Node.js version (e.g., `v12.16.1`)
+</ResponseField>
+
+<ResponseField name="Arch" type="string">
+  System architecture (e.g., `x64`)
+</ResponseField>
+
+<ResponseField name="Platform" type="string">
+  Operating system platform (e.g., `linux`)
+</ResponseField>
+
+<ResponseField name="Docker" type="boolean">
+  Whether running in Docker
+</ResponseField>
+
+<ResponseField name="RootDB" type="string">
+  Root database type (e.g., `postgres`, `mysql2`)
+</ResponseField>
+
+<ResponseField name="PackageVersion" type="string">
+  NocoDB version
+</ResponseField>
+
+## Duplicate Base
+
+Create a copy of an existing base.
+
+```bash POST /api/v1/db/meta/duplicate/{baseId}
+curl -X POST https://app.nocodb.com/api/v1/db/meta/duplicate/p_124hhlkbeasewh \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "options": {
+      "excludeData": false,
+      "excludeViews": false,
+      "excludeHooks": false
+    }
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="baseId" type="string" required>
+  Base ID to duplicate
+</ParamField>
+
+### Request Body
+
+<ParamField body="options" type="object">
+  Duplication options
+  <ParamField body="excludeData" type="boolean" default="false">
+    Exclude table data from duplication
+  </ParamField>
+  <ParamField body="excludeViews" type="boolean" default="false">
+    Exclude views from duplication
+  </ParamField>
+  <ParamField body="excludeHooks" type="boolean" default="false">
+    Exclude webhooks from duplication
+  </ParamField>
+</ParamField>
+
+### Response
+
+<ResponseField name="id" type="string">
+  ID of the duplicated base
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Name of the duplicated base
+</ResponseField>

@@ -1,0 +1,459 @@
+---
+title: 'Filters API'
+description: 'Manage view filters using NocoDB API'
+---
+
+## Overview
+
+Filters allow you to define conditions for displaying records in views. NocoDB supports complex filter logic with groups, multiple conditions, and various comparison operators.
+
+## Comparison Operators
+
+Filters support a wide range of comparison operators:
+
+### Equality & Comparison
+- `eq` - Equals
+- `neq` - Not equals
+- `gt` - Greater than
+- `gte` - Greater than or equal
+- `lt` - Less than
+- `lte` - Less than or equal
+
+### Text Operators
+- `like` - Contains
+- `nlike` - Does not contain
+
+### List Operators
+- `in` - Is in list
+- `allof` - All of (multi-select)
+- `anyof` - Any of (multi-select)
+- `nallof` - Not all of
+- `nanyof` - Not any of
+
+### Null Operators
+- `null` - Is null
+- `notnull` - Is not null
+- `empty` - Is empty
+- `notempty` - Is not empty
+- `blank` - Is blank (null or empty)
+- `notblank` - Is not blank
+
+### Boolean Operators
+- `checked` - Is checked (checkbox)
+- `notchecked` - Is not checked
+
+### Special Operators
+- `is` - Is (exact match)
+- `isnot` - Is not
+- `btw` - Between
+- `nbtw` - Not between
+- `isWithin` - Is within (date/time)
+
+## Comparison Sub-Operators
+
+For date/time filters, use sub-operators:
+
+- `today`, `tomorrow`, `yesterday`
+- `oneWeekAgo`, `oneWeekFromNow`
+- `oneMonthAgo`, `oneMonthFromNow`
+- `daysAgo`, `daysFromNow`
+- `exactDate`
+- `pastWeek`, `pastMonth`, `pastYear`
+- `nextWeek`, `nextMonth`, `nextYear`
+- `nextNumberOfDays`, `pastNumberOfDays`
+
+## List View Filters
+
+Retrieve all filters for a specific view.
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/filters" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="includeAllFilters" type="boolean">
+  Include all filters, including nested group filters
+</ParamField>
+
+### Response
+
+<ResponseField name="list" type="array">
+  Array of filter objects
+</ResponseField>
+
+<ResponseField name="list[].id" type="string">
+  Unique filter identifier
+</ResponseField>
+
+<ResponseField name="list[].fk_view_id" type="string">
+  Foreign key to the view
+</ResponseField>
+
+<ResponseField name="list[].fk_column_id" type="string">
+  Foreign key to the column being filtered
+</ResponseField>
+
+<ResponseField name="list[].comparison_op" type="string">
+  Comparison operator (e.g., "eq", "like", "gt")
+</ResponseField>
+
+<ResponseField name="list[].value" type="any">
+  Filter value to compare against
+</ResponseField>
+
+<ResponseField name="list[].logical_op" type="string">
+  Logical operator: `and`, `or`, or `not`
+</ResponseField>
+
+<ResponseField name="list[].is_group" type="boolean">
+  Whether this filter is a group
+</ResponseField>
+
+<ResponseField name="list[].children" type="array">
+  Nested filters (only for groups)
+</ResponseField>
+
+## Create Filter
+
+Add a new filter to a view.
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/filters" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "comparison_op": "eq",
+    "fk_column_id": "cl_d7ah9n2qfupgys",
+    "value": "Active",
+    "logical_op": "and"
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="viewId" type="string" required>
+  Unique identifier for the view
+</ParamField>
+
+### Request Body
+
+<ParamField body="fk_column_id" type="string" required>
+  Column ID to filter on
+</ParamField>
+
+<ParamField body="comparison_op" type="string" required>
+  Comparison operator (see [Comparison Operators](#comparison-operators))
+</ParamField>
+
+<ParamField body="value" type="any">
+  Value to compare against (can be null for some operators)
+</ParamField>
+
+<ParamField body="logical_op" type="string">
+  Logical operator: `and` (default), `or`, or `not`
+</ParamField>
+
+<ParamField body="comparison_sub_op" type="string">
+  Sub-operator for date/time filters (see [Comparison Sub-Operators](#comparison-sub-operators))
+</ParamField>
+
+<ParamField body="fk_parent_id" type="string">
+  Parent filter group ID (for nested filters)
+</ParamField>
+
+<ParamField body="is_group" type="boolean">
+  Whether this filter is a group (default: false)
+</ParamField>
+
+### Example: Text Filter
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/filters" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_name123",
+    "comparison_op": "like",
+    "value": "John",
+    "logical_op": "and"
+  }'
+```
+
+### Example: Date Filter with Sub-Operator
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/filters" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_created_at",
+    "comparison_op": "isWithin",
+    "comparison_sub_op": "pastWeek",
+    "logical_op": "and"
+  }'
+```
+
+### Example: Number Filter
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/filters" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_column_id": "cl_price",
+    "comparison_op": "gte",
+    "value": 100,
+    "logical_op": "and"
+  }'
+```
+
+## Get Filter
+
+Retrieve a specific filter by its ID.
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/filters/{filterId}" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="filterId" type="string" required>
+  Unique identifier for the filter
+</ParamField>
+
+## Update Filter
+
+Modify an existing filter.
+
+```bash
+curl -X PATCH "https://app.nocodb.com/api/v1/db/meta/filters/{filterId}" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "comparison_op": "neq",
+    "value": "Inactive"
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="filterId" type="string" required>
+  Unique identifier for the filter
+</ParamField>
+
+### Request Body
+
+Accepts the same parameters as [Create Filter](#create-filter). Only include fields you want to update.
+
+<ParamField body="comparison_op" type="string">
+  New comparison operator
+</ParamField>
+
+<ParamField body="value" type="any">
+  New filter value
+</ParamField>
+
+<ParamField body="logical_op" type="string">
+  New logical operator
+</ParamField>
+
+<ParamField body="enabled" type="boolean">
+  Enable or disable the filter (disabled filters are skipped)
+</ParamField>
+
+## Delete Filter
+
+Remove a filter from a view.
+
+```bash
+curl -X DELETE "https://app.nocodb.com/api/v1/db/meta/filters/{filterId}" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="filterId" type="string" required>
+  Unique identifier for the filter to delete
+</ParamField>
+
+## Filter Groups
+
+Filter groups allow you to create complex filter logic with nested conditions.
+
+### Create Filter Group
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/filters" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "is_group": true,
+    "logical_op": "or"
+  }'
+```
+
+<ParamField body="is_group" type="boolean" required>
+  Set to true to create a filter group
+</ParamField>
+
+<ParamField body="logical_op" type="string" required>
+  Logical operator for combining filters in the group: `and` or `or`
+</ParamField>
+
+### Add Filter to Group
+
+Once you have a group, add filters to it using the `fk_parent_id`:
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/{viewId}/filters" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_parent_id": "fi_group123",
+    "fk_column_id": "cl_status",
+    "comparison_op": "eq",
+    "value": "Active",
+    "logical_op": "and"
+  }'
+```
+
+### List Group Children
+
+Retrieve all filters within a group.
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/filters/{filterGroupId}/children" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+<ParamField path="filterGroupId" type="string" required>
+  Unique identifier for the filter group
+</ParamField>
+
+### Example: Complex Filter Logic
+
+Create a filter group with OR logic for multiple conditions:
+
+```bash
+# 1. Create the group
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/filters" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"is_group": true, "logical_op": "or"}'
+
+# Response: {"id": "fi_group789"}
+
+# 2. Add first condition to group
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/filters" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_parent_id": "fi_group789",
+    "fk_column_id": "cl_status",
+    "comparison_op": "eq",
+    "value": "Active"
+  }'
+
+# 3. Add second condition to group
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/views/vw_abc123/filters" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fk_parent_id": "fi_group789",
+    "fk_column_id": "cl_priority",
+    "comparison_op": "eq",
+    "value": "High"
+  }'
+```
+
+This creates: `(Status = "Active" OR Priority = "High")`
+
+## Hook Filters
+
+Filters can also be applied to webhooks to control when they trigger.
+
+### Create Hook Filter
+
+```bash
+curl -X POST "https://app.nocodb.com/api/v1/db/meta/hooks/{hookId}/filters" \
+  -H "xc-token: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "comparison_op": "eq",
+    "fk_column_id": "cl_status",
+    "value": "Completed",
+    "logical_op": "and"
+  }'
+```
+
+<ParamField path="hookId" type="string" required>
+  Unique identifier for the webhook
+</ParamField>
+
+### List Hook Filters
+
+```bash
+curl -X GET "https://app.nocodb.com/api/v1/db/meta/hooks/{hookId}/filters" \
+  -H "xc-token: YOUR_API_TOKEN"
+```
+
+## Logical Operators
+
+Combine multiple filters using logical operators:
+
+### AND Logic
+
+```json
+{
+  "logical_op": "and"
+}
+```
+
+All conditions must be true.
+
+### OR Logic
+
+```json
+{
+  "logical_op": "or"
+}
+```
+
+At least one condition must be true.
+
+### NOT Logic
+
+```json
+{
+  "logical_op": "not"
+}
+```
+
+Negates the condition.
+
+## Filter Best Practices
+
+<Tip>
+  **Performance**: Keep filter conditions simple and indexed when possible. Complex nested groups can impact query performance.
+</Tip>
+
+<Tip>
+  **Order**: Filters are evaluated in order. Place more restrictive filters first to improve performance.
+</Tip>
+
+<Tip>
+  **Testing**: Use the `enabled` field to temporarily disable filters without deleting them.
+</Tip>
+
+<Info>
+  Filter changes take effect immediately and apply to all users viewing the same view (unless using personal lock type).
+</Info>

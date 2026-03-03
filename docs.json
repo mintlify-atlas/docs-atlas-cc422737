@@ -1,122 +1,149 @@
 {
   "$schema": "https://mintlify.com/docs.json",
+  "name": "NocoDB",
   "theme": "mint",
-  "name": "Mint Starter Kit",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#3366FF",
+    "light": "#5C8AFF",
+    "dark": "#1F4CCC"
   },
-  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/nocodb/nocodb"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/nocodb/nocodb",
+      "discord": "https://discord.gg/c7GEYrvFtT",
+      "twitter": "https://twitter.com/nocodb"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
-              "index",
+              "introduction",
               "quickstart",
-              "development"
+              "installation"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Features",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "features/bases",
+              "features/tables",
+              "features/views",
+              "features/fields",
+              "features/filters-sorting",
+              "features/formulas",
+              "features/relations"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Views",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "views/grid",
+              "views/gallery",
+              "views/form",
+              "views/kanban",
+              "views/calendar"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Automation",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "automation/webhooks",
+              "automation/integrations",
+              "automation/extensions"
+            ]
+          },
+          {
+            "group": "Collaboration",
+            "pages": [
+              "collaboration/workspaces",
+              "collaboration/sharing",
+              "collaboration/permissions",
+              "collaboration/comments"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/docker",
+              "deployment/kubernetes",
+              "deployment/environment-variables",
+              "deployment/database-setup"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Authentication",
             "pages": [
-              "api-reference/introduction"
+              "api/authentication",
+              "api/api-tokens"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Database Operations",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/bases",
+              "api/tables",
+              "api/records",
+              "api/bulk-operations"
+            ]
+          },
+          {
+            "group": "Schema Management",
+            "pages": [
+              "api/columns",
+              "api/views",
+              "api/filters",
+              "api/sorts"
+            ]
+          },
+          {
+            "group": "Advanced Features",
+            "pages": [
+              "api/webhooks",
+              "api/attachments",
+              "api/comments",
+              "api/integrations"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SDK",
+        "groups": [
+          {
+            "group": "SDK Overview",
+            "pages": [
+              "sdk/introduction",
+              "sdk/installation",
+              "sdk/quickstart"
+            ]
+          },
+          {
+            "group": "SDK Methods",
+            "pages": [
+              "sdk/database",
+              "sdk/tables",
+              "sdk/records",
+              "sdk/filters"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

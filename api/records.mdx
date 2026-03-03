@@ -1,0 +1,455 @@
+---
+title: 'Records'
+description: 'Create, read, update, and delete records in NocoDB tables'
+---
+
+## List Records
+
+Retrieve records from a table with support for filtering, sorting, and pagination.
+
+```bash GET /api/v1/db/data/{orgs}/{baseName}/{tableName}
+curl -X GET "https://app.nocodb.com/api/v1/db/data/noco/my-base/users?limit=25&offset=0" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+<ParamField path="viewName" type="string">
+  Optional view name to apply view filters and sorts
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="fields" type="array">
+  Comma-separated list of field names to include in response
+</ParamField>
+
+<ParamField query="sort" type="string">
+  Sort by field. Use `-` prefix for descending order (e.g., `-createdAt`)
+</ParamField>
+
+<ParamField query="where" type="string">
+  Filter condition (e.g., `(name,eq,John)~and(age,gt,25)`)
+</ParamField>
+
+<ParamField query="limit" type="integer" default="25">
+  Number of records to return (max 1000)
+</ParamField>
+
+<ParamField query="offset" type="integer" default="0">
+  Number of records to skip for pagination
+</ParamField>
+
+<ParamField query="sortArrJson" type="string">
+  JSON array for multiple sort fields: `[{"field":"name","direction":"asc"}]`
+</ParamField>
+
+<ParamField query="filterArrJson" type="string">
+  JSON array for complex filters: `[{"field":"status","op":"eq","value":"active"}]`
+</ParamField>
+
+<ParamField query="getHiddenColumns" type="boolean" default="false">
+  Include hidden columns in response
+</ParamField>
+
+### Response
+
+<ResponseField name="list" type="array">
+  Array of record objects. Each record contains the table columns as properties.
+</ResponseField>
+
+<ResponseField name="pageInfo" type="object">
+  Pagination metadata
+  <ResponseField name="totalRows" type="number">
+    Total number of records matching the query
+  </ResponseField>
+  <ResponseField name="page" type="number">
+    Current page number
+  </ResponseField>
+  <ResponseField name="pageSize" type="number">
+    Number of records per page
+  </ResponseField>
+  <ResponseField name="isFirstPage" type="boolean">
+    Whether this is the first page
+  </ResponseField>
+  <ResponseField name="isLastPage" type="boolean">
+    Whether this is the last page
+  </ResponseField>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "list": [
+    {
+      "Id": 1,
+      "Name": "John Doe",
+      "Email": "john@example.com",
+      "CreatedAt": "2023-03-11T09:10:53.567Z"
+    },
+    {
+      "Id": 2,
+      "Name": "Jane Smith",
+      "Email": "jane@example.com",
+      "CreatedAt": "2023-03-11T10:15:20.123Z"
+    }
+  ],
+  "pageInfo": {
+    "totalRows": 100,
+    "page": 1,
+    "pageSize": 25,
+    "isFirstPage": true,
+    "isLastPage": false
+  }
+}
+```
+
+## Get Record
+
+Retrieve a single record by its ID.
+
+```bash GET /api/v1/db/data/{orgs}/{baseName}/{tableName}/{rowId}
+curl -X GET https://app.nocodb.com/api/v1/db/data/noco/my-base/users/1 \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+<ParamField path="rowId" type="string" required>
+  Record ID (primary key value)
+</ParamField>
+
+### Response
+
+Returns a single record object with all field values.
+
+## Create Record
+
+Insert a new record into a table.
+
+```bash POST /api/v1/db/data/{orgs}/{baseName}/{tableName}
+curl -X POST https://app.nocodb.com/api/v1/db/data/noco/my-base/users \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Name": "John Doe",
+    "Email": "john@example.com",
+    "Age": 30
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+### Request Body
+
+Provide field values as key-value pairs. Use the column title or column name as keys.
+
+```json
+{
+  "FieldName1": "value1",
+  "FieldName2": "value2"
+}
+```
+
+### Query Parameters
+
+<ParamField query="before" type="string">
+  Insert record before the specified row ID
+</ParamField>
+
+<ParamField query="undo" type="boolean" default="false">
+  Track this operation for undo functionality
+</ParamField>
+
+### Response
+
+Returns the created record with all field values including auto-generated fields (ID, timestamps, etc.).
+
+## Update Record
+
+Update an existing record.
+
+```bash PATCH /api/v1/db/data/{orgs}/{baseName}/{tableName}/{rowId}
+curl -X PATCH https://app.nocodb.com/api/v1/db/data/noco/my-base/users/1 \
+  -H "xc-auth: YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Name": "John Updated",
+    "Age": 31
+  }'
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+<ParamField path="rowId" type="string" required>
+  Record ID to update
+</ParamField>
+
+### Request Body
+
+Provide only the fields you want to update.
+
+```json
+{
+  "FieldName1": "newValue1",
+  "FieldName2": "newValue2"
+}
+```
+
+### Response
+
+Returns the updated record with all field values.
+
+## Delete Record
+
+Delete a record from the table.
+
+```bash DELETE /api/v1/db/data/{orgs}/{baseName}/{tableName}/{rowId}
+curl -X DELETE https://app.nocodb.com/api/v1/db/data/noco/my-base/users/1 \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+<ParamField path="rowId" type="string" required>
+  Record ID to delete
+</ParamField>
+
+### Response
+
+Returns `1` on successful deletion.
+
+## Find One Record
+
+Find the first record matching the given criteria.
+
+```bash GET /api/v1/db/data/{orgs}/{baseName}/{tableName}/find-one
+curl -X GET "https://app.nocodb.com/api/v1/db/data/noco/my-base/users/find-one?where=(Email,eq,john@example.com)" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="fields" type="array">
+  Fields to include in response
+</ParamField>
+
+<ParamField query="where" type="string">
+  Filter condition
+</ParamField>
+
+<ParamField query="sort" type="string">
+  Sort order
+</ParamField>
+
+### Response
+
+Returns a single record object or null if no match found.
+
+## Count Records
+
+Get the total count of records matching the criteria.
+
+```bash GET /api/v1/db/data/{orgs}/{baseName}/{tableName}/count
+curl -X GET "https://app.nocodb.com/api/v1/db/data/noco/my-base/users/count?where=(Status,eq,active)" \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+### Query Parameters
+
+<ParamField query="where" type="string">
+  Filter condition to count matching records
+</ParamField>
+
+### Response
+
+```json
+{
+  "count": 42
+}
+```
+
+## Check Record Exists
+
+Check if a record exists by its ID.
+
+```bash GET /api/v1/db/data/{orgs}/{baseName}/{tableName}/{rowId}/exist
+curl -X GET https://app.nocodb.com/api/v1/db/data/noco/my-base/users/1/exist \
+  -H "xc-auth: YOUR_API_TOKEN"
+```
+
+### Path Parameters
+
+<ParamField path="orgs" type="string" required>
+  Organization name (currently always `noco`)
+</ParamField>
+
+<ParamField path="baseName" type="string" required>
+  Base name or base ID
+</ParamField>
+
+<ParamField path="tableName" type="string" required>
+  Table name or table ID
+</ParamField>
+
+<ParamField path="rowId" type="string" required>
+  Record ID to check
+</ParamField>
+
+### Response
+
+```json
+true
+```
+
+## Filtering Records
+
+NocoDB supports powerful filtering using the `where` parameter:
+
+### Simple Filter
+```
+(FieldName,operator,value)
+```
+
+### Multiple Filters
+```
+(Field1,eq,value1)~and(Field2,gt,value2)
+(Field1,eq,value1)~or(Field2,lt,value2)
+```
+
+### Supported Operators
+
+- `eq` - Equal
+- `neq` - Not equal
+- `gt` - Greater than
+- `gte` - Greater than or equal
+- `lt` - Less than
+- `lte` - Less than or equal
+- `like` - Contains (case-insensitive)
+- `nlike` - Does not contain
+- `is` - Is (for null checks)
+- `isnot` - Is not (for null checks)
+- `in` - In list
+- `notin` - Not in list
+- `btw` - Between
+
+### Examples
+
+```bash
+# Find active users
+?where=(Status,eq,active)
+
+# Find users older than 25
+?where=(Age,gt,25)
+
+# Find users with name containing "John"
+?where=(Name,like,John)
+
+# Complex filter
+?where=(Status,eq,active)~and(Age,gt,25)~and(Country,eq,USA)
+```
+
+## Sorting Records
+
+### Single Field Sort
+```bash
+# Ascending
+?sort=Name
+
+# Descending
+?sort=-Name
+```
+
+### Multiple Field Sort
+```bash
+?sortArrJson=[{"field":"Status","direction":"asc"},{"field":"Name","direction":"desc"}]
+```

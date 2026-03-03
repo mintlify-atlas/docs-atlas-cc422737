@@ -1,0 +1,508 @@
+---
+title: 'Filters & Sorting'
+description: 'Filter and sort your data to find exactly what you need in NocoDB.'
+---
+
+Filters and sorting help you organize and find specific data in your tables. Apply powerful filter conditions and multi-level sorting to views for precise data control.
+
+## What are Filters?
+
+Filters determine which records appear in a view by applying conditional logic. You can:
+
+- Filter by field values using comparison operators
+- Combine multiple conditions with AND/OR logic
+- Create nested filter groups
+- Apply date-based dynamic filters
+- Filter on computed fields (formulas, lookups, rollups)
+
+<CardGroup cols={2}>
+  <Card title="40+ Operators" icon="equals">
+    From simple equality to complex date ranges
+  </Card>
+  <Card title="Nested Groups" icon="layer-group">
+    Build sophisticated AND/OR logic trees
+  </Card>
+  <Card title="Dynamic Filters" icon="clock">
+    Relative dates like "Last 7 days" or "Next month"
+  </Card>
+  <Card title="View-Specific" icon="eye">
+    Each view maintains its own filters
+  </Card>
+</CardGroup>
+
+## Filter Operators
+
+NocoDB supports a comprehensive set of comparison operators:
+
+### Text Operators
+
+| Operator | Description | Example |
+|----------|-------------|----------|
+| `eq` | Equals (exact match) | Name is "John" |
+| `neq` | Not equals | Status is not "Complete" |
+| `like` | Contains (case-insensitive) | Email contains "@gmail" |
+| `nlike` | Does not contain | Title doesn't contain "Draft" |
+| `empty` | Is empty string | Description is empty |
+| `notempty` | Is not empty string | Notes is not empty |
+| `null` | Is null (no value) | Manager is null |
+| `notnull` | Is not null (has value) | Email is not null |
+| `blank` | Is blank (null or empty) | Address is blank |
+| `notblank` | Is not blank | Phone is not blank |
+
+### Numeric Operators
+
+| Operator | Description | Example |
+|----------|-------------|----------|
+| `eq` | Equals | Price is 100 |
+| `neq` | Not equals | Quantity is not 0 |
+| `gt` | Greater than | Age greater than 18 |
+| `lt` | Less than | Stock less than 10 |
+| `gte` / `ge` | Greater than or equal | Score greater than or equal to 80 |
+| `lte` / `le` | Less than or equal | Discount less than or equal to 50 |
+| `btw` | Between (inclusive) | Amount between 100 and 500 |
+| `nbtw` | Not between | Price not between 10 and 20 |
+
+### Boolean Operators
+
+| Operator | Description | Example |
+|----------|-------------|----------|
+| `checked` | Is checked/true | Active is checked |
+| `notchecked` | Is not checked/false | Archived is not checked |
+
+### Select Field Operators
+
+| Operator | Description | Example |
+|----------|-------------|----------|
+| `anyof` | Matches any of (OR) | Status is any of ["Open", "In Progress"] |
+| `nanyof` | Matches none of | Priority is none of ["Low"] |
+| `allof` | Matches all of (AND) | Tags include all of ["Urgent", "Bug"] |
+| `nallof` | Does not match all | Labels not all of ["Done"] |
+| `is` | Exact match | Category is "Sales" |
+| `isnot` | Not exact match | Type is not "Internal" |
+
+### Date & Time Operators
+
+| Operator | Description | Example |
+|----------|-------------|----------|
+| `eq` | Equals exact date | Date is 2024-01-15 |
+| `neq` | Not equals date | Due Date is not 2024-12-31 |
+| `gt` | After date | Created after 2024-01-01 |
+| `lt` | Before date | Deadline before 2024-12-31 |
+| `gte` | On or after | Start Date on or after 2024-06-01 |
+| `lte` | On or before | End Date on or before 2024-06-30 |
+| `isWithin` | Within time period | Modified is within last 7 days |
+
+#### Dynamic Date Filters
+
+The `isWithin` operator supports relative date ranges:
+
+| Sub-Operator | Description |
+|--------------|-------------|
+| `today` | Today |
+| `tomorrow` | Tomorrow |
+| `yesterday` | Yesterday |
+| `oneWeekAgo` | Exactly 7 days ago |
+| `oneWeekFromNow` | Exactly 7 days from now |
+| `oneMonthAgo` | Exactly 1 month ago |
+| `oneMonthFromNow` | Exactly 1 month from now |
+| `pastWeek` | Last 7 days |
+| `pastMonth` | Last 30 days |
+| `pastYear` | Last 365 days |
+| `nextWeek` | Next 7 days |
+| `nextMonth` | Next 30 days |
+| `nextYear` | Next 365 days |
+| `pastNumberOfDays` | Custom past X days |
+| `nextNumberOfDays` | Custom next X days |
+| `daysAgo` | X days ago |
+| `daysFromNow` | X days from now |
+| `exactDate` | Specific date |
+
+Source: `query-filter-lexer.ts:10-73`
+
+## Creating Filters
+
+<Steps>
+  <Step title="Open the view">
+    Navigate to the view where you want to add filters
+  </Step>
+  
+  <Step title="Click 'Filter'">
+    Click the filter icon in the toolbar
+  </Step>
+  
+  <Step title="Add filter condition">
+    - Select a field
+    - Choose an operator
+    - Enter the value to compare
+  </Step>
+  
+  <Step title="Add more conditions (optional)">
+    Click "Add Filter" to add additional conditions
+  </Step>
+  
+  <Step title="Set logical operator">
+    Choose AND or OR to combine conditions
+  </Step>
+</Steps>
+
+## Filter Structure
+
+### Filter Properties
+
+| Property | Description | Type |
+|----------|-------------|------|
+| `id` | Unique identifier | string |
+| `fk_view_id` | View this filter belongs to | string |
+| `fk_column_id` | Field being filtered | string |
+| `comparison_op` | Operator (eq, gt, like, etc.) | string |
+| `comparison_sub_op` | Sub-operator (for dates) | string |
+| `value` | Comparison value | string |
+| `fk_parent_id` | Parent filter (for nesting) | string |
+| `is_group` | Is this a group container | boolean |
+| `logical_op` | Group logic (and/or/not) | string |
+| `order` | Display order | number |
+| `enabled` | Is filter active | boolean |
+
+Source: `Filter.ts:26-56`
+
+### Nested Filters
+
+Create complex logic by nesting filter groups:
+
+```typescript
+// Example: (Status is "Open" OR Priority is "High") AND Assigned is not null
+{
+  is_group: true,
+  logical_op: 'and',
+  children: [
+    {
+      is_group: true,
+      logical_op: 'or',
+      children: [
+        { fk_column_id: 'status_id', comparison_op: 'eq', value: 'Open' },
+        { fk_column_id: 'priority_id', comparison_op: 'eq', value: 'High' }
+      ]
+    },
+    { fk_column_id: 'assigned_id', comparison_op: 'notnull' }
+  ]
+}
+```
+
+## Managing Filters
+
+### Adding a Filter
+
+```typescript
+const filter = await Filter.insert(context, {
+  fk_view_id: viewId,
+  fk_column_id: columnId,
+  comparison_op: 'eq',
+  value: 'Active',
+  logical_op: 'and'
+});
+```
+
+### Creating Nested Filters
+
+```typescript
+// Create parent group
+const group = await Filter.insert(context, {
+  fk_view_id: viewId,
+  is_group: true,
+  logical_op: 'or'
+});
+
+// Add child filters
+await Filter.insert(context, {
+  fk_view_id: viewId,
+  fk_parent_id: group.id,
+  fk_column_id: columnId1,
+  comparison_op: 'eq',
+  value: 'Value1'
+});
+
+await Filter.insert(context, {
+  fk_view_id: viewId,
+  fk_parent_id: group.id,
+  fk_column_id: columnId2,
+  comparison_op: 'gt',
+  value: '100'
+});
+```
+
+### Updating a Filter
+
+```typescript
+await Filter.update(context, filterId, {
+  comparison_op: 'gte',
+  value: '50',
+  enabled: true
+});
+```
+
+### Deleting a Filter
+
+```typescript
+// Deletes filter and all children recursively
+await Filter.delete(context, filterId);
+```
+
+Source: `Filter.ts:93-485`
+
+## Sorting
+
+**Sorting** controls the order in which records appear in a view. You can:
+
+- Sort by multiple fields
+- Choose ascending or descending order
+- Combine sorts for hierarchical ordering
+- Sort on any field type including formulas
+
+### Sort Directions
+
+| Direction | Description | Usage |
+|-----------|-------------|-------|
+| `asc` | Ascending (A-Z, 0-9, oldest first) | Alphabetical, chronological |
+| `desc` | Descending (Z-A, 9-0, newest first) | Reverse order |
+| `count-asc` | Count ascending (for link fields) | Fewest links first |
+| `count-desc` | Count descending (for link fields) | Most links first |
+
+Source: `Sort.ts:22`
+
+### Creating Sorts
+
+<Steps>
+  <Step title="Open the view">
+    Navigate to the view where you want to add sorting
+  </Step>
+  
+  <Step title="Click 'Sort'">
+    Click the sort icon in the toolbar
+  </Step>
+  
+  <Step title="Add sort field">
+    - Select the field to sort by
+    - Choose ascending or descending
+  </Step>
+  
+  <Step title="Add secondary sorts (optional)">
+    Add more sort levels for hierarchical ordering
+  </Step>
+</Steps>
+
+## Managing Sorts
+
+### Adding a Sort
+
+```typescript
+const sort = await Sort.insert(context, {
+  fk_view_id: viewId,
+  fk_column_id: columnId,
+  direction: 'desc',  // or 'asc'
+  push_to_top: false  // Set true to add at top priority
+});
+```
+
+### Listing Sorts
+
+```typescript
+// Get all sorts for a view (ordered by priority)
+const sorts = await Sort.list(context, { viewId });
+
+// Sorts are applied in order
+// First sort has highest priority
+```
+
+### Updating a Sort
+
+```typescript
+await Sort.update(context, sortId, {
+  fk_column_id: newColumnId,
+  direction: 'asc'
+});
+```
+
+### Deleting Sorts
+
+```typescript
+// Delete single sort
+await Sort.delete(context, sortId);
+
+// Delete all sorts for a view
+await Sort.deleteAll(context, viewId);
+```
+
+Source: `Sort.ts:16-278`
+
+## Multi-Level Sorting
+
+Sorts are applied in sequence. For example:
+
+1. **First sort**: Priority (High → Low)
+2. **Second sort**: Status (A → Z)
+3. **Third sort**: Due Date (Oldest → Newest)
+
+Results will be ordered by Priority first, then by Status within each priority, then by Due Date within each status.
+
+```typescript
+// Add priority sort
+await Sort.insert(context, {
+  fk_view_id: viewId,
+  fk_column_id: priorityColumnId,
+  direction: 'desc',
+  order: 1
+});
+
+// Add secondary status sort
+await Sort.insert(context, {
+  fk_view_id: viewId,
+  fk_column_id: statusColumnId,
+  direction: 'asc',
+  order: 2
+});
+
+// Add tertiary date sort
+await Sort.insert(context, {
+  fk_view_id: viewId,
+  fk_column_id: dateColumnId,
+  direction: 'asc',
+  order: 3
+});
+```
+
+## Combining Filters and Sorts
+
+Filters and sorts work together:
+
+1. **Filters** determine which records to show
+2. **Sorts** determine the order of those filtered records
+
+```typescript
+// Filter: Show only active, high-priority items
+await Filter.insert(context, {
+  fk_view_id: viewId,
+  is_group: true,
+  logical_op: 'and',
+  children: [
+    { fk_column_id: statusCol, comparison_op: 'eq', value: 'Active' },
+    { fk_column_id: priorityCol, comparison_op: 'eq', value: 'High' }
+  ]
+});
+
+// Sort: Order by due date (earliest first)
+await Sort.insert(context, {
+  fk_view_id: viewId,
+  fk_column_id: dueDateCol,
+  direction: 'asc'
+});
+```
+
+## Performance Considerations
+
+<AccordionGroup>
+  <Accordion title="Index filtered columns">
+    Add database indexes on frequently filtered columns for better performance.
+  </Accordion>
+  
+  <Accordion title="Limit filter complexity">
+    Deeply nested filters with many conditions can slow down queries—simplify when possible.
+  </Accordion>
+  
+  <Accordion title="Use appropriate operators">
+    `eq` is faster than `like`. Use exact matches when you can.
+  </Accordion>
+  
+  <Accordion title="Filter before sorting">
+    Filtering reduces the dataset before sorting is applied, improving performance.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Save common filters as views">
+    Instead of reapplying filters repeatedly, create dedicated views with pre-configured filters.
+  </Accordion>
+  
+  <Accordion title="Use dynamic date filters">
+    "Last 7 days" automatically updates—better than filtering by specific dates that become stale.
+  </Accordion>
+  
+  <Accordion title="Group related conditions">
+    Use nested filter groups to make complex logic more readable and maintainable.
+  </Accordion>
+  
+  <Accordion title="Start with broad filters">
+    Apply general filters first, then add specific conditions to narrow results.
+  </Accordion>
+  
+  <Accordion title="Test filter logic">
+    Verify AND/OR combinations work as expected, especially with nested groups.
+  </Accordion>
+  
+  <Accordion title="Document complex filters">
+    Add view descriptions explaining the purpose of complex filter configurations.
+  </Accordion>
+</AccordionGroup>
+
+## Common Filter Patterns
+
+### Show recent records
+
+```typescript
+// Records from the last 30 days
+{
+  fk_column_id: createdTimeCol,
+  comparison_op: 'isWithin',
+  comparison_sub_op: 'pastMonth'
+}
+```
+
+### Show incomplete tasks
+
+```typescript
+// Not complete AND (no due date OR due date in future)
+{
+  is_group: true,
+  logical_op: 'and',
+  children: [
+    { fk_column_id: statusCol, comparison_op: 'neq', value: 'Complete' },
+    {
+      is_group: true,
+      logical_op: 'or',
+      children: [
+        { fk_column_id: dueDateCol, comparison_op: 'null' },
+        { fk_column_id: dueDateCol, comparison_op: 'gte', value: 'today' }
+      ]
+    }
+  ]
+}
+```
+
+### Show assigned to me
+
+```typescript
+// Collaborator includes current user
+{
+  fk_column_id: assignedCol,
+  comparison_op: 'anyof',
+  value: currentUserId
+}
+```
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Views" icon="eye" href="/features/views">
+    Learn how filters and sorts apply to views
+  </Card>
+  <Card title="Formulas" icon="calculator" href="/features/formulas">
+    Filter on computed formula fields
+  </Card>
+  <Card title="Fields" icon="input-text" href="/features/fields">
+    Understand field types and operators
+  </Card>
+  <Card title="API Filtering" icon="code" href="/api/filters">
+    Apply filters programmatically via API
+  </Card>
+</CardGroup>

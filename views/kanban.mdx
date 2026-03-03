@@ -1,0 +1,441 @@
+---
+title: "Kanban View"
+description: "Learn how to use Kanban view to visualize workflows and manage tasks using drag-and-drop boards"
+---
+
+## Overview
+
+Kanban view displays your records as cards organized into columns based on a grouping field, typically representing different stages of a workflow. This view is inspired by agile project management boards and makes it easy to visualize progress and move items between stages with drag-and-drop.
+
+<Info>
+Kanban view requires at least one Single Select or Checkbox field to serve as the grouping column for board lanes.
+</Info>
+
+## When to Use Kanban View
+
+Kanban view is ideal for:
+
+- **Project management** - Track tasks through stages like To Do, In Progress, Done
+- **Sales pipelines** - Manage deals through Lead, Qualified, Proposal, Closed stages
+- **Recruitment** - Track candidates from Applied to Interview to Hired
+- **Bug tracking** - Organize issues by status (New, Assigned, In Progress, Resolved)
+- **Content planning** - Manage articles through Draft, Review, Published stages
+- **Order fulfillment** - Track orders from Placed to Shipped to Delivered
+- **Sprint planning** - Organize user stories and tasks in agile workflows
+
+## Configuration Options
+
+Kanban view provides the following configuration options:
+
+### Grouping Column
+
+The most important configuration is selecting which field determines the board columns:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `fk_grp_col_id` | string | ID of the Single Select field used for grouping |
+
+<Tabs>
+  <Tab title="Status Field">
+    Use a status field to create a classic task board:
+
+    **Single Select Options:**
+    - To Do
+    - In Progress
+    - Review
+    - Done
+
+    ```json
+    {
+      "fk_grp_col_id": "status_column_id"
+    }
+    ```
+
+    Each option becomes a column on the Kanban board.
+  </Tab>
+  <Tab title="Priority Field">
+    Group by priority to focus on high-value items:
+
+    **Single Select Options:**
+    - Critical
+    - High
+    - Medium
+    - Low
+
+    ```json
+    {
+      "fk_grp_col_id": "priority_column_id"
+    }
+    ```
+
+    Organize work by urgency level.
+  </Tab>
+  <Tab title="Stage Field">
+    Track items through a pipeline:
+
+    **Single Select Options:**
+    - Lead
+    - Contacted
+    - Qualified
+    - Proposal
+    - Negotiation
+    - Closed Won
+    - Closed Lost
+
+    ```json
+    {
+      "fk_grp_col_id": "stage_column_id"
+    }
+    ```
+
+    Perfect for sales or recruiting workflows.
+  </Tab>
+</Tabs>
+
+### Cover Image
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `fk_cover_image_col_id` | string | ID of attachment column to display as card cover |
+| `meta.fk_cover_image_object_fit` | string | Image fit mode: "fit" or "cover" |
+
+```json
+{
+  "fk_cover_image_col_id": "attachment_column_id",
+  "meta": {
+    "fk_cover_image_object_fit": "cover"
+  }
+}
+```
+
+<Tip>
+Adding cover images to Kanban cards helps with visual recognition, especially useful for product development, design workflows, or any visual content.
+</Tip>
+
+## Working with Kanban View
+
+<Tabs>
+  <Tab title="Managing Cards">
+    ### Drag and Drop
+
+    Move cards between columns to update their status:
+
+    1. Click and hold a card
+    2. Drag to the target column
+    3. Release to drop and update the status
+    4. The grouping field value updates automatically
+
+    <Info>
+    Dragging a card between columns automatically updates the underlying record's grouping field value.
+    </Info>
+
+    ### Reorder Within Columns
+
+    Organize cards within a column:
+
+    - Drag cards up or down within the same column
+    - Order is preserved and saved per view
+    - Different users can have different card orders
+
+    ### Add New Cards
+
+    Create records directly from the board:
+
+    1. Click "+" at the top of any column
+    2. The new card is created with that column's status
+    3. Fill in required fields in the expanded form
+    4. Card appears immediately in the column
+  </Tab>
+  <Tab title="Customizing Columns">
+    ### Column Display
+
+    Each column represents one option from the grouping field:
+
+    - Columns appear in the order defined in the field options
+    - Empty columns (no cards) are still displayed
+    - Column headers show the option name and card count
+
+    ### Collapse/Expand Columns
+
+    - Click the column header to collapse/expand
+    - Collapsed columns show just the header and count
+    - Useful when working with many columns
+
+    ### Column Colors
+
+    Columns inherit colors from Single Select field options:
+
+    1. Go to table fields configuration
+    2. Edit the grouping Single Select field
+    3. Assign colors to each option
+    4. Colors appear as column header backgrounds
+
+    <Tip>
+    Use color coding strategically: green for completed, red for blocked, yellow for in progress, etc.
+    </Tip>
+  </Tab>
+  <Tab title="Card Content">
+    ### Visible Fields
+
+    Configure which fields appear on cards:
+
+    1. Click "Fields" in the view toolbar
+    2. Toggle fields on/off
+    3. Reorder fields by dragging
+    4. Limited space shows ~3-4 fields per card
+
+    ### Card Layout
+
+    Cards display information in this order:
+    - Cover image (if configured)
+    - Primary field (always shown as title)
+    - Selected visible fields
+    - Linked records (as chips)
+    - Attachment count
+
+    ### Click to Expand
+
+    - Click any card to open full record details
+    - Edit all fields in the expanded form
+    - Changes save automatically
+    - Close to return to board view
+
+    <Info>
+    Keep card content minimal to maintain board clarity. Show only the most critical 2-3 fields.
+    </Info>
+  </Tab>
+</Tabs>
+
+## Advanced Features
+
+### Filtering Kanban Boards
+
+Apply filters to show specific cards:
+
+- Filter by any field, not just the grouping column
+- Combine multiple filter conditions
+- Empty columns remain visible even if filtered out
+- Filters affect all columns simultaneously
+
+**Example filters:**
+- Assignee is "John" (show only John's tasks)
+- Priority is "High" or "Critical" (show urgent items)
+- Due Date is within next 7 days (show upcoming deadlines)
+
+### Sorting Cards
+
+Control card order within columns:
+
+- Sort by due date (earliest first)
+- Sort by priority (highest first)
+- Sort by created time (newest first)
+- Manual drag-and-drop order (when no sort applied)
+
+<Tip>
+Combine sorting and filtering to create focused boards like "My high-priority tasks due this week".
+</Tip>
+
+### WIP Limits
+
+While not enforced by default, you can:
+
+- Use card counts in column headers to monitor work in progress
+- Create filters to highlight columns with too many items
+- Set up automations to notify when limits are exceeded
+
+### Search on Board
+
+Quickly find specific cards:
+
+- Use the search bar to filter cards by text
+- Search works across all visible fields
+- Matching cards are highlighted
+- Non-matching cards are dimmed but remain visible
+
+## Use Cases and Examples
+
+### Software Development Board
+
+```json
+{
+  "fk_grp_col_id": "status_column_id",
+  "meta": {
+    "fk_cover_image_object_fit": "fit"
+  }
+}
+```
+
+**Columns (Status field options):**
+- Backlog
+- To Do
+- In Development
+- Code Review
+- Testing
+- Done
+
+**Card fields:**
+- Task title
+- Assignee
+- Priority
+- Story points
+- Due date
+
+### Sales Pipeline
+
+```json
+{
+  "fk_grp_col_id": "stage_column_id",
+  "fk_cover_image_col_id": "company_logo_column_id"
+}
+```
+
+**Columns (Stage field options):**
+- New Lead
+- Contacted
+- Qualified
+- Proposal Sent
+- Negotiation
+- Closed Won
+- Closed Lost
+
+**Card fields:**
+- Company name
+- Contact person
+- Deal value
+- Expected close date
+- Last contact
+
+### Content Calendar
+
+```json
+{
+  "fk_grp_col_id": "content_status_column_id",
+  "fk_cover_image_col_id": "featured_image_column_id",
+  "meta": {
+    "fk_cover_image_object_fit": "cover"
+  }
+}
+```
+
+**Columns (Content Status field options):**
+- Idea
+- Outline
+- Draft
+- Review
+- Approved
+- Scheduled
+- Published
+
+**Card fields:**
+- Article title
+- Author
+- Topic/Category
+- Publish date
+- Word count
+
+### Recruitment Pipeline
+
+```json
+{
+  "fk_grp_col_id": "candidate_stage_column_id",
+  "fk_cover_image_col_id": "resume_column_id"
+}
+```
+
+**Columns (Candidate Stage field options):**
+- Applied
+- Phone Screen
+- Technical Interview
+- Final Interview
+- Offer Extended
+- Hired
+- Rejected
+
+**Card fields:**
+- Candidate name
+- Position applied
+- Experience level
+- Interview date
+- Recruiter notes
+
+## Best Practices
+
+<Tip>
+**Limit Column Count** - Keep columns between 4-7 for optimal visibility. Too many columns require excessive scrolling.
+</Tip>
+
+<Tip>
+**Clear Column Names** - Use concise, action-oriented column names that clearly indicate the status ("In Review" not "Review Column").
+</Tip>
+
+<Tip>
+**Consistent Card Content** - Show the same fields on all cards for visual consistency and easy scanning.
+</Tip>
+
+<Tip>
+**Regular Board Review** - Conduct regular reviews to move stale cards, archive completed items, and maintain board hygiene.
+</Tip>
+
+<Info>
+**One Grouping Field** - Unlike Grid view which supports multiple group-by columns, Kanban uses a single grouping field that defines the board structure.
+</Info>
+
+## Performance Considerations
+
+Kanban view is optimized for handling many cards:
+
+- Virtual scrolling within columns for hundreds of cards
+- Lazy loading of card images
+- Efficient drag-and-drop rendering
+- Cached board state
+
+For optimal performance:
+
+- Keep grouping field options reasonable (under 10 columns)
+- Use filters to reduce the total number of visible cards
+- Limit visible fields to 3-4 per card
+- Consider archiving completed items to separate views
+
+<Info>
+When dealing with thousands of records, consider using filters to create multiple focused Kanban views rather than one massive board.
+</Info>
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Arrow keys` | Navigate between cards |
+| `Enter` | Open selected card |
+| `Esc` | Close card detail |
+| `Ctrl/Cmd + F` | Focus search |
+
+## API Reference
+
+Create a kanban view programmatically:
+
+```typescript
+const kanbanView = {
+  fk_view_id: 'view_id',
+  fk_grp_col_id: 'single_select_column_id',
+  fk_cover_image_col_id: 'attachment_column_id',
+  meta: {
+    fk_cover_image_object_fit: 'cover'
+  }
+}
+```
+
+Update kanban view settings:
+
+```typescript
+const updates = {
+  fk_grp_col_id: 'new_grouping_column_id',
+  fk_cover_image_col_id: 'new_cover_image_column_id',
+  meta: {
+    fk_cover_image_object_fit: 'fit'
+  }
+}
+```
+
+<Info>
+Changing the grouping column (`fk_grp_col_id`) completely restructures the board, so choose carefully when setting up your Kanban view.
+</Info>

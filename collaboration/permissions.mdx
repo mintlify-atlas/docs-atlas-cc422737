@@ -1,0 +1,435 @@
+---
+title: 'Roles & Permissions'
+description: 'Understand NocoDB role hierarchy and permission matrices'
+---
+
+## Overview
+
+NocoDB implements a comprehensive role-based access control (RBAC) system across three scopes:
+
+- **Organization (Org)**: Instance-level super admin roles
+- **Workspace**: Workspace-level collaboration roles
+- **Base**: Base-level (project) roles for specific databases
+
+## Role Hierarchy
+
+### Organization Roles
+
+| Role | Description |
+|------|-------------|
+| **Super Admin** | Full instance access, all permissions |
+| **Creator** | Can create workspaces and manage org resources |
+| **Viewer** | Read-only org-level access |
+
+### Workspace Roles
+
+| Role | Description | Key Permissions |
+|------|-------------|----------------|
+| **Owner** | Full workspace control | All workspace and base operations |
+| **Creator** | Can create bases and integrations | Base creation, user management, integrations |
+| **Editor** | Can modify data | Data editing, personal view management |
+| **Commenter** | Can add comments | Comment on records |
+| **Viewer** | Read-only access | View data, invite users |
+| **No Access** | No workspace access | Can only see base list |
+
+### Base Roles (Project Roles)
+
+| Role | Description | Key Permissions |
+|------|-------------|----------------|
+| **Owner** | Full base control | All base operations except deletion |
+| **Creator** | Can modify schema | Create tables, views, fields |
+| **Editor** | Can modify data | CRUD operations on data |
+| **Commenter** | Can add comments | Add and manage comments |
+| **Viewer** | Read-only access | View data and schema |
+| **Inherit** | Use workspace role | Inherits permissions from workspace role |
+| **No Access** | No base access | Blocked from base |
+
+<Warning>
+The **Inherit** role is a special role that tells NocoDB to use the user's workspace role for base permissions. The **No Access** role explicitly blocks access even if the user has workspace permissions.
+</Warning>
+
+## Permission Matrices
+
+### Workspace Permission Matrix
+
+| Permission | No Access | Viewer | Commenter | Editor | Creator | Owner |
+|------------|-----------|--------|-----------|--------|---------|-------|
+| View base list | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Access bases | | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Invite users | | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Create bases | | | | | ✓ | ✓ |
+| Manage integrations | | | | | ✓ | ✓ |
+| Update user roles | | | | | ✓ | ✓ |
+| Delete users | | | | | ✓ | ✓ |
+| Workspace settings | | | | | | ✓ |
+| Delete workspace | | | | | | ✓ |
+
+### Base Permission Matrix - Schema Operations
+
+| Permission | Viewer | Commenter | Editor | Creator | Owner |
+|------------|--------|-----------|--------|---------|-------|
+| View tables | ✓ | ✓ | ✓ | ✓ | ✓ |
+| View schema | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Export data | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Create tables | | | | ✓ | ✓ |
+| Modify schema | | | | ✓ | ✓ |
+| Delete tables | | | | ✓ | ✓ |
+| Create views | | | | ✓ | ✓ |
+| Manage webhooks | | | | ✓ | ✓ |
+| API tokens | | | | ✓ | ✓ |
+| Base settings | | | | | ✓ |
+| Manage users | | | | | ✓ |
+| Delete base | | | | | |
+
+<Warning>
+Even **Owners** cannot delete a base - this is a safety measure. Base deletion requires higher-level permissions.
+</Warning>
+
+### Base Permission Matrix - Data Operations
+
+| Permission | Viewer | Commenter | Editor | Creator | Owner |
+|------------|--------|-----------|--------|---------|-------|
+| Read data | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Search data | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Group by | ✓ | ✓ | ✓ | ✓ | ✓ |
+| View filters | ✓ | ✓ | ✓ | ✓ | ✓ |
+| View sorts | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Comment on records | | ✓ | ✓ | ✓ | ✓ |
+| Create records | | | ✓ | ✓ | ✓ |
+| Update records | | | ✓ | ✓ | ✓ |
+| Delete records | | | ✓ | ✓ | ✓ |
+| Bulk operations | | | ✓ | ✓ | ✓ |
+| Link records | | | ✓ | ✓ | ✓ |
+
+### Base Permission Matrix - View Management
+
+| Permission | Viewer | Commenter | Editor | Creator | Owner |
+|------------|--------|-----------|--------|---------|-------|
+| View data in views | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Create personal views | | | ✓ | ✓ | ✓ |
+| Edit personal views | | | ✓ | ✓ | ✓ |
+| Create shared views | | | | ✓ | ✓ |
+| Edit shared views | | | | ✓ | ✓ |
+| Delete views | | | Own | ✓ | ✓ |
+| Manage view sharing | | | | ✓ | ✓ |
+| Share with password | | | | ✓ | ✓ |
+
+<Warning>
+**Personal views** are owned by the user who created them. Editors can create, modify, and delete their own personal views, but cannot modify views created by others unless they have Creator or Owner role.
+</Warning>
+
+### Advanced Permission Matrix - Collaboration
+
+| Permission | Viewer | Commenter | Editor | Creator | Owner |
+|------------|--------|-----------|--------|---------|-------|
+| View comments | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Add comments | | ✓ | ✓ | ✓ | ✓ |
+| Edit own comments | | ✓ | ✓ | ✓ | ✓ |
+| Delete own comments | | ✓ | ✓ | ✓ | ✓ |
+| Resolve comments | | | | ✓ | ✓ |
+| View audit logs | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Invite base users | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Manage user roles | | | | | ✓ |
+| Remove users | | | | | ✓ |
+
+### Advanced Permission Matrix - Extensions & APIs
+
+| Permission | Viewer | Commenter | Editor | Creator | Owner |
+|------------|--------|-----------|--------|---------|-------|
+| View extensions | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Install extensions | | | | ✓ | ✓ |
+| Update extensions | | | ✓ | ✓ | ✓ |
+| Delete extensions | | | | ✓ | ✓ |
+| Create MCP tokens | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Manage webhooks | | | | ✓ | ✓ |
+| Access REST API | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Generate API docs | ✓ | ✓ | ✓ | ✓ | ✓ |
+| AI features | | | ✓ | ✓ | ✓ |
+
+## Role Power Levels
+
+Roles are ordered by power level for permission checks:
+
+### Base Role Hierarchy (Lowest to Highest)
+
+1. No Access (power: -1)
+2. Viewer (power: 0)
+3. Commenter (power: 1)
+4. Editor (power: 2)
+5. Creator (power: 3)
+6. Owner (power: 4)
+
+### Workspace Role Hierarchy (Lowest to Highest)
+
+1. No Access
+2. Viewer
+3. Commenter
+4. Editor
+5. Creator
+6. Owner
+
+<Warning>
+Users cannot assign roles with higher power than their own role. For example, an Editor cannot grant Creator or Owner permissions to other users.
+</Warning>
+
+## Special Permission Rules
+
+### View Ownership
+
+- **Personal Views**: Created by Editors for their own use
+  - Creator has full control
+  - Other users can view but not edit (unless Creator/Owner)
+  - Deleted when creator is removed from base
+
+- **Shared Views**: Created by Creators/Owners
+  - Visible to all base users
+  - Only Creator and Owner roles can modify
+  - Can be shared publicly with or without password
+
+### Base Ownership Rules
+
+1. **At least one owner required**: Cannot remove or downgrade the last owner
+2. **Super admins excluded**: Super admin access doesn't count toward the "one owner" requirement
+3. **Inherited ownership**: Users with workspace Owner role can be promoted to explicit base Owner if needed
+4. **Self-protection**: Users cannot delete themselves if they're the only owner
+
+### Role Assignment Rules
+
+```typescript
+// Valid base roles for assignment
+[
+  ProjectRoles.OWNER,
+  ProjectRoles.CREATOR,
+  ProjectRoles.EDITOR,
+  ProjectRoles.COMMENTER,
+  ProjectRoles.VIEWER,
+  ProjectRoles.INHERIT,     // Use workspace role
+  ProjectRoles.NO_ACCESS    // Block access
+]
+```
+
+```typescript
+// Valid workspace roles for assignment
+[
+  WorkspaceUserRoles.OWNER,
+  WorkspaceUserRoles.CREATOR,
+  WorkspaceUserRoles.EDITOR,
+  WorkspaceUserRoles.COMMENTER,
+  WorkspaceUserRoles.VIEWER,
+  WorkspaceUserRoles.NO_ACCESS
+]
+```
+
+## Permission Checks
+
+### How Permissions Are Evaluated
+
+1. **Check scope**: Determine if permission is org, workspace, or base level
+2. **Get user roles**: Retrieve all applicable roles (org, workspace, base)
+3. **Check role permissions**: Look up permission in role definition
+4. **Include/Exclude logic**:
+   - `include`: Explicitly granted permissions
+   - `exclude`: Explicitly denied permissions (overrides include)
+5. **Inheritance**: Higher roles inherit all permissions from lower roles
+
+### Permission Check Flow
+
+```typescript
+// Pseudo-code for permission evaluation
+function hasPermission(user, permission, scope) {
+  // 1. Get effective role for scope
+  const role = getEffectiveRole(user, scope);
+  
+  // 2. Check if super admin (has all permissions)
+  if (user.roles.includes('super')) return true;
+  
+  // 3. Check explicit excludes (denied)
+  if (rolePermissions[role].exclude[permission]) return false;
+  
+  // 4. Check explicit includes (granted)
+  if (rolePermissions[role].include[permission]) return true;
+  
+  // 5. Check parent roles (inheritance)
+  return checkParentRoles(role, permission);
+}
+```
+
+### Effective Role Calculation
+
+For base permissions:
+
+```typescript
+function getEffectiveBaseRole(user, base) {
+  // 1. Super admin override
+  if (user.roles.includes('super')) return 'owner';
+  
+  // 2. Explicit base role (not INHERIT or null)
+  if (user.base_roles && user.base_roles !== 'inherit') {
+    return user.base_roles;
+  }
+  
+  // 3. Base default role
+  if (base.default_role) {
+    return base.default_role;
+  }
+  
+  // 4. Workspace role (inherited)
+  if (user.workspace_roles) {
+    return WorkspaceRolesToProjectRoles[user.workspace_roles];
+  }
+  
+  // 5. No access (default)
+  return 'no-access';
+}
+```
+
+## Managing Permissions
+
+### Inviting Users with Roles
+
+```typescript
+// Workspace invitation
+await workspaceUserInvite({
+  email: 'user@example.com',
+  roles: WorkspaceUserRoles.EDITOR
+});
+
+// Base invitation
+await baseUserInvite({
+  email: 'user@example.com',
+  roles: ProjectRoles.VIEWER
+});
+```
+
+### Updating User Roles
+
+```typescript
+// Update workspace role
+await workspaceUserUpdate(userId, {
+  roles: WorkspaceUserRoles.CREATOR
+});
+
+// Update base role
+await baseUserUpdate(baseId, userId, {
+  roles: ProjectRoles.EDITOR
+});
+```
+
+### Removing Users
+
+```typescript
+// Remove from workspace (removes from all bases too)
+await workspaceUserDelete(workspaceId, userId);
+
+// Remove from specific base only
+await baseUserDelete(baseId, userId);
+```
+
+<Warning>
+Removing a user from a workspace automatically removes them from all bases within that workspace. This action cannot be undone.
+</Warning>
+
+## Best Practices
+
+### Workspace Level
+
+1. **Default to Viewer**: Give new users Viewer access initially
+2. **Use Creator role wisely**: Only for users who need to create bases
+3. **Maintain multiple Owners**: Ensure workspace continuity
+4. **Review permissions regularly**: Audit user access quarterly
+
+### Base Level
+
+1. **Leverage inheritance**: Use `INHERIT` role when workspace roles are sufficient
+2. **Minimize Owners**: Only assign Owner to users who need full control
+3. **Use Commenter for review workflows**: Great for approval processes
+4. **Editor for daily users**: Most collaborative users need Editor role
+5. **Viewer for stakeholders**: Read-only access for reporting needs
+
+### Security
+
+1. **Principle of least privilege**: Grant minimum necessary permissions
+2. **Regular access reviews**: Remove inactive users promptly
+3. **Role-based, not user-based**: Design permissions around roles, not individuals
+4. **Document role assignments**: Keep records of why users have specific roles
+5. **Use No Access explicitly**: Block access when needed rather than removing users
+
+<Warning>
+Never share Owner or Creator roles with untrusted users. These roles can modify your database schema and potentially cause data loss.
+</Warning>
+
+## Common Scenarios
+
+### Read-Only Access
+
+**Goal**: User can view data but make no changes
+
+**Solution**: Assign **Viewer** role at workspace or base level
+
+### Data Entry Only
+
+**Goal**: User can add/edit data but not modify schema
+
+**Solution**: Assign **Editor** role
+
+### Review and Approval Workflow
+
+**Goal**: User can comment on records for approval
+
+**Solution**: Assign **Commenter** role
+
+### Full Base Management
+
+**Goal**: User can manage tables, views, and users
+
+**Solution**: Assign **Creator** role (or **Owner** if they need user management)
+
+### Temporary Contractor Access
+
+**Goal**: Give limited access that's easy to revoke
+
+**Solution**:
+1. Create base-specific role (not workspace)
+2. Use **Editor** or **Viewer** as appropriate
+3. Remove user when contract ends
+
+### Cross-Team Collaboration
+
+**Goal**: Multiple teams share workspace but access different bases
+
+**Solution**:
+1. Give workspace **Viewer** role to all
+2. Assign specific base roles (Editor/Creator) as needed
+3. Use **No Access** base role to explicitly block access to sensitive bases
+
+## Troubleshooting
+
+### User Can't Access Base
+
+**Check**:
+1. User has workspace access (not No Access)
+2. Base role is not explicitly set to No Access
+3. User account is active (not deleted/disabled)
+4. Workspace membership is confirmed
+
+### User Has Too Much Access
+
+**Check**:
+1. Workspace role may be granting inherited access
+2. Multiple role assignments (base + workspace)
+3. Default base role may be set
+4. User may have Super Admin org role
+
+### Can't Change User Role
+
+**Possible reasons**:
+1. You don't have sufficient permissions (need Owner role)
+2. Attempting to remove last Owner
+3. Trying to assign higher role than your own
+4. User is a Super Admin (org-level role)
+
+## Related
+
+- [Workspaces](/collaboration/workspaces) - Understanding workspace organization
+- [Sharing](/collaboration/sharing) - Public sharing and views
+- [Comments](/collaboration/comments) - Record-level collaboration

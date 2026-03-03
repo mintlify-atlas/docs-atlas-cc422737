@@ -1,0 +1,554 @@
+---
+title: 'Relations'
+description: 'Connect tables with relationships to model complex data structures in NocoDB.'
+---
+
+Relationships (also called links or relations) connect tables together, allowing you to model real-world data structures. Instead of duplicating data, you can reference records from one table in another.
+
+## What are Relations?
+
+A **relation** is a connection between two tables that represents how data is associated. Relations enable you to:
+
+- Link customers to their orders
+- Connect projects to team members
+- Associate products with categories
+- Build hierarchical data structures
+- Avoid data duplication
+
+<CardGroup cols={2}>
+  <Card title="6 Relation Types" icon="link">
+    One-to-Many, Many-to-One, Many-to-Many, and more
+  </Card>
+  <Card title="Bidirectional" icon="arrows-left-right">
+    Automatically creates inverse relationship
+  </Card>
+  <Card title="Lookups & Rollups" icon="calculator">
+    Access and aggregate linked data
+  </Card>
+  <Card title="V2 Performance" icon="gauge-high">
+    Enhanced junction-table architecture
+  </Card>
+</CardGroup>
+
+## Relation Types
+
+### One-to-Many (Has Many)
+
+One record in Table A relates to many records in Table B.
+
+**Example**: One customer has many orders
+
+- **Type**: `hm` (has many)
+- **From**: Customer table → Orders table
+- **Shows**: List of related orders
+
+```
+Customer (1) ----< Orders (Many)
+```
+
+### Many-to-One (Belongs To)
+
+Many records in Table A relate to one record in Table B.
+
+**Example**: Many orders belong to one customer
+
+- **Type**: `bt` (belongs to)
+- **From**: Orders table → Customer table
+- **Shows**: Single linked customer
+- **Inverse of**: One-to-Many
+
+```
+Orders (Many) >---- Customer (1)
+```
+
+### Many-to-Many
+
+Records in both tables can relate to multiple records in the other table.
+
+**Example**: Students and courses (students take multiple courses, courses have multiple students)
+
+- **Type**: `mm` (many-to-many)
+- **Junction Table**: Automatically created
+- **Shows**: List of related records
+
+```
+Students (Many) >----< Courses (Many)
+         [Enrollments junction table]
+```
+
+### One-to-One
+
+One record in Table A relates to exactly one record in Table B.
+
+**Example**: One user has one profile
+
+- **Type**: `oo` (one-to-one)
+- **From**: Either direction
+- **Shows**: Single linked record
+- **Unique**: Enforces uniqueness
+
+```
+User (1) ---- Profile (1)
+```
+
+### One-to-Many V2
+
+Enhanced one-to-many using junction table architecture.
+
+- **Type**: `om` (one-to-many V2)
+- **Version**: LinksVersion.V2
+- **Performance**: Better for large datasets
+- **Junction Table**: Uses intermediate table
+
+### Many-to-One V2
+
+Enhanced many-to-one using junction table architecture.
+
+- **Type**: `mo` (many-to-one V2)
+- **Version**: LinksVersion.V2
+- **Single Record**: Returns one record despite junction table
+
+Source: `globals.ts:79-91`, `LinkToAnotherRecordColumn.ts:50`
+
+## Creating Relations
+
+<Steps>
+  <Step title="Open the table">
+    Navigate to the table where you want to add a relationship
+  </Step>
+  
+  <Step title="Add a new field">
+    Click "+" to add a field
+  </Step>
+  
+  <Step title="Select 'Links' or 'Link to Another Record'">
+    Choose the relationship field type:
+    - **Links**: Modern V2 relationships (recommended)
+    - **Link to Another Record**: Legacy V1 relationships
+  </Step>
+  
+  <Step title="Choose the related table">
+    Select which table to link to
+  </Step>
+  
+  <Step title="Select relation type">
+    - One-to-Many (Has Many)
+    - Many-to-One (Belongs To)
+    - Many-to-Many
+    - One-to-One (V2 only)
+  </Step>
+  
+  <Step title="Configure relation settings">
+    - **Field Label**: Name for this relationship
+    - **Related Field Label**: Name in the linked table
+    - **Junction Table** (for M2M): Auto-created or choose existing
+  </Step>
+  
+  <Step title="Save the relationship">
+    NocoDB creates both sides of the relationship automatically
+  </Step>
+</Steps>
+
+## Relationship Properties
+
+### Link Field Properties
+
+| Property | Description | Type |
+|----------|-------------|------|
+| `id` | Unique identifier | string |
+| `fk_column_id` | Column ID | string |
+| `type` | Relation type (hm, bt, mm, oo, om, mo) | string |
+| `fk_related_model_id` | ID of linked table | string |
+| `fk_child_column_id` | Foreign key in child table | string |
+| `fk_parent_column_id` | Foreign key in parent table | string |
+| `fk_mm_model_id` | Junction table ID (M2M) | string |
+| `fk_mm_child_column_id` | Junction FK to child | string |
+| `fk_mm_parent_column_id` | Junction FK to parent | string |
+| `virtual` | Is virtual relation | boolean |
+| `version` | V1 or V2 | number |
+| `ur` | Update rule (cascade, etc.) | string |
+| `dr` | Delete rule (cascade, etc.) | string |
+
+Source: `LinkToAnotherRecordColumn.ts:13-63`
+
+### Cross-Base Relations
+
+Relations can span across different bases:
+
+| Property | Description |
+|----------|-------------|
+| `fk_related_base_id` | Related table's base ID |
+| `fk_mm_base_id` | Junction table's base ID |
+| `fk_related_source_id` | Related table's data source |
+| `fk_mm_source_id` | Junction table's data source |
+
+Source: `LinkToAnotherRecordColumn.ts:39-42`
+
+## Working with Relations
+
+### Adding Links
+
+In the UI:
+1. Click the link field cell
+2. Search for or select records to link
+3. Multiple selections for Has-Many/Many-to-Many
+4. Single selection for Belongs-To/One-to-One
+
+### Removing Links
+
+1. Click the linked record chip
+2. Click the X icon to unlink
+3. Does not delete the related record
+
+### Managing Links Programmatically
+
+```typescript
+// Get relationship details
+const column = await Column.get(context, { colId: linkColumnId });
+const relation = await column.getColOptions<LinkToAnotherRecordColumn>();
+
+// Access relationship properties
+const relatedTableId = relation.fk_related_model_id;
+const relationType = relation.type;  // 'hm', 'bt', 'mm', etc.
+const isV2 = relation.version === LinksVersion.V2;
+
+// Get child/parent columns
+const childCol = await relation.getChildColumn(context);
+const parentCol = await relation.getParentColumn(context);
+
+// For Many-to-Many, get junction table
+if (relationType === 'mm') {
+  const junctionTable = await relation.getMMModel(context);
+  const mmChildCol = await relation.getMMChildColumn(context);
+  const mmParentCol = await relation.getMMParentColumn(context);
+}
+```
+
+Source: `LinkToAnotherRecordColumn.ts:72-245`
+
+## Lookups
+
+Lookups let you display a field from a linked record without duplication.
+
+### What is a Lookup?
+
+**Example**: Show customer name in the orders table
+
+- **Requires**: Link field to traverse
+- **Displays**: Field from linked record
+- **Read-only**: Cannot edit lookup values
+- **Auto-updates**: When linked record changes
+
+### Creating a Lookup
+
+<Steps>
+  <Step title="Add a new field">
+    Click "+" to add a field
+  </Step>
+  
+  <Step title="Select 'Lookup' type">
+    Choose Lookup from field types
+  </Step>
+  
+  <Step title="Select link field">
+    Choose the relationship field to traverse
+  </Step>
+  
+  <Step title="Select field to display">
+    Pick which field from the linked table to show
+  </Step>
+  
+  <Step title="Save the lookup">
+    Values appear automatically for all linked records
+  </Step>
+</Steps>
+
+### Lookup Properties
+
+```typescript
+interface LookupColumn {
+  fk_relation_column_id: string;  // Link field to traverse
+  fk_lookup_column_id: string;     // Field to display
+}
+```
+
+### Example
+
+```
+Orders Table:
+- Customer (Link to Customers)
+- Customer Email (Lookup via Customer → Email)
+- Customer Phone (Lookup via Customer → Phone)
+```
+
+Source: `Column.ts:317-328`
+
+## Rollups
+
+Rollups aggregate data from linked records using functions.
+
+### What is a Rollup?
+
+**Example**: Total amount of all orders for a customer
+
+- **Requires**: Link field to traverse
+- **Aggregates**: Values using functions
+- **Functions**: Count, Sum, Average, Min, Max, etc.
+- **Auto-updates**: When linked records change
+
+### Creating a Rollup
+
+<Steps>
+  <Step title="Add a new field">
+    Click "+" to add a field
+  </Step>
+  
+  <Step title="Select 'Rollup' type">
+    Choose Rollup from field types
+  </Step>
+  
+  <Step title="Select link field">
+    Choose the relationship field to traverse
+  </Step>
+  
+  <Step title="Select field to aggregate">
+    Pick which field from linked records to calculate
+  </Step>
+  
+  <Step title="Choose aggregation function">
+    Select how to aggregate:
+    - Count: Number of linked records
+    - Sum: Total of all values
+    - Average: Mean value
+    - Min: Smallest value
+    - Max: Largest value
+    - And more...
+  </Step>
+  
+  <Step title="Save the rollup">
+    Calculated value appears for all records
+  </Step>
+</Steps>
+
+### Rollup Functions
+
+| Function | Description | Use Case |
+|----------|-------------|----------|
+| `count` | Count linked records | Number of orders |
+| `sum` | Sum of values | Total sales amount |
+| `avg` | Average value | Average order value |
+| `min` | Minimum value | Earliest date |
+| `max` | Maximum value | Latest date |
+| `countDistinct` | Unique values count | Unique products |
+| `sumDistinct` | Sum of unique values | Unique revenue |
+| `avgDistinct` | Average of unique | Average unique price |
+
+### Rollup Properties
+
+```typescript
+interface RollupColumn {
+  fk_relation_column_id: string;  // Link field to traverse
+  fk_rollup_column_id: string;    // Field to aggregate
+  rollup_function: string;         // Aggregation function
+}
+```
+
+### Example
+
+```
+Customers Table:
+- Orders (Link to Orders table)
+- Order Count (Rollup: COUNT of Orders)
+- Total Spent (Rollup: SUM of Orders.Amount)
+- Average Order (Rollup: AVG of Orders.Amount)
+- Last Order Date (Rollup: MAX of Orders.Date)
+```
+
+Source: `Column.ts:330-342`
+
+## Junction Tables (Many-to-Many)
+
+Many-to-Many relations use a hidden junction table to store the relationships.
+
+### What is a Junction Table?
+
+An intermediate table that connects two tables:
+
+```
+Students >---- StudentCourses ----< Courses
+           (junction table)
+```
+
+### Junction Table Properties
+
+- **Auto-created**: NocoDB creates it automatically
+- **Hidden**: Usually hidden from UI
+- **Two Foreign Keys**: References both related tables
+- **Marked as MM**: `mm: true` flag
+
+```typescript
+// Access junction table
+const relation = await LinkToAnotherRecordColumn.read(
+  context,
+  linkColumnId
+);
+
+if (relation.type === 'mm') {
+  const junctionTable = await relation.getMMModel(context);
+  // Junction table has two link fields:
+  // - Link to Students
+  // - Link to Courses
+}
+```
+
+Source: `Model.ts:87-88`, `Model.ts:974-996`
+
+## Relation Versions
+
+### V1 Relations (Legacy)
+
+- **Direct Foreign Keys**: Traditional database foreign keys
+- **Types**: Has Many, Belongs To, Many-to-Many
+- **Performance**: Good for small datasets
+
+### V2 Relations (Modern)
+
+- **Junction Tables**: All relations use intermediate tables
+- **Types**: All relation types including One-to-Many, Many-to-One, One-to-One
+- **Performance**: Better for large datasets
+- **Features**: Enhanced filtering, better UI
+
+Version detection:
+```typescript
+const isV2 = relation.version === LinksVersion.V2;
+// or check relation type
+const isV2Type = ['om', 'mo', 'oo'].includes(relation.type);
+```
+
+Source: `Column.ts:346-390`, `UITypes.ts:481-556`
+
+## Cascading Actions
+
+Control what happens when related records are updated or deleted:
+
+### Update Rules (ur)
+
+- **CASCADE**: Update foreign key when parent changes
+- **RESTRICT**: Prevent updates if children exist
+- **SET NULL**: Set foreign key to null
+
+### Delete Rules (dr)
+
+- **CASCADE**: Delete children when parent is deleted
+- **RESTRICT**: Prevent deletion if children exist
+- **SET NULL**: Set foreign key to null
+
+Source: `LinkToAnotherRecordColumn.ts:46-47`
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use V2 relations for new projects">
+    V2 relations offer better performance and more features. Use them for all new relationships.
+  </Accordion>
+  
+  <Accordion title="Name relationships clearly">
+    Use descriptive names: "Customer Orders" instead of just "Orders".
+  </Accordion>
+  
+  <Accordion title="Choose the right relation type">
+    - One-to-Many: One parent, multiple children (Customer → Orders)
+    - Many-to-Many: Multiple on both sides (Students ↔ Courses)
+    - One-to-One: Unique pairing (User → Profile)
+  </Accordion>
+  
+  <Accordion title="Use lookups to avoid duplication">
+    Instead of copying data, use lookups to display information from linked records.
+  </Accordion>
+  
+  <Accordion title="Use rollups for aggregation">
+    Summarize linked data with rollups instead of manually calculating totals.
+  </Accordion>
+  
+  <Accordion title="Consider cascading carefully">
+    CASCADE delete can remove many records. Use RESTRICT or SET NULL for safety.
+  </Accordion>
+  
+  <Accordion title="Plan your data model">
+    Design relationships before creating tables to avoid restructuring later.
+  </Accordion>
+</AccordionGroup>
+
+## Common Patterns
+
+### One-to-Many: Customer Orders
+
+```
+Customers:
+- Orders (Has Many → Orders)
+- Total Orders (Rollup: COUNT of Orders)
+- Total Spent (Rollup: SUM of Orders.Amount)
+
+Orders:
+- Customer (Belongs To → Customers)
+- Customer Name (Lookup via Customer → Name)
+- Customer Email (Lookup via Customer → Email)
+```
+
+### Many-to-Many: Project Members
+
+```
+Projects:
+- Team Members (Many-to-Many → Users)
+- Member Count (Rollup: COUNT of Team Members)
+
+Users:
+- Projects (Many-to-Many → Projects)
+- Project Count (Rollup: COUNT of Projects)
+```
+
+### Hierarchical: Employee Manager
+
+```
+Employees:
+- Manager (Belongs To → Employees, same table)
+- Direct Reports (Has Many → Employees, same table)
+- Manager Name (Lookup via Manager → Name)
+```
+
+## Performance Considerations
+
+<AccordionGroup>
+  <Accordion title="V2 relations scale better">
+    For large datasets with thousands of links, V2 relations perform better due to junction table indexing.
+  </Accordion>
+  
+  <Accordion title="Limit lookup chains">
+    Deeply nested lookups (A → B → C → D) can slow queries. Limit to 2-3 levels.
+  </Accordion>
+  
+  <Accordion title="Index foreign keys">
+    Ensure foreign key columns are indexed for faster join queries.
+  </Accordion>
+  
+  <Accordion title="Use rollups wisely">
+    Rollups calculate on every query. For very large datasets, consider caching results.
+  </Accordion>
+</AccordionGroup>
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Fields" icon="input-text" href="/features/fields">
+    Learn about all field types including links
+  </Card>
+  <Card title="Formulas" icon="calculator" href="/features/formulas">
+    Use formulas with linked data
+  </Card>
+  <Card title="Tables" icon="table" href="/features/tables">
+    Understand table structure and relationships
+  </Card>
+  <Card title="API Relations" icon="code" href="/api/relations">
+    Work with relations programmatically
+  </Card>
+</CardGroup>

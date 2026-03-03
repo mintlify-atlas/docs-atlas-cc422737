@@ -1,0 +1,474 @@
+---
+title: Database Setup
+description: Configure NocoDB with PostgreSQL, MySQL, or SQLite
+---
+
+NocoDB stores its metadata in a database. This guide explains how to connect NocoDB to PostgreSQL, MySQL, or SQLite with real configuration examples.
+
+## Database Options
+
+NocoDB supports three database types for metadata storage:
+
+- **SQLite**: Simple file-based database (default, good for development)
+- **PostgreSQL**: Recommended for production
+- **MySQL/MariaDB**: Alternative for production
+
+<Warning>
+SQLite is not recommended for production use with multiple instances or high concurrency.
+</Warning>
+
+## SQLite Configuration
+
+SQLite is the default database. NocoDB creates a `noco.db` file in the tool directory.
+
+### Default (No Configuration)
+
+```bash
+docker run -d \
+  --name nocodb \
+  -v "$(pwd)"/nocodb:/usr/app/data/ \
+  -p 8080:8080 \
+  nocodb/nocodb:latest
+```
+
+Database file location: `/usr/app/data/noco.db`
+
+### Custom SQLite Path
+
+```bash
+NC_DB="sqlite:///custom/path/to/noco.db"
+```
+
+### In-Memory SQLite (Testing)
+
+```bash
+NC_TRY="true"
+```
+
+Uses an in-memory SQLite database that doesn't persist data.
+
+## PostgreSQL Configuration
+
+PostgreSQL is the recommended database for production deployments.
+
+### Connection String Format
+
+NocoDB uses a URL-style connection string:
+
+```bash
+NC_DB="pg://hostname:port?u=username&p=password&d=database"
+```
+
+### Basic PostgreSQL Setup
+
+```bash
+NC_DB="pg://localhost:5432?u=postgres&p=password&d=nocodb"
+```
+
+### With SSL
+
+```bash
+NC_DB="pg://hostname:5432?u=username&p=password&d=database&ssl=true"
+```
+
+### Full Example with Docker
+
+<CodeGroup>
+```bash Docker Run
+docker run -d \
+  --name nocodb \
+  -v "$(pwd)"/nocodb:/usr/app/data/ \
+  -p 8080:8080 \
+  -e NC_DB="pg://host.docker.internal:5432?u=nocodb&p=SecurePass123&d=nocodb" \
+  -e NC_AUTH_JWT_SECRET="your-secret-key" \
+  nocodb/nocodb:latest
+```
+
+```yaml Docker Compose
+version: '2.1'
+services: 
+  nocodb: 
+    depends_on: 
+      postgres: 
+        condition: service_healthy
+    environment: 
+      NC_DB: "pg://postgres:5432?u=postgres&p=password&d=root_db"
+      NC_AUTH_JWT_SECRET: "569a1821-0a93-45e8-87ab-eb857f20a010"
+    image: "nocodb/nocodb:latest"
+    ports: 
+      - "8080:8080"
+    restart: always
+    volumes: 
+      - "nc_data:/usr/app/data"
+  postgres: 
+    environment: 
+      POSTGRES_DB: root_db
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+    healthcheck: 
+      interval: 10s
+      retries: 10
+      test: "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""
+      timeout: 2s
+    image: postgres:16.6
+    restart: always
+    volumes: 
+      - "db_data:/var/lib/postgresql/data"
+volumes: 
+  db_data: {}
+  nc_data: {}
+```
+</CodeGroup>
+
+### PostgreSQL with Kubernetes
+
+```yaml
+extraSecretEnvs:
+  NC_AUTH_JWT_SECRET: "your-jwt-secret"
+  NC_DB: "pg://nocodb-postgresql:5432?u=nocodb&p=secretPass&d=nocodb"
+
+postgresql:
+  enabled: true
+  auth:
+    database: nocodb
+    username: nocodb
+    password: secretPass
+  persistence:
+    size: 8Gi
+```
+
+### Managed PostgreSQL (AWS RDS, Google Cloud SQL, Azure)
+
+```bash
+# AWS RDS
+NC_DB="pg://mydb.abc123.us-east-1.rds.amazonaws.com:5432?u=nocodb&p=password&d=nocodb&ssl=true"
+
+# Google Cloud SQL
+NC_DB="pg://10.1.2.3:5432?u=nocodb&p=password&d=nocodb&ssl=true"
+
+# Azure Database for PostgreSQL
+NC_DB="pg://myserver.postgres.database.azure.com:5432?u=nocodb@myserver&p=password&d=nocodb&ssl=true"
+```
+
+### PostgreSQL with Connection Pool
+
+```bash
+NC_DB="pg://hostname:5432?u=username&p=password&d=database"
+NC_DB_POOL_MAX="20"
+```
+
+## MySQL/MariaDB Configuration
+
+MySQL and MariaDB are supported as alternative production databases.
+
+### Connection String Format
+
+```bash
+NC_DB="mysql2://hostname:port?u=username&p=password&d=database"
+```
+
+### Basic MySQL Setup
+
+```bash
+NC_DB="mysql2://localhost:3306?u=root&p=password&d=nocodb"
+```
+
+### With SSL
+
+```bash
+NC_DB="mysql2://hostname:3306?u=username&p=password&d=database&ssl=true"
+```
+
+### Full Example with Docker Compose
+
+```yaml
+version: '2.1'
+services:
+  nocodb:
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      NC_DB: "mysql2://mysql:3306?u=nocodb&p=password&d=nocodb"
+      NC_AUTH_JWT_SECRET: "your-secret-key"
+    image: "nocodb/nocodb:latest"
+    ports:
+      - "8080:8080"
+    restart: always
+    volumes:
+      - "nc_data:/usr/app/data"
+  mysql:
+    environment:
+      MYSQL_DATABASE: nocodb
+      MYSQL_USER: nocodb
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
+    healthcheck:
+      interval: 10s
+      retries: 10
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 2s
+    image: mysql:8.0
+    restart: always
+    volumes:
+      - "db_data:/var/lib/mysql"
+volumes:
+  db_data: {}
+  nc_data: {}
+```
+
+### MySQL with Kubernetes
+
+```yaml
+extraSecretEnvs:
+  NC_AUTH_JWT_SECRET: "your-jwt-secret"
+  NC_DB: "mysql2://nocodb-mysql:3306?u=nocodb&p=secretPass&d=nocodb"
+
+mysql:
+  enabled: true
+  auth:
+    database: nocodb
+    username: nocodb
+    password: secretPass
+  persistence:
+    enabled: true
+    size: 8Gi
+```
+
+### Managed MySQL (AWS RDS, Google Cloud SQL)
+
+```bash
+# AWS RDS MySQL
+NC_DB="mysql2://mydb.abc123.us-east-1.rds.amazonaws.com:3306?u=admin&p=password&d=nocodb&ssl=true"
+
+# Google Cloud SQL MySQL
+NC_DB="mysql2://10.1.2.3:3306?u=nocodb&p=password&d=nocodb&ssl=true"
+```
+
+## Alternative Configuration Methods
+
+### Using JSON Configuration
+
+Provide database configuration as JSON:
+
+```bash
+NC_DB_JSON='{"client":"pg","connection":{"host":"localhost","port":5432,"user":"postgres","password":"password","database":"nocodb"}}'
+```
+
+### Using JSON File
+
+Create a `db-config.json` file:
+
+```json
+{
+  "client": "pg",
+  "connection": {
+    "host": "localhost",
+    "port": 5432,
+    "user": "nocodb",
+    "password": "password",
+    "database": "nocodb",
+    "ssl": {
+      "rejectUnauthorized": false
+    }
+  }
+}
+```
+
+Reference the file:
+
+```bash
+NC_DB_JSON_FILE="/path/to/db-config.json"
+```
+
+### Using Standard Database URL
+
+NocoDB also accepts standard PostgreSQL URLs:
+
+```bash
+DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
+```
+
+Or from a file:
+
+```bash
+DATABASE_URL_FILE="/run/secrets/db_url"
+```
+
+## Connection String Parameters
+
+### Common Parameters
+
+| Parameter | Alias | Description |
+|-----------|-------|-------------|
+| `u` | `user` | Database username |
+| `p` | `password` | Database password |
+| `d` | `db`, `database` | Database name |
+| `ssl` | | Enable SSL (`true`/`false`) |
+
+### PostgreSQL Example with All Parameters
+
+```bash
+NC_DB="pg://hostname:5432?u=username&p=password&d=database&ssl=true&caFilePath=/path/to/ca.pem&certFilePath=/path/to/cert.pem&keyFilePath=/path/to/key.pem"
+```
+
+### MySQL Example with Options
+
+```bash
+NC_DB="mysql2://hostname:3306?u=username&p=password&d=database&ssl=true&options=--max_allowed_packet=67108864"
+```
+
+## Database Preparation
+
+### PostgreSQL
+
+Create database and user:
+
+```sql
+CREATE DATABASE nocodb;
+CREATE USER nocodb WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE nocodb TO nocodb;
+```
+
+### MySQL
+
+Create database and user:
+
+```sql
+CREATE DATABASE nocodb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'nocodb'@'%' IDENTIFIED BY 'your_password';
+GRANT ALL PRIVILEGES ON nocodb.* TO 'nocodb'@'%';
+FLUSH PRIVILEGES;
+```
+
+## Production Considerations
+
+### Use Connection Pooling
+
+Configure appropriate pool size:
+
+```bash
+NC_DB_POOL_MAX="20"
+```
+
+**Recommended**:
+- Small deployments: 5-10
+- Medium deployments: 10-20
+- Large deployments: 20-50
+
+### Enable SSL/TLS
+
+Always use SSL in production:
+
+```bash
+NC_DB="pg://hostname:5432?u=username&p=password&d=database&ssl=true"
+```
+
+### Use Managed Databases
+
+For production, use managed database services:
+- AWS RDS (PostgreSQL/MySQL)
+- Google Cloud SQL
+- Azure Database
+- DigitalOcean Managed Databases
+
+Benefits:
+- Automatic backups
+- High availability
+- Automated updates
+- Better performance
+
+### Backup Strategy
+
+Regularly backup your metadata database:
+
+**PostgreSQL**:
+```bash
+pg_dump -h hostname -U username -d nocodb > backup.sql
+```
+
+**MySQL**:
+```bash
+mysqldump -h hostname -u username -p nocodb > backup.sql
+```
+
+### Separate Application Databases
+
+The `NC_DB` is for NocoDB's metadata. Your application data is stored separately in the databases you connect to NocoDB.
+
+## Troubleshooting
+
+### Connection Failed
+
+1. Verify database is running:
+   ```bash
+   # PostgreSQL
+   pg_isready -h hostname -p 5432
+   
+   # MySQL
+   mysqladmin ping -h hostname
+   ```
+
+2. Check credentials and database name
+
+3. Verify network connectivity from NocoDB container
+
+4. Check firewall rules
+
+### Permission Denied
+
+Ensure the user has all required privileges:
+
+```sql
+-- PostgreSQL
+GRANT ALL PRIVILEGES ON DATABASE nocodb TO nocodb;
+
+-- MySQL
+GRANT ALL PRIVILEGES ON nocodb.* TO 'nocodb'@'%';
+```
+
+### SSL Issues
+
+If SSL connection fails:
+
+```bash
+# Try without SSL first (development only)
+NC_DB="pg://hostname:5432?u=username&p=password&d=database"
+
+# Or disable certificate validation (development only)
+NODE_TLS_REJECT_UNAUTHORIZED="0"
+```
+
+<Warning>
+Never disable SSL or certificate validation in production.
+</Warning>
+
+### Database Already Exists
+
+NocoDB will use existing tables if the database already exists. To start fresh:
+
+```sql
+-- Drop and recreate (WARNING: deletes all data)
+DROP DATABASE nocodb;
+CREATE DATABASE nocodb;
+```
+
+## Migration Between Databases
+
+To migrate from SQLite to PostgreSQL/MySQL:
+
+1. Export data from existing NocoDB instance
+2. Set up new database
+3. Update `NC_DB` environment variable
+4. Restart NocoDB
+5. Import data
+
+<Warning>
+Migrating between database types requires manual data export/import. Test thoroughly in a staging environment first.
+</Warning>
+
+## Next Steps
+
+- [Configure environment variables](/deployment/environment-variables)
+- [Docker deployment guide](/deployment/docker)
+- [Kubernetes deployment guide](/deployment/kubernetes)
