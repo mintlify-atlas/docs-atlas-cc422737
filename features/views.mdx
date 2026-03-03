@@ -34,7 +34,7 @@ A **view** is a saved configuration that determines how table data is displayed 
 
 NocoDB supports 8 different view types:
 
-### Grid View
+### [Grid View](/views/grid)
 
 The classic spreadsheet-style view:
 - **Best for**: Data entry, bulk editing, detailed analysis
@@ -43,7 +43,7 @@ The classic spreadsheet-style view:
 
 **ViewTypes.GRID** (Type: 3)
 
-### Gallery View
+### [Gallery View](/views/gallery)
 
 Card-based visual layout:
 - **Best for**: Image-heavy data, portfolios, catalogs
@@ -52,7 +52,7 @@ Card-based visual layout:
 
 **ViewTypes.GALLERY** (Type: 2)
 
-### Form View
+### [Form View](/views/form)
 
 Data collection interface:
 - **Best for**: External submissions, surveys, intake forms
@@ -61,7 +61,7 @@ Data collection interface:
 
 **ViewTypes.FORM** (Type: 1)
 
-### Kanban View
+### [Kanban View](/views/kanban)
 
 Drag-and-drop board layout:
 - **Best for**: Workflow management, status tracking
@@ -70,7 +70,7 @@ Drag-and-drop board layout:
 
 **ViewTypes.KANBAN** (Type: 4)
 
-### Calendar View
+### [Calendar View](/views/calendar)
 
 Time-based visualization:
 - **Best for**: Event scheduling, date tracking
@@ -79,7 +79,7 @@ Time-based visualization:
 
 **ViewTypes.CALENDAR** (Type: 6)
 
-### Map View
+### [Map View](/views/map)
 
 Geospatial data display:
 - **Best for**: Location-based data
@@ -90,7 +90,11 @@ Geospatial data display:
 
 ### List View
 
-Hierarchical nested display:
+<Info>
+List view is currently in development. The view type is defined in the type system but full implementation is pending.
+</Info>
+
+Hierarchical nested display (upcoming):
 - **Best for**: Parent-child relationships, nested data
 - **Features**: Expandable levels, linked records
 - **Use cases**: Organization charts, category trees, threaded discussions
@@ -99,7 +103,11 @@ Hierarchical nested display:
 
 ### Timeline View
 
-Time-range based visualization:
+<Info>
+Timeline view is currently in development. The view type is defined in the type system but full implementation is pending.
+</Info>
+
+Time-range based visualization (upcoming):
 - **Best for**: Project timelines, scheduling
 - **Features**: Start/end dates, duration display, Gantt-style layout
 - **Use cases**: Project planning, resource allocation, scheduling

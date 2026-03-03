@@ -52,7 +52,8 @@
               "views/gallery",
               "views/form",
               "views/kanban",
-              "views/calendar"
+              "views/calendar",
+              "views/map"
             ]
           },
           {
