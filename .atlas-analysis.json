@@ -1,0 +1,166 @@
+{
+  "projectType": "saas",
+  "projectName": "NocoDB",
+  "projectDescription": "Open source Airtable alternative that transforms any database into a smart spreadsheet interface.",
+  "theme": "mint",
+  "primaryColor": "#3366FF",
+  "lightColor": "#5C8AFF",
+  "darkColor": "#1F4CCC",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/bases",
+              "features/tables",
+              "features/views",
+              "features/fields",
+              "features/filters-sorting",
+              "features/formulas",
+              "features/relations"
+            ]
+          },
+          {
+            "group": "Views",
+            "pages": [
+              "views/grid",
+              "views/gallery",
+              "views/form",
+              "views/kanban",
+              "views/calendar"
+            ]
+          },
+          {
+            "group": "Automation",
+            "pages": [
+              "automation/webhooks",
+              "automation/integrations",
+              "automation/extensions"
+            ]
+          },
+          {
+            "group": "Collaboration",
+            "pages": [
+              "collaboration/workspaces",
+              "collaboration/sharing",
+              "collaboration/permissions",
+              "collaboration/comments"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/docker",
+              "deployment/kubernetes",
+              "deployment/environment-variables",
+              "deployment/database-setup"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Authentication",
+            "pages": [
+              "api/authentication",
+              "api/api-tokens"
+            ]
+          },
+          {
+            "group": "Database Operations",
+            "pages": [
+              "api/bases",
+              "api/tables",
+              "api/records",
+              "api/bulk-operations"
+            ]
+          },
+          {
+            "group": "Schema Management",
+            "pages": [
+              "api/columns",
+              "api/views",
+              "api/filters",
+              "api/sorts"
+            ]
+          },
+          {
+            "group": "Advanced Features",
+            "pages": [
+              "api/webhooks",
+              "api/attachments",
+              "api/comments",
+              "api/integrations"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SDK",
+        "groups": [
+          {
+            "group": "SDK Overview",
+            "pages": [
+              "sdk/introduction",
+              "sdk/installation",
+              "sdk/quickstart"
+            ]
+          },
+          {
+            "group": "SDK Methods",
+            "pages": [
+              "sdk/database",
+              "sdk/tables",
+              "sdk/records",
+              "sdk/filters"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Rich spreadsheet interface with grid, gallery, form, kanban, and calendar views",
+    "Connect to existing databases (PostgreSQL, MySQL, SQLite) or use built-in storage",
+    "REST APIs with auto-generated Swagger documentation",
+    "Webhooks and automation with integrations for Slack, Discord, email services",
+    "Fine-grained access control with role-based permissions",
+    "Real-time collaboration with comments and notifications",
+    "Formula fields with Excel-like functions",
+    "Link to other records with lookup and rollup fields",
+    "File attachments with cloud storage integration (S3, Minio, GCS)",
+    "Public and password-protected view sharing",
+    "Self-hostable with Docker and Kubernetes deployment options"
+  ],
+  "publicApiSurface": [
+    "POST /api/v1/auth/user/signup - User signup",
+    "POST /api/v1/auth/user/signin - User signin",
+    "POST /api/v1/auth/token/create - Create API token",
+    "GET /api/v1/db/meta/projects - List bases",
+    "POST /api/v1/db/meta/projects/{baseId}/tables - Create table",
+    "GET /api/v1/db/data/{baseId}/{tableName} - List records",
+    "POST /api/v1/db/data/{baseId}/{tableName} - Create record",
+    "GET /api/v1/db/data/{baseId}/{tableName}/{rowId} - Get record",
+    "PATCH /api/v1/db/data/{baseId}/{tableName}/{rowId} - Update record",
+    "DELETE /api/v1/db/data/{baseId}/{tableName}/{rowId} - Delete record",
+    "GET /api/v1/db/meta/tables/{tableId}/columns - List columns",
+    "POST /api/v1/db/meta/tables/{tableId}/columns - Create column",
+    "GET /api/v1/db/meta/tables/{tableId}/views - List views",
+    "POST /api/v1/db/meta/tables/{tableId}/views - Create view",
+    "GET /api/v1/db/meta/tables/{tableId}/hooks - List webhooks",
+    "POST /api/v1/db/meta/tables/{tableId}/hooks - Create webhook"
+  ]
+}
